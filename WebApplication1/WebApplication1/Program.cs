@@ -5,7 +5,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using WebApplication1.Data;
 using WebApplication1.Services.Implementations;
+using WebApplication1.Services.Implementations.Work;
 using WebApplication1.Services.Interfaces;
+using WebApplication1.Services.Interfaces.IWork;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,6 +86,11 @@ builder.Services
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDailyPlanService, DailyPlanService>();
+builder.Services.AddScoped<IWorkProjectService, WorkProjectService>();
+builder.Services.AddScoped<IWorkDeviceService, WorkDeviceService>();
+builder.Services.AddScoped<IWorkTaskTypeService, WorkTaskTypeService>();
+builder.Services.AddScoped<IWorkLogService, WorkLogService>();
+builder.Services.AddScoped<IWorkStatisticsService, WorkStatisticsService>();
 
 var app = builder.Build();
 

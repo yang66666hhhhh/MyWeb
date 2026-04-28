@@ -147,4 +147,4 @@ D:\03_Projects\Personal\MyWebSite\WebApplication1\WebApplication1\bin\Debug\net1
 D:\03_Projects\Personal\MyWebSite\WebApplication1\WebApplication1\bin\Debug\net10.0\runtimes\win-x64\native\krb5_64.dll
 D:\03_Projects\Personal\MyWebSite\WebApplication1\WebApplication1\bin\Debug\net10.0\runtimes\win-x64\native\krbcc64.dll
 D:\03_Projects\Personal\MyWebSite\WebApplication1\WebApplication1\bin\Debug\net10.0\runtimes\win\lib\net8.0\System.Windows.Extensions.dll
-D:\03_Projects\Personal\MyWebSite\WebApplication1\WebApplication1\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
+D:\03_Projects\Personal\MyWebSite\WebApplication1\WebApplication1\obj\Debug\net10.0\WebApplication1.sourcelink.json

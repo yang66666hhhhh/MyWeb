@@ -2,10 +2,8 @@ using WebApplication1.Enums;
 
 namespace WebApplication1.Entities;
 
-public class DailyPlan
+public class DailyPlan : EntityBase
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-
     public DateOnly PlanDate { get; set; }
 
     public string Title { get; set; } = string.Empty;
@@ -19,8 +17,4 @@ public class DailyPlan
     public string? Remark { get; set; }
 
     public DateTime? CompletedAt { get; set; }
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    public DateTime? UpdatedAt { get; set; }
 }
