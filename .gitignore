@@ -1,3 +1,17 @@
+# 后端
 .vs/
 bin/
 obj/
+packages/
+*.user
+*.suo
+
+# 前端
+node_modules/
+dist/
+pnpm-lock.yaml   # 如果想保留 lock 文件可以删除这行
+.env.local
+
+# 通用
+.DS_Store
+Thumbs.db
