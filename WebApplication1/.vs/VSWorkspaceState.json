@@ -1,0 +1,15 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\WebApplication1",
+    "\\WebApplication1\\Dtos",
+    "\\WebApplication1\\Entities",
+    "\\WebApplication1\\Enums",
+    "\\WebApplication1\\obj",
+    "\\WebApplication1\\obj\\Release",
+    "\\WebApplication1\\obj\\Release\\net10.0",
+    "\\WebApplication1\\Properties",
+    "\\WebApplication1\\Services"
+  ],
+  "PreviewInSolutionExplorer": false
+}
