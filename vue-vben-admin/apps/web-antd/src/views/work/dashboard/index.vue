@@ -5,8 +5,8 @@ import { Page } from '@vben/common-ui';
 
 import { Card, Col, Row, Statistic } from 'ant-design-vue';
 
-import type { WorkStatisticsOverview } from '#/api/growth/work';
-import { getWorkStatisticsOverviewApi } from '#/api/growth/work';
+import type { WorkStatisticsOverview } from '#/api/work';
+import { getOverviewApi } from '#/api/work';
 
 const loading = ref(false);
 const overview = ref<WorkStatisticsOverview>({
@@ -23,7 +23,7 @@ const overview = ref<WorkStatisticsOverview>({
 async function load() {
   loading.value = true;
   try {
-    overview.value = await getWorkStatisticsOverviewApi();
+    overview.value = await getOverviewApi();
   } finally {
     loading.value = false;
   }

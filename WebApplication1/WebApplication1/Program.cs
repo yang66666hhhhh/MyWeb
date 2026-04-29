@@ -92,6 +92,7 @@ builder.Services.AddScoped<IWorkTaskTypeService, WorkTaskTypeService>();
 builder.Services.AddScoped<IWorkLogService, WorkLogService>();
 builder.Services.AddScoped<IWorkStatisticsService, WorkStatisticsService>();
 builder.Services.AddScoped<IWorkDailyPlanService, WorkDailyPlanService>();
+builder.Services.AddScoped<IWorkImportService, WorkImportService>();
 
 var app = builder.Build();
 

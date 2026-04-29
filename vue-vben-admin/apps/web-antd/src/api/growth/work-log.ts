@@ -118,3 +118,24 @@ export async function deleteWorkLogApi(id: string) {
   }
   return mockDelay(true);
 }
+
+interface ConvertToWorkLogInput {
+  originalContent?: null | string;
+  planId: string;
+  workDate: string;
+}
+
+export async function convertToWorkLogApi(data: ConvertToWorkLogInput) {
+  const item: WorkLog = {
+    category: '开发',
+    content: data.originalContent || '',
+    createdAt: new Date().toISOString(),
+    durationMinutes: 0,
+    id: createId('work-log'),
+    logDate: data.workDate,
+    summary: '',
+    title: `来自计划 ${data.planId}`,
+  };
+  workLogs.unshift(item);
+  return mockDelay(item);
+}

@@ -58,3 +58,11 @@ public interface IWorkDailyPlanService
     Task<WorkDailyPlanDto?> CompleteAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Guid?> ConvertToWorkLogAsync(ConvertToWorkLogDto input, CancellationToken cancellationToken = default);
 }
+
+public interface IWorkImportService
+{
+    Task<PageResult<WorkImportBatchDto>> GetBatchPageAsync(WorkImportBatchQueryDto query, CancellationToken cancellationToken = default);
+    Task<WorkImportPreviewResultDto> PreviewAsync(Stream stream, string fileName, CancellationToken cancellationToken = default);
+    Task<WorkImportConfirmResultDto> ExecuteAsync(WorkImportConfirmDto input, CancellationToken cancellationToken = default);
+    byte[] GenerateTemplate();
+}

@@ -19,7 +19,7 @@ namespace WebApplication1.Migrations
                 .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
-            modelBuilder.Entity("WebApplication1.Entities.DailyPlan", b =>
+            modelBuilder.Entity("WebApplication1.Features.DailyPlans.DailyPlan", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -35,7 +35,7 @@ namespace WebApplication1.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("varchar(1000)");
 
-                    b.Property<DateOnly>("PlanDate")
+                    b.Property<DateTime>("PlanDate")
                         .HasColumnType("date");
 
                     b.Property<int>("Priority")
@@ -69,7 +69,7 @@ namespace WebApplication1.Migrations
                     b.ToTable("DailyPlans", (string)null);
                 });
 
-            modelBuilder.Entity("WebApplication1.Entities.Work.WorkDailyPlan", b =>
+            modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkDailyPlan", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -95,7 +95,7 @@ namespace WebApplication1.Migrations
                     b.Property<decimal?>("EstimatedHours")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateOnly>("PlanDate")
+                    b.Property<DateTime>("PlanDate")
                         .HasColumnType("date");
 
                     b.Property<int>("Priority")
@@ -141,7 +141,7 @@ namespace WebApplication1.Migrations
                     b.ToTable("WorkDailyPlans", (string)null);
                 });
 
-            modelBuilder.Entity("WebApplication1.Entities.Work.WorkDevice", b =>
+            modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkDevice", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -193,7 +193,7 @@ namespace WebApplication1.Migrations
                     b.ToTable("WorkDevices", (string)null);
                 });
 
-            modelBuilder.Entity("WebApplication1.Entities.Work.WorkImportBatch", b =>
+            modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkImportBatch", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -261,7 +261,7 @@ namespace WebApplication1.Migrations
                     b.ToTable("WorkImportBatches", (string)null);
                 });
 
-            modelBuilder.Entity("WebApplication1.Entities.Work.WorkImportRow", b =>
+            modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkImportRow", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -272,6 +272,11 @@ namespace WebApplication1.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
+
+                    b.Property<int>("DuplicateStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<string>("ErrorMessage")
                         .HasMaxLength(500)
@@ -336,7 +341,7 @@ namespace WebApplication1.Migrations
                     b.ToTable("WorkImportRows", (string)null);
                 });
 
-            modelBuilder.Entity("WebApplication1.Entities.Work.WorkLog", b =>
+            modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkLog", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -393,7 +398,7 @@ namespace WebApplication1.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("varchar(10)");
 
-                    b.Property<DateOnly>("WorkDate")
+                    b.Property<DateTime>("WorkDate")
                         .HasColumnType("date");
 
                     b.HasKey("Id");
@@ -407,7 +412,7 @@ namespace WebApplication1.Migrations
                     b.ToTable("WorkLogs", (string)null);
                 });
 
-            modelBuilder.Entity("WebApplication1.Entities.Work.WorkLogItem", b =>
+            modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkLogItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -458,7 +463,7 @@ namespace WebApplication1.Migrations
                     b.ToTable("WorkLogItems", (string)null);
                 });
 
-            modelBuilder.Entity("WebApplication1.Entities.Work.WorkProject", b =>
+            modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkProject", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -475,7 +480,7 @@ namespace WebApplication1.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("varchar(1000)");
 
-                    b.Property<DateOnly?>("EndDate")
+                    b.Property<DateTime?>("EndDate")
                         .HasColumnType("date");
 
                     b.Property<string>("ProjectCode")
@@ -495,7 +500,7 @@ namespace WebApplication1.Migrations
                     b.Property<int>("Sort")
                         .HasColumnType("int");
 
-                    b.Property<DateOnly?>("StartDate")
+                    b.Property<DateTime?>("StartDate")
                         .HasColumnType("date");
 
                     b.Property<int>("Status")
@@ -518,7 +523,7 @@ namespace WebApplication1.Migrations
                     b.ToTable("WorkProjects", (string)null);
                 });
 
-            modelBuilder.Entity("WebApplication1.Entities.Work.WorkTaskType", b =>
+            modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkTaskType", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -562,9 +567,9 @@ namespace WebApplication1.Migrations
                     b.ToTable("WorkTaskTypes", (string)null);
                 });
 
-            modelBuilder.Entity("WebApplication1.Entities.Work.WorkDailyPlan", b =>
+            modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkDailyPlan", b =>
                 {
-                    b.HasOne("WebApplication1.Entities.Work.WorkProject", "Project")
+                    b.HasOne("WebApplication1.Features.Work.Entities.WorkProject", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -572,9 +577,9 @@ namespace WebApplication1.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("WebApplication1.Entities.Work.WorkDevice", b =>
+            modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkDevice", b =>
                 {
-                    b.HasOne("WebApplication1.Entities.Work.WorkProject", "Project")
+                    b.HasOne("WebApplication1.Features.Work.Entities.WorkProject", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -582,9 +587,9 @@ namespace WebApplication1.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("WebApplication1.Entities.Work.WorkImportRow", b =>
+            modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkImportRow", b =>
                 {
-                    b.HasOne("WebApplication1.Entities.Work.WorkImportBatch", "Batch")
+                    b.HasOne("WebApplication1.Features.Work.Entities.WorkImportBatch", "Batch")
                         .WithMany("Rows")
                         .HasForeignKey("BatchId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -593,9 +598,9 @@ namespace WebApplication1.Migrations
                     b.Navigation("Batch");
                 });
 
-            modelBuilder.Entity("WebApplication1.Entities.Work.WorkLog", b =>
+            modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkLog", b =>
                 {
-                    b.HasOne("WebApplication1.Entities.Work.WorkProject", "Project")
+                    b.HasOne("WebApplication1.Features.Work.Entities.WorkProject", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -604,19 +609,19 @@ namespace WebApplication1.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("WebApplication1.Entities.Work.WorkLogItem", b =>
+            modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkLogItem", b =>
                 {
-                    b.HasOne("WebApplication1.Entities.Work.WorkDevice", "Device")
+                    b.HasOne("WebApplication1.Features.Work.Entities.WorkDevice", "Device")
                         .WithMany()
                         .HasForeignKey("DeviceId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("WebApplication1.Entities.Work.WorkTaskType", "TaskType")
+                    b.HasOne("WebApplication1.Features.Work.Entities.WorkTaskType", "TaskType")
                         .WithMany()
                         .HasForeignKey("TaskTypeId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("WebApplication1.Entities.Work.WorkLog", "WorkLog")
+                    b.HasOne("WebApplication1.Features.Work.Entities.WorkLog", "WorkLog")
                         .WithMany("Items")
                         .HasForeignKey("WorkLogId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -629,12 +634,12 @@ namespace WebApplication1.Migrations
                     b.Navigation("WorkLog");
                 });
 
-            modelBuilder.Entity("WebApplication1.Entities.Work.WorkImportBatch", b =>
+            modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkImportBatch", b =>
                 {
                     b.Navigation("Rows");
                 });
 
-            modelBuilder.Entity("WebApplication1.Entities.Work.WorkLog", b =>
+            modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkLog", b =>
                 {
                     b.Navigation("Items");
                 });

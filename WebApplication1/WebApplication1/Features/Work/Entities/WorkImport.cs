@@ -66,6 +66,8 @@ public class WorkImportRow : EntityBase
 
     public string? ErrorMessage { get; set; }
 
+    public int DuplicateStatus { get; set; }
+
     public Guid? ImportedWorkLogId { get; set; }
 
     public WorkImportBatch Batch { get; set; } = null!;

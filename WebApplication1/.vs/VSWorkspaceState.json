@@ -2,10 +2,13 @@
   "ExpandedNodes": [
     "",
     "\\WebApplication1",
+    "\\WebApplication1\\bin",
+    "\\WebApplication1\\Features",
+    "\\WebApplication1\\Features\\Work",
+    "\\WebApplication1\\Features\\Work\\Controllers",
     "\\WebApplication1\\Migrations",
-    "\\WebApplication1\\obj",
-    "\\WebApplication1\\obj\\Debug",
-    "\\WebApplication1\\Services"
+    "\\WebApplication1\\Shared"
   ],
+  "SelectedNode": "\\WebApplication1\\Migrations",
   "PreviewInSolutionExplorer": false
 }

@@ -121,6 +121,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     private static void ConfigureWorkProject(ModelBuilder modelBuilder)
     {
+        var dateOnlyConverter = new ValueConverter<DateOnly, DateTime>(
+            v => v.ToDateTime(TimeOnly.MinValue),
+            v => DateOnly.FromDateTime(v));
+
         modelBuilder.Entity<WorkProject>(entity =>
         {
             entity.ToTable("WorkProjects");
@@ -130,6 +134,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(x => x.ProjectType).HasConversion<int>().HasDefaultValue(WorkProjectType.Internal);
             entity.Property(x => x.CustomerName).HasMaxLength(100);
             entity.Property(x => x.Description).HasMaxLength(1000);
+            entity.Property(x => x.StartDate).HasColumnType("date").HasConversion(dateOnlyConverter);
+            entity.Property(x => x.EndDate).HasColumnType("date").HasConversion(dateOnlyConverter);
             entity.Property(x => x.Status).HasConversion<int>().HasDefaultValue(WorkProjectStatus.Active);
             entity.Property(x => x.CreatedAt).HasColumnType("datetime");
             entity.HasIndex(x => x.ProjectName);
@@ -264,6 +270,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(x => x.RawRemark).HasMaxLength(500);
             entity.Property(x => x.ErrorMessage).HasMaxLength(500);
             entity.Property(x => x.ValidationStatus).HasConversion<int>().HasDefaultValue(WorkImportValidationStatus.Valid);
+            entity.Property(x => x.DuplicateStatus).HasDefaultValue(0);
             entity.Property(x => x.CreatedAt).HasColumnType("datetime");
 
             entity.HasOne(x => x.Batch)

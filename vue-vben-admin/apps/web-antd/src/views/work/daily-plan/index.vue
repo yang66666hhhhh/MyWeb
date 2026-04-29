@@ -113,9 +113,8 @@ const { changePage, items, load, loading, query, resetQuery, search, total } = u
   fetcher: getWorkDailyPlanPageApi,
 });
 
-function onDateChange(val: null | string | dayjs.Dayjs) {
-  const date = val && typeof val !== 'string' ? val.format('YYYY-MM-DD') : undefined;
-  query.planDate = date as string;
+function onDateChange(val: string) {
+  query.planDate = val || undefined;
 }
 
 function openCreate() {
@@ -143,7 +142,7 @@ async function openEdit(record: WorkDailyPlan) {
       content: detail.content || '',
       endTime: detail.endTime || '',
       estimatedHours: detail.estimatedHours || 0,
-      planDate: detail.planDate,
+      planDate: typeof detail.planDate === 'string' ? detail.planDate : detail.planDate?.toString() || '',
       priority: detail.priority,
       projectId: detail.projectId || '',
       remark: detail.remark || '',
@@ -217,8 +216,9 @@ onMounted(() => {
             <Form.Item label="计划日期">
               <DatePicker
                 style="width: 160px"
-                :value="query.planDate ? dayjs(query.planDate) : undefined"
+                :value="query.planDate"
                 format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD"
                 allow-clear
                 @change="onDateChange"
               />
@@ -310,7 +310,13 @@ onMounted(() => {
         </Form.Item>
         <div class="grid grid-cols-2 gap-4">
           <Form.Item label="计划日期">
-            <DatePicker style="width: 100%" :value="dayjs(formState.planDate)" format="YYYY-MM-DD" @change="(_, d) => formState.planDate = d" />
+            <DatePicker
+              style="width: 100%"
+              :value="formState.planDate ? dayjs(formState.planDate) : null"
+              format="YYYY-MM-DD"
+              value-format="YYYY-MM-DD"
+              @change="(_, d) => formState.planDate = d"
+            />
           </Form.Item>
           <Form.Item label="状态">
             <Select v-model:value="formState.status" :options="statusOptions.slice(1)" />

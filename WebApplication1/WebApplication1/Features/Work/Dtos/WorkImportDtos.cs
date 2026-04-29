@@ -42,6 +42,7 @@ public class WorkImportPreviewDto
     public WorkImportValidationStatus ValidationStatus { get; set; }
     public string? ErrorMessage { get; set; }
     public int DuplicateStatus { get; set; }
+    public int DuplicateRows { get; set; }
 }
 
 public class WorkImportPreviewResultDto
