@@ -7,8 +7,8 @@ const createApiProxy = (target: string) => ({
   ws: true,
 });
 
-const mockApi = createApiProxy('http://localhost:5320/api');
-const dotnetApi = createApiProxy('http://localhost:5062/api');
+// const mockApi = createApiProxy('http://localhost:5320/api');
+const dotnetApi = createApiProxy('http://localhost:5000/api');
 
 export default defineConfig(async () => {
   return {
@@ -16,23 +16,27 @@ export default defineConfig(async () => {
     vite: {
       server: {
         proxy: {
-          '/api/auth': mockApi,
-          '/api/user': mockApi,
-          '/api/menu': mockApi,
-          '/api/daily-plans': dotnetApi,
-          '/api/habits': dotnetApi,
-          '/api/work-logs': dotnetApi,
-          '/api/knowledge-base': dotnetApi,
-          '/api/postgraduate': dotnetApi,
-          '/api/projects': dotnetApi,
-          '/api/work/logs': dotnetApi,
-          '/api/work/projects': dotnetApi,
-          '/api/work/devices': dotnetApi,
-          '/api/work/task-types': dotnetApi,
-          '/api/work/import': dotnetApi,
-          '/api/work/statistics': dotnetApi,
-          '/api/work/daily-plans': dotnetApi,
-          '/api': mockApi,
+          // === Mock 环境 (取消注释启用) ===
+          // '/api/auth': mockApi,
+          // '/api/user': mockApi,
+          // '/api/menu': mockApi,
+          // '/api/daily-plans': mockApi,
+          // '/api/habits': mockApi,
+          // '/api/work-logs': mockApi,
+          // '/api/knowledge-base': mockApi,
+          // '/api/postgraduate': mockApi,
+          // '/api/projects': mockApi,
+          // '/api/work/logs': mockApi,
+          // '/api/work/projects': mockApi,
+          // '/api/work/devices': mockApi,
+          // '/api/work/task-types': mockApi,
+          // '/api/work/import': mockApi,
+          // '/api/work/statistics': mockApi,
+          // '/api/work/daily-plans': mockApi,
+          // '/api': mockApi,
+
+          // === 真实后端环境 ===
+          '/api': dotnetApi,
         },
       },
     },

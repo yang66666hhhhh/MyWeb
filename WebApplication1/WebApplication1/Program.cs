@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
-using WebApplication1.Data;
-using WebApplication1.Services.Implementations;
-using WebApplication1.Services.Implementations.Work;
-using WebApplication1.Services.Interfaces;
-using WebApplication1.Services.Interfaces.IWork;
+using WebApplication1.Shared.Data;
+using WebApplication1.Features.Auth;
+using WebApplication1.Features.DailyPlans;
+using WebApplication1.Features.Work.Services;
+using WebApplication1.Features.Work.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,6 +91,7 @@ builder.Services.AddScoped<IWorkDeviceService, WorkDeviceService>();
 builder.Services.AddScoped<IWorkTaskTypeService, WorkTaskTypeService>();
 builder.Services.AddScoped<IWorkLogService, WorkLogService>();
 builder.Services.AddScoped<IWorkStatisticsService, WorkStatisticsService>();
+builder.Services.AddScoped<IWorkDailyPlanService, WorkDailyPlanService>();
 
 var app = builder.Build();
 
@@ -111,5 +112,12 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await DbSeeder.SeedAsync(context);
+}
 
 app.Run();

@@ -12,93 +12,57 @@ import {
 import { SvgAntdvNextLogoIcon, SvgTDesignIcon } from '@vben/icons';
 
 import { IFrameView } from '#/layouts';
-import { $t } from '#/locales';
 
 const routes: RouteRecordRaw[] = [
   {
     meta: {
-      badgeType: 'dot',
-      icon: VBEN_LOGO_URL,
+      icon: 'lucide:external-link',
       order: 9998,
-      title: $t('demos.vben.title'),
+      title: '外部链接',
     },
-    name: 'VbenProject',
-    path: '/vben-admin',
+    name: 'ExternalLinks',
+    path: '/external-links',
     children: [
       {
         name: 'VbenDocument',
-        path: '/vben-admin/document',
+        path: '/external-links/document',
         component: IFrameView,
         meta: {
-          icon: 'lucide:book-open-text',
-          link: VBEN_DOC_URL,
-          title: $t('demos.vben.document'),
+          icon: 'lucide:book-open',
+          iframeSrc: VBEN_DOC_URL,
+          title: '官方文档',
         },
       },
       {
         name: 'VbenGithub',
-        path: '/vben-admin/github',
+        path: '/external-links/github',
         component: IFrameView,
         meta: {
-          icon: 'mdi:github',
+          icon: 'lucide:github',
           link: VBEN_GITHUB_URL,
           title: 'Github',
         },
       },
       {
-        name: 'VbenAntdVNext',
-        path: '/vben-admin/antdv-next',
+        name: 'VbenAntdv',
+        path: '/external-links/antdv',
         component: IFrameView,
         meta: {
-          badgeType: 'dot',
-          icon: SvgAntdvNextLogoIcon,
+          icon: 'lucide:layout-grid',
           link: VBEN_ANTDV_NEXT_PREVIEW_URL,
-          title: $t('demos.vben.antdv-next'),
-        },
-      },
-      {
-        name: 'VbenNaive',
-        path: '/vben-admin/naive',
-        component: IFrameView,
-        meta: {
-          badgeType: 'dot',
-          icon: 'logos:naiveui',
-          link: VBEN_NAIVE_PREVIEW_URL,
-          title: $t('demos.vben.naive-ui'),
-        },
-      },
-      {
-        name: 'VbenTDesign',
-        path: '/vben-admin/tdesign',
-        component: IFrameView,
-        meta: {
-          badgeType: 'dot',
-          icon: SvgTDesignIcon,
-          link: VBEN_TD_PREVIEW_URL,
-          title: $t('demos.vben.tdesign'),
-        },
-      },
-      {
-        name: 'VbenElementPlus',
-        path: '/vben-admin/ele',
-        component: IFrameView,
-        meta: {
-          badgeType: 'dot',
-          icon: 'logos:element',
-          link: VBEN_ELE_PREVIEW_URL,
-          title: $t('demos.vben.element-plus'),
+          title: 'Ant Design Vue Pro',
         },
       },
     ],
   },
   {
-    name: 'VbenAbout',
-    path: '/vben-admin/about',
-    component: () => import('#/views/_core/about/index.vue'),
+    name: 'About',
+    path: '/about',
+    component: () => import('#/views/about/index.vue'),
     meta: {
-      icon: 'lucide:copyright',
-      title: $t('demos.vben.about'),
+      icon: 'lucide:info',
       order: 9999,
+      title: '关于',
     },
   },
   {
@@ -108,7 +72,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       icon: 'lucide:user',
       hideInMenu: true,
-      title: $t('page.auth.profile'),
+      title: '个人设置',
     },
   },
 ];

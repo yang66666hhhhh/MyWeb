@@ -1,24 +1,22 @@
 import type { RouteRecordRaw } from 'vue-router';
 
-import { $t } from '#/locales';
-
 const routes: RouteRecordRaw[] = [
   {
     meta: {
-      icon: 'ic:baseline-view-in-ar',
-      keepAlive: true,
+      icon: 'lucide:sparkles',
       order: 1000,
-      title: $t('demos.title'),
+      title: '示例中心',
     },
     name: 'Demos',
     path: '/demos',
     children: [
       {
         meta: {
-          title: $t('demos.antd'),
+          icon: 'lucide:layout-grid',
+          title: 'Ant Design 示例',
         },
-        name: 'AntDesignDemos',
-        path: '/demos/ant-design',
+        name: 'AntdDemos',
+        path: '/demos/antd',
         component: () => import('#/views/demos/antd/index.vue'),
       },
     ],

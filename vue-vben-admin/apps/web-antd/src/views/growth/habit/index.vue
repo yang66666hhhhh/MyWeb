@@ -6,15 +6,14 @@ import { Page } from '@vben/common-ui';
 import {
   Button,
   Card,
-  Form,
   Input,
   message,
+  Modal,
   Popconfirm,
   Select,
   Space,
-  Table,
   Tag,
-  Modal,
+  Table,
 } from 'ant-design-vue';
 
 import type { Habit } from '#/api/growth';
@@ -27,12 +26,12 @@ import {
 } from '#/api/growth';
 import { usePagedQuery } from '#/composables/usePagedQuery';
 
-import HabitForm from './components/HabitForm.vue';
 import HabitDetail from './components/HabitDetail.vue';
+import HabitForm from './components/HabitForm.vue';
 
 const formOpen = ref(false);
 const detailOpen = ref(false);
-const editingId = ref<null | string>(null);
+const editingId = ref<null | string>(undefined);
 const selectedItem = ref<null | Habit>(null);
 
 const { changePage, items, load, loading, query, search, total } = usePagedQuery<
@@ -78,7 +77,7 @@ const habitTypeOptions = [
 ];
 
 function openCreate() {
-  editingId.value = null;
+  editingId.value = undefined;
   formOpen.value = true;
 }
 
@@ -118,7 +117,7 @@ async function remove(id: string) {
 
 function handleFormOpenChange(value: boolean) {
   if (!value) {
-    editingId.value = null;
+    editingId.value = undefined;
   }
 }
 
@@ -130,7 +129,7 @@ onMounted(() => {
 <template>
   <Page description="维护学习、工作、健康和生活习惯，支持每日打卡和启停管理" title="习惯打卡">
     <Card class="mb-4">
-      <Form :model="query" layout="inline">
+      <Form layout="inline" :model="query">
         <Form.Item label="关键词">
           <Input
             v-model:value="query.keyword"
@@ -211,13 +210,7 @@ onMounted(() => {
       @success="load"
       @update:open="handleFormOpenChange"
     />
-    <Modal
-      v-model:open="detailOpen"
-      title="习惯详情"
-      width="560px"
-      :footer="null"
-      @cancel="detailOpen = false"
-    >
+    <Modal v-model:open="detailOpen" title="习惯详情" width="560px" :footer="null">
       <HabitDetail :item="selectedItem" />
     </Modal>
   </Page>

@@ -56,10 +56,41 @@ export const MOCK_CODES = [
   },
 ];
 
+const dashboardMenus = [
+  {
+    meta: {
+      icon: 'lucide:home',
+      order: -1,
+      title: '首页',
+    },
+    name: 'Dashboard',
+    path: '/dashboard',
+    redirect: '/dashboard/workspace',
+    children: [
+      {
+        name: 'Workspace',
+        path: '/dashboard/workspace',
+        component: '/dashboard/workspace/index',
+        meta: {
+          title: '工作台',
+        },
+      },
+      {
+        name: 'Analytics',
+        path: '/dashboard/analytics',
+        component: '/dashboard/analytics/index',
+        meta: {
+          affixTab: true,
+          title: '数据分析',
+        },
+      },
+    ],
+  },
+];
+
 const growthMenus = [
   {
     meta: {
-      authority: ['growth:view'],
       icon: 'lucide:sprout',
       order: 10,
       title: '个人成长',
@@ -70,7 +101,6 @@ const growthMenus = [
       {
         component: '/growth/dashboard/index',
         meta: {
-          authority: ['growth:dashboard:view'],
           icon: 'lucide:gauge',
           title: '成长看板',
         },
@@ -80,7 +110,6 @@ const growthMenus = [
       {
         component: '/growth/daily-plan/index',
         meta: {
-          authority: ['growth:daily-plan:list'],
           icon: 'lucide:calendar-check',
           keepAlive: true,
           title: '每日计划',
@@ -91,7 +120,6 @@ const growthMenus = [
       {
         component: '/growth/habit/index',
         meta: {
-          authority: ['growth:habit:list'],
           icon: 'lucide:badge-check',
           keepAlive: true,
           title: '习惯打卡',
@@ -102,7 +130,6 @@ const growthMenus = [
       {
         component: '/growth/work-log/index',
         meta: {
-          authority: ['growth:work-log:list'],
           icon: 'lucide:book-open-check',
           title: '工作日志',
         },
@@ -112,7 +139,6 @@ const growthMenus = [
       {
         component: '/growth/knowledge-base/index',
         meta: {
-          authority: ['growth:knowledge-base:list'],
           icon: 'lucide:library',
           title: '知识库',
         },
@@ -122,17 +148,44 @@ const growthMenus = [
       {
         component: '/growth/postgraduate/index',
         meta: {
-          authority: ['growth:postgraduate:list'],
           icon: 'lucide:graduation-cap',
           title: '备考中心',
         },
         name: 'PostgraduateList',
         path: '/growth/postgraduate',
+        children: [
+          {
+            component: '/growth/postgraduate/materials/index',
+            meta: {
+              icon: 'lucide:file-text',
+              title: '备考资料',
+            },
+            name: 'PostgraduateMaterials',
+            path: '/growth/postgraduate/materials',
+          },
+          {
+            component: '/growth/postgraduate/mistakes/index',
+            meta: {
+              icon: 'lucide:x-circle',
+              title: '错题本',
+            },
+            name: 'PostgraduateMistakes',
+            path: '/growth/postgraduate/mistakes',
+          },
+          {
+            component: '/growth/postgraduate/study-plans/index',
+            meta: {
+              icon: 'lucide:list-todo',
+              title: '学习计划',
+            },
+            name: 'PostgraduateStudyPlans',
+            path: '/growth/postgraduate/study-plans',
+          },
+        ],
       },
       {
         component: '/growth/project/index',
         meta: {
-          authority: ['growth:project:list'],
           icon: 'lucide:kanban',
           title: '项目管理',
         },
@@ -143,120 +196,111 @@ const growthMenus = [
   },
 ];
 
-const dashboardMenus = [
+const workMenus = [
   {
     meta: {
-      order: -1,
-      title: 'page.dashboard.title',
+      icon: 'lucide:briefcase',
+      order: 20,
+      title: '工作中心',
     },
-    name: 'Dashboard',
-    path: '/dashboard',
-    redirect: '/analytics',
+    name: 'Work',
+    path: '/growth/work',
     children: [
       {
-        name: 'Analytics',
-        path: '/analytics',
-        component: '/dashboard/analytics/index',
+        component: '/growth/work/dashboard/index',
         meta: {
-          affixTab: true,
-          title: 'page.dashboard.analytics',
+          icon: 'lucide:layout-dashboard',
+          title: '工作看板',
         },
+        name: 'WorkDashboard',
+        path: '/growth/work/dashboard',
       },
       {
-        name: 'Workspace',
-        path: '/workspace',
-        component: '/dashboard/workspace/index',
+        component: '/growth/work/daily-plan/index',
         meta: {
-          title: 'page.dashboard.workspace',
+          icon: 'lucide:calendar-check',
+          title: '每日计划',
         },
+        name: 'WorkDailyPlan',
+        path: '/growth/work/daily-plan',
+      },
+      {
+        component: '/growth/work/task-type/index',
+        meta: {
+          icon: 'lucide:tag',
+          title: '任务类型',
+        },
+        name: 'WorkTaskType',
+        path: '/growth/work/task-type',
+      },
+      {
+        component: '/growth/work/device/index',
+        meta: {
+          icon: 'lucide:device-desktop',
+          title: '设备管理',
+        },
+        name: 'WorkDevice',
+        path: '/growth/work/device',
+      },
+      {
+        component: '/growth/work/project/index',
+        meta: {
+          icon: 'lucide:folder-kanban',
+          title: '工作项目',
+        },
+        name: 'WorkProject',
+        path: '/growth/work/project',
+      },
+      {
+        component: '/growth/work/log/index',
+        meta: {
+          icon: 'lucide:clipboard-list',
+          title: '工作日志',
+        },
+        name: 'WorkLog',
+        path: '/growth/work/log',
+      },
+      {
+        component: '/growth/work/import/index',
+        meta: {
+          icon: 'lucide:upload',
+          title: '数据导入',
+        },
+        name: 'WorkImport',
+        path: '/growth/work/import',
+      },
+      {
+        component: '/growth/work/statistics/index',
+        meta: {
+          icon: 'lucide:bar-chart-3',
+          title: '统计分析',
+        },
+        name: 'WorkStatistics',
+        path: '/growth/work/statistics',
       },
     ],
   },
 ];
 
 const createDemosMenus = (role: 'admin' | 'super' | 'user') => {
-  const roleWithMenus = {
-    admin: {
-      component: '/demos/access/admin-visible',
-      meta: {
-        icon: 'mdi:button-cursor',
-        title: 'demos.access.adminVisible',
-      },
-      name: 'AccessAdminVisibleDemo',
-      path: '/demos/access/admin-visible',
-    },
-    super: {
-      component: '/demos/access/super-visible',
-      meta: {
-        icon: 'mdi:button-cursor',
-        title: 'demos.access.superVisible',
-      },
-      name: 'AccessSuperVisibleDemo',
-      path: '/demos/access/super-visible',
-    },
-    user: {
-      component: '/demos/access/user-visible',
-      meta: {
-        icon: 'mdi:button-cursor',
-        title: 'demos.access.userVisible',
-      },
-      name: 'AccessUserVisibleDemo',
-      path: '/demos/access/user-visible',
-    },
-  };
-
   return [
     {
       meta: {
-        icon: 'ic:baseline-view-in-ar',
-        keepAlive: true,
+        icon: 'lucide:sparkles',
         order: 1000,
-        title: 'demos.title',
+        title: '示例中心',
       },
       name: 'Demos',
       path: '/demos',
-      redirect: '/demos/access',
       children: [
         {
-          name: 'AccessDemos',
-          path: '/demosaccess',
+          name: 'AntdDemos',
+          path: '/demos/antd',
+          component: '/demos/antd/index',
           meta: {
-            icon: 'mdi:cloud-key-outline',
-            title: 'demos.access.backendPermissions',
+            icon: 'lucide:layout-grid',
+            title: 'Ant Design 示例',
           },
-          redirect: '/demos/access/page-control',
-          children: [
-            {
-              name: 'AccessPageControlDemo',
-              path: '/demos/access/page-control',
-              component: '/demos/access/index',
-              meta: {
-                icon: 'mdi:page-previous-outline',
-                title: 'demos.access.pageAccess',
-              },
-            },
-            {
-              name: 'AccessButtonControlDemo',
-              path: '/demos/access/button-control',
-              component: '/demos/access/button-control',
-              meta: {
-                icon: 'mdi:button-cursor',
-                title: 'demos.access.buttonControl',
-              },
-            },
-            {
-              name: 'AccessMenuVisible403Demo',
-              path: '/demos/access/menu-visible-403',
-              component: '/demos/access/menu-visible-403',
-              meta: {
-                authority: ['no-body'],
-                icon: 'mdi:button-cursor',
-                menuVisibleWithForbidden: true,
-                title: 'demos.access.menuVisible403',
-              },
-            },
-            roleWithMenus[role],
-          ],
         },
       ],
     },
@@ -265,15 +309,15 @@ const createDemosMenus = (role: 'admin' | 'super' | 'user') => {
 
 export const MOCK_MENUS = [
   {
-    menus: [...dashboardMenus, ...growthMenus, ...createDemosMenus('super')],
+    menus: [...dashboardMenus, ...growthMenus, ...workMenus, ...createDemosMenus('super')],
     username: 'vben',
   },
   {
-    menus: [...dashboardMenus, ...growthMenus, ...createDemosMenus('admin')],
+    menus: [...dashboardMenus, ...growthMenus, ...workMenus, ...createDemosMenus('admin')],
     username: 'admin',
   },
   {
-    menus: [...dashboardMenus, ...growthMenus, ...createDemosMenus('user')],
+    menus: [...dashboardMenus, ...growthMenus, ...workMenus, ...createDemosMenus('user')],
     username: 'jack',
   },
 ];
@@ -284,25 +328,21 @@ export const MOCK_MENU_LIST = [
     name: 'Workspace',
     status: 1,
     type: 'menu',
-    icon: 'mdi:dashboard',
-    path: '/workspace',
+    icon: 'lucide:home',
+    path: '/dashboard/workspace',
     component: '/dashboard/workspace/index',
     meta: {
-      icon: 'carbon:workspace',
-      title: 'page.dashboard.workspace',
-      affixTab: true,
-      order: 0,
+      icon: 'lucide:home',
+      title: '工作台',
+      order: -1,
     },
   },
   {
     id: 2,
     meta: {
-      icon: 'carbon:settings',
+      icon: 'lucide:settings',
       order: 9997,
-      title: 'system.title',
-      badge: 'new',
-      badgeType: 'normal',
-      badgeVariants: 'primary',
+      title: '系统',
     },
     status: 1,
     type: 'catalog',
@@ -318,8 +358,8 @@ export const MOCK_MENU_LIST = [
         status: 1,
         type: 'menu',
         meta: {
-          icon: 'carbon:menu',
-          title: 'system.menu.title',
+          icon: 'lucide:menu',
+          title: '菜单管理',
         },
         component: '/system/menu/list',
         children: [
@@ -330,7 +370,7 @@ export const MOCK_MENU_LIST = [
             status: 1,
             type: 'button',
             authCode: 'System:Menu:Create',
-            meta: { title: 'common.create' },
+            meta: { title: '新增' },
           },
           {
             id: 20_102,
@@ -339,7 +379,7 @@ export const MOCK_MENU_LIST = [
             status: 1,
             type: 'button',
             authCode: 'System:Menu:Edit',
-            meta: { title: 'common.edit' },
+            meta: { title: '编辑' },
           },
           {
             id: 20_103,
@@ -348,7 +388,7 @@ export const MOCK_MENU_LIST = [
             status: 1,
             type: 'button',
             authCode: 'System:Menu:Delete',
-            meta: { title: 'common.delete' },
+            meta: { title: '删除' },
           },
         ],
       },
@@ -361,8 +401,8 @@ export const MOCK_MENU_LIST = [
         type: 'menu',
         authCode: 'System:Dept:List',
         meta: {
-          icon: 'carbon:container-services',
-          title: 'system.dept.title',
+          icon: 'lucide:building',
+          title: '部门管理',
         },
         component: '/system/dept/list',
         children: [
@@ -373,7 +413,7 @@ export const MOCK_MENU_LIST = [
             status: 1,
             type: 'button',
             authCode: 'System:Dept:Create',
-            meta: { title: 'common.create' },
+            meta: { title: '新增' },
           },
           {
             id: 20_402,
@@ -382,7 +422,7 @@ export const MOCK_MENU_LIST = [
             status: 1,
             type: 'button',
             authCode: 'System:Dept:Edit',
-            meta: { title: 'common.edit' },
+            meta: { title: '编辑' },
           },
           {
             id: 20_403,
@@ -391,7 +431,7 @@ export const MOCK_MENU_LIST = [
             status: 1,
             type: 'button',
             authCode: 'System:Dept:Delete',
-            meta: { title: 'common.delete' },
+            meta: { title: '删除' },
           },
         ],
       },
@@ -400,12 +440,11 @@ export const MOCK_MENU_LIST = [
   {
     id: 9,
     meta: {
-      badgeType: 'dot',
       order: 9998,
-      title: 'demos.vben.title',
-      icon: 'carbon:data-center',
+      title: '外部链接',
+      icon: 'lucide:external-link',
     },
-    name: 'Project',
+    name: 'ExternalLinks',
     path: '/vben-admin',
     type: 'catalog',
     status: 1,
@@ -419,9 +458,9 @@ export const MOCK_MENU_LIST = [
         type: 'embedded',
         status: 1,
         meta: {
-          icon: 'carbon:book',
+          icon: 'lucide:book-open',
           iframeSrc: 'https://doc.vben.pro',
-          title: 'demos.vben.document',
+          title: '官方文档',
         },
       },
       {
@@ -433,7 +472,7 @@ export const MOCK_MENU_LIST = [
         type: 'link',
         status: 1,
         meta: {
-          icon: 'carbon:logo-github',
+          icon: 'lucide:github',
           link: 'https://github.com/vbenjs/vue-vben-admin',
           title: 'Github',
         },
@@ -447,10 +486,10 @@ export const MOCK_MENU_LIST = [
         type: 'link',
         status: 0,
         meta: {
-          icon: 'carbon:hexagon-vertical-solid',
+          icon: 'lucide:layout-grid',
           badgeType: 'dot',
           link: 'https://ant.vben.pro',
-          title: 'demos.vben.antdv',
+          title: 'Ant Design Vue Pro',
         },
       },
     ],
@@ -461,9 +500,9 @@ export const MOCK_MENU_LIST = [
     type: 'menu',
     status: 1,
     meta: {
-      icon: 'lucide:copyright',
+      icon: 'lucide:info',
       order: 9999,
-      title: 'demos.vben.about',
+      title: '关于',
     },
     name: 'About',
     path: '/about',

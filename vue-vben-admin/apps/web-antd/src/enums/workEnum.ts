@@ -141,6 +141,13 @@ export enum WorkImportValidationStatusColor {
   Error = 'error',
 }
 
+export enum WorkImportStatusColor {
+  Pending = 'default',
+  Processing = 'processing',
+  Completed = 'success',
+  Failed = 'error',
+}
+
 export enum WorkDailyPlanStatus {
   Pending = 0,
   InProgress = 1,
