@@ -28,6 +28,12 @@ function getStreakStatus(streak: number, longest: number): { color: string; text
   if (streak >= 3) return { color: 'blue', text: '进行中' };
   return { color: 'default', text: '刚起步' };
 }
+
+function isTodayCompleted(item: Habit): boolean {
+  if (!item.lastCheckInDate) return false;
+  const today = new Date().toISOString().split('T')[0];
+  return item.lastCheckInDate.split('T')[0] === today;
+}
 </script>
 
 <template>
@@ -54,7 +60,7 @@ function getStreakStatus(streak: number, longest: number): { color: string; text
         <Statistic title="最长连续" :value="item.longestStreak" suffix="天" :value-style="{ color: '#faad14' }" />
       </Col>
       <Col :span="8">
-        <Statistic title="累计打卡" :value="item.checkInCount" suffix="次" />
+        <Statistic title="累计打卡" :value="item.totalCheckIns" suffix="次" />
       </Col>
     </Row>
 
@@ -80,8 +86,8 @@ function getStreakStatus(streak: number, longest: number): { color: string; text
       </Descriptions.Item>
       <Descriptions.Item label="打卡频率">{{ item.targetFrequency }}</Descriptions.Item>
       <Descriptions.Item label="今日打卡">
-        <Tag :color="item.todayCompleted ? 'success' : 'default'">
-          {{ item.todayCompleted ? '已打卡' : '未打卡' }}
+        <Tag :color="isTodayCompleted(item) ? 'success' : 'default'">
+          {{ isTodayCompleted(item) ? '已打卡' : '未打卡' }}
         </Tag>
       </Descriptions.Item>
       <Descriptions.Item label="最近打卡">{{ item.lastCheckInDate || '-' }}</Descriptions.Item>

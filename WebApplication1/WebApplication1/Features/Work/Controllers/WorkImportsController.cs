@@ -21,8 +21,8 @@ public class WorkImportsController(IWorkImportService importService) : Controlle
         return Ok(ApiResult<PageResult<WorkImportBatchDto>>.Success(result));
     }
 
-    [HttpPost("preview")]
-    public async Task<ActionResult<ApiResult<WorkImportPreviewResultDto>>> Preview(
+    [HttpPost("worklog/preview")]
+    public async Task<ActionResult<ApiResult<WorkImportPreviewResultDto>>> PreviewWorkLog(
         IFormFile file,
         CancellationToken cancellationToken)
     {
@@ -30,28 +30,114 @@ public class WorkImportsController(IWorkImportService importService) : Controlle
             return BadRequest(ApiResult.Fail("请上传文件"));
 
         using var stream = file.OpenReadStream();
-        using var memoryStream = new MemoryStream();
-        await stream.CopyToAsync(memoryStream, cancellationToken);
-        memoryStream.Position = 0;
-
-        var result = await importService.PreviewAsync(memoryStream, file.FileName, cancellationToken);
+        var result = await importService.PreviewWorkLogAsync(stream, file.FileName, cancellationToken);
         return Ok(ApiResult<WorkImportPreviewResultDto>.Success(result));
     }
 
-    [HttpPost("execute")]
-    public async Task<ActionResult<ApiResult<WorkImportConfirmResultDto>>> Execute(
+    [HttpPost("worklog/execute")]
+    public async Task<ActionResult<ApiResult<WorkImportConfirmResultDto>>> ExecuteWorkLog(
         [FromBody] WorkImportConfirmDto input,
         CancellationToken cancellationToken)
     {
-        var result = await importService.ExecuteAsync(input, cancellationToken);
+        var result = await importService.ExecuteWorkLogImportAsync(input, cancellationToken);
         return Ok(ApiResult<WorkImportConfirmResultDto>.Success(result, "导入完成"));
     }
 
-    [HttpGet("template")]
-    public ActionResult<FileStreamResult> GetTemplate()
+    [HttpGet("worklog/template")]
+    public ActionResult<FileStreamResult> GetWorkLogTemplate()
     {
-        var template = importService.GenerateTemplate();
+        var template = importService.GenerateWorkLogTemplate();
         var stream = new MemoryStream(template);
         return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "工作日志导入模板.xlsx");
+    }
+
+    [HttpPost("project/preview")]
+    public async Task<ActionResult<ApiResult<WorkImportPreviewResultDto>>> PreviewProject(
+        IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(ApiResult.Fail("请上传文件"));
+
+        using var stream = file.OpenReadStream();
+        var result = await importService.PreviewProjectAsync(stream, file.FileName, cancellationToken);
+        return Ok(ApiResult<WorkImportPreviewResultDto>.Success(result));
+    }
+
+    [HttpPost("project/execute")]
+    public async Task<ActionResult<ApiResult<WorkImportConfirmResultDto>>> ExecuteProject(
+        [FromBody] WorkImportConfirmDto input,
+        CancellationToken cancellationToken)
+    {
+        var result = await importService.ExecuteProjectImportAsync(input, cancellationToken);
+        return Ok(ApiResult<WorkImportConfirmResultDto>.Success(result, "导入完成"));
+    }
+
+    [HttpGet("project/template")]
+    public ActionResult<FileStreamResult> GetProjectTemplate()
+    {
+        var template = importService.GenerateProjectTemplate();
+        var stream = new MemoryStream(template);
+        return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "项目导入模板.xlsx");
+    }
+
+    [HttpPost("device/preview")]
+    public async Task<ActionResult<ApiResult<WorkImportPreviewResultDto>>> PreviewDevice(
+        IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(ApiResult.Fail("请上传文件"));
+
+        using var stream = file.OpenReadStream();
+        var result = await importService.PreviewDeviceAsync(stream, file.FileName, cancellationToken);
+        return Ok(ApiResult<WorkImportPreviewResultDto>.Success(result));
+    }
+
+    [HttpPost("device/execute")]
+    public async Task<ActionResult<ApiResult<WorkImportConfirmResultDto>>> ExecuteDevice(
+        [FromBody] WorkImportConfirmDto input,
+        CancellationToken cancellationToken)
+    {
+        var result = await importService.ExecuteDeviceImportAsync(input, cancellationToken);
+        return Ok(ApiResult<WorkImportConfirmResultDto>.Success(result, "导入完成"));
+    }
+
+    [HttpGet("device/template")]
+    public ActionResult<FileStreamResult> GetDeviceTemplate()
+    {
+        var template = importService.GenerateDeviceTemplate();
+        var stream = new MemoryStream(template);
+        return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "设备导入模板.xlsx");
+    }
+
+    [HttpPost("tasktype/preview")]
+    public async Task<ActionResult<ApiResult<WorkImportPreviewResultDto>>> PreviewTaskType(
+        IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(ApiResult.Fail("请上传文件"));
+
+        using var stream = file.OpenReadStream();
+        var result = await importService.PreviewTaskTypeAsync(stream, file.FileName, cancellationToken);
+        return Ok(ApiResult<WorkImportPreviewResultDto>.Success(result));
+    }
+
+    [HttpPost("tasktype/execute")]
+    public async Task<ActionResult<ApiResult<WorkImportConfirmResultDto>>> ExecuteTaskType(
+        [FromBody] WorkImportConfirmDto input,
+        CancellationToken cancellationToken)
+    {
+        var result = await importService.ExecuteTaskTypeImportAsync(input, cancellationToken);
+        return Ok(ApiResult<WorkImportConfirmResultDto>.Success(result, "导入完成"));
+    }
+
+    [HttpGet("tasktype/template")]
+    public ActionResult<FileStreamResult> GetTaskTypeTemplate()
+    {
+        var template = importService.GenerateTaskTypeTemplate();
+        var stream = new MemoryStream(template);
+        return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "任务类型导入模板.xlsx");
     }
 }

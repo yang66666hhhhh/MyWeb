@@ -1,3 +1,7 @@
+<script lang="ts" setup>
+import { RouterView } from 'vue-router';
+</script>
+
 <template>
-  <div>系统管理</div>
+  <RouterView />
 </template>

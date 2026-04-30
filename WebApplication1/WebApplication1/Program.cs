@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -8,12 +9,17 @@ using WebApplication1.Features.Auth;
 using WebApplication1.Features.DailyPlans;
 using WebApplication1.Features.Work.Services;
 using WebApplication1.Features.Work.Services.Interfaces;
+using WebApplication1.Features.Growth.Services;
+using WebApplication1.Features.Growth.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
 const string CorsPolicyName = "VueVbenAdmin";
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+});
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
@@ -85,6 +91,7 @@ builder.Services
 
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IDailyPlanService, DailyPlanService>();
 builder.Services.AddScoped<IWorkProjectService, WorkProjectService>();
 builder.Services.AddScoped<IWorkDeviceService, WorkDeviceService>();
@@ -93,6 +100,12 @@ builder.Services.AddScoped<IWorkLogService, WorkLogService>();
 builder.Services.AddScoped<IWorkStatisticsService, WorkStatisticsService>();
 builder.Services.AddScoped<IWorkDailyPlanService, WorkDailyPlanService>();
 builder.Services.AddScoped<IWorkImportService, WorkImportService>();
+builder.Services.AddScoped<IHabitService, HabitService>();
+builder.Services.AddScoped<IGrowthProjectService, GrowthProjectService>();
+builder.Services.AddScoped<IKnowledgeArticleService, KnowledgeArticleService>();
+builder.Services.AddScoped<IPostgraduateTaskService, PostgraduateTaskService>();
+builder.Services.AddScoped<IExamMistakeService, ExamMistakeService>();
+builder.Services.AddScoped<IExamMaterialService, ExamMaterialService>();
 
 var app = builder.Build();
 

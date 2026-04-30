@@ -59,6 +59,7 @@ public class WorkImportConfirmDto
 {
     public Guid BatchId { get; set; }
     public WorkImportStrategy ImportStrategy { get; set; } = WorkImportStrategy.SkipDuplicate;
+    public List<WorkImportPreviewDto> Items { get; set; } = new();
 }
 
 public class WorkImportConfirmResultDto
@@ -66,5 +67,28 @@ public class WorkImportConfirmResultDto
     public int SuccessRows { get; set; }
     public int FailedRows { get; set; }
     public int SkippedRows { get; set; }
+    public int DuplicateRows { get; set; }
+}
+
+public class WorkImportRowDto
+{
+    public int RowNumber { get; set; }
+    public string RawData1 { get; set; } = string.Empty;
+    public string RawData2 { get; set; } = string.Empty;
+    public string RawData3 { get; set; } = string.Empty;
+    public string RawData4 { get; set; } = string.Empty;
+    public string RawData5 { get; set; } = string.Empty;
+    public WorkImportValidationStatus ValidationStatus { get; set; }
+    public string? ErrorMessage { get; set; }
+    public int DuplicateStatus { get; set; }
+}
+
+public class WorkImportRowResultDto
+{
+    public List<WorkImportRowDto> Items { get; set; } = new();
+    public int TotalRows { get; set; }
+    public int ValidRows { get; set; }
+    public int WarningRows { get; set; }
+    public int ErrorRows { get; set; }
     public int DuplicateRows { get; set; }
 }

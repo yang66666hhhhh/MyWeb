@@ -10,12 +10,17 @@ namespace WebApplication1.Features.Work.Services;
 
 public class WorkDailyPlanService(AppDbContext dbContext) : IWorkDailyPlanService
 {
-    public async Task<PageResult<WorkDailyPlanDto>> GetPageAsync(WorkDailyPlanQueryDto query, CancellationToken cancellationToken = default)
+    public async Task<PageResult<WorkDailyPlanDto>> GetPageAsync(WorkDailyPlanQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         var page = Math.Max(query.Page, 1);
         var pageSize = Math.Clamp(query.PageSize, 1, 100);
 
         var plans = dbContext.WorkDailyPlans.AsNoTracking();
+
+        if (userId.HasValue)
+        {
+            plans = plans.Where(x => x.UserId == userId.Value);
+        }
 
         if (query.StartDate.HasValue)
         {
@@ -69,7 +74,7 @@ public class WorkDailyPlanService(AppDbContext dbContext) : IWorkDailyPlanServic
         return plan is null ? null : ToDto(plan);
     }
 
-    public async Task<WorkDailyPlanDto> CreateAsync(CreateWorkDailyPlanDto input, CancellationToken cancellationToken = default)
+    public async Task<WorkDailyPlanDto> CreateAsync(CreateWorkDailyPlanDto input, Guid userId, CancellationToken cancellationToken = default)
     {
         Guid? projectId = null;
         if (!string.IsNullOrWhiteSpace(input.ProjectId) && Guid.TryParse(input.ProjectId, out var parsedProjectId))
@@ -79,6 +84,7 @@ public class WorkDailyPlanService(AppDbContext dbContext) : IWorkDailyPlanServic
 
         var plan = new WorkDailyPlan
         {
+            UserId = userId,
             PlanDate = input.PlanDate,
             Title = input.Title,
             Content = input.Content,

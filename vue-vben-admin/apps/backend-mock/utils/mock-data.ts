@@ -244,7 +244,7 @@ const workMenus = [
       {
         component: '/work/device/index',
         meta: {
-          icon: 'lucide:device-desktop',
+          icon: 'lucide:monitor',
           title: '设备管理',
         },
         name: 'WorkDevice',

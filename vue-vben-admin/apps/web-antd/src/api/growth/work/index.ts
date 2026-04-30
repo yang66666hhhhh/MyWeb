@@ -147,13 +147,16 @@ export const getWorkStatisticsDeviceRankingApi = (params?: any) =>
 export const getWorkImportBatchPageApi = (params?: any) =>
   requestClient.get<PageResult<WorkImportBatch>>('/work/import', { params });
 
-export const previewWorkImportApi = (data: any) =>
-  requestClient.post<WorkImportPreviewItem[]>('/work/import/preview', data);
+export const previewWorkImportApi = (file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return requestClient.post<{ Items: WorkImportPreviewItem[]; TotalRows: number }>('/work/import/worklog/preview', formData);
+};
 
 export const confirmWorkImportApi = (id: string) =>
   requestClient.post<WorkImportBatch>(`/work/import/${id}/execute`);
 
-export const getWorkImportTemplateUrl = () => '/api/work/import/template';
+export const getWorkImportTemplateUrl = () => '/api/work/import/worklog/template';
 
 export type CreateWorkLogInput = Partial<WorkLog>;
 

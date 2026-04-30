@@ -2,46 +2,19 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using WebApplication1.Features.Auth.Entities;
+using WebApplication1.Shared.Data;
 
 namespace WebApplication1.Features.Auth;
 
-public class AuthService(IConfiguration configuration) : IAuthService
+public class AuthService(
+    IConfiguration configuration,
+    AppDbContext context) : IAuthService
 {
-    private static readonly IReadOnlyDictionary<string, AppUserDefinition> Users =
-        new Dictionary<string, AppUserDefinition>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["vben"] = new(
-                UserId: "10000",
-                Username: "vben",
-                Password: "123456",
-                RealName: "Vben Super",
-                Avatar: "https://avatar.vercel.sh/vben",
-                HomePath: "/growth/dashboard",
-                Roles: ["super"],
-                AccessCodes: ["dashboard", "growth"]),
-            ["admin"] = new(
-                UserId: "10001",
-                Username: "admin",
-                Password: "123456",
-                RealName: "Admin User",
-                Avatar: "https://avatar.vercel.sh/admin",
-                HomePath: "/growth/dashboard",
-                Roles: ["admin"],
-                AccessCodes: ["dashboard", "growth"]),
-            ["jack"] = new(
-                UserId: "10002",
-                Username: "jack",
-                Password: "123456",
-                RealName: "Jack User",
-                Avatar: "https://avatar.vercel.sh/jack",
-                HomePath: "/growth/dashboard",
-                Roles: ["user"],
-                AccessCodes: ["dashboard", "growth"]),
-        };
-
     public string CreateAccessToken(string username)
     {
-        if (!Users.TryGetValue(username, out var user))
+        var user = context.Users.FirstOrDefault(x => x.Username == username);
+        if (user == null)
         {
             throw new InvalidOperationException("User does not exist.");
         }
@@ -54,16 +27,18 @@ public class AuthService(IConfiguration configuration) : IAuthService
             ?? throw new InvalidOperationException("Jwt:Audience is not configured.");
         var expireMinutes = configuration.GetValue("Jwt:ExpireMinutes", 120);
 
+        var roles = user.Roles.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, user.UserId),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.Username),
             new(ClaimTypes.GivenName, user.RealName),
-            new("avatar", user.Avatar),
-            new("homePath", user.HomePath),
+            new("avatar", user.Avatar ?? string.Empty),
+            new("homePath", "/growth/dashboard"),
         };
 
-        claims.AddRange(user.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role.Trim())));
 
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey));
         var tokenDescriptor = new SecurityTokenDescriptor
@@ -83,51 +58,51 @@ public class AuthService(IConfiguration configuration) : IAuthService
     public IReadOnlyList<string> GetAccessCodes(ClaimsPrincipal principal)
     {
         var username = principal.Identity?.Name;
-        return username is not null && Users.TryGetValue(username, out var user)
-            ? user.AccessCodes
-            : [];
+        if (username is null) return [];
+        var user = context.Users.FirstOrDefault(x => x.Username == username);
+        return user != null ? new[] { "dashboard", "growth" } : [];
     }
 
     public UserInfoDto? GetUserInfo(ClaimsPrincipal principal)
     {
         var username = principal.Identity?.Name;
-        return username is not null && Users.TryGetValue(username, out var user)
-            ? ToUserInfo(user)
-            : null;
-    }
+        if (username is null) return null;
+        var user = context.Users.FirstOrDefault(x => x.Username == username);
+        if (user == null) return null;
 
-    public UserInfoDto? ValidateUser(string username, string password)
-    {
-        if (!Users.TryGetValue(username, out var user))
-        {
-            return null;
-        }
+        var roles = user.Roles.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
-        return string.Equals(user.Password, password, StringComparison.Ordinal)
-            ? ToUserInfo(user)
-            : null;
-    }
-
-    private static UserInfoDto ToUserInfo(AppUserDefinition user)
-    {
         return new UserInfoDto
         {
-            Avatar = user.Avatar,
-            HomePath = user.HomePath,
+            Avatar = user.Avatar ?? string.Empty,
+            HomePath = "/growth/dashboard",
             RealName = user.RealName,
-            Roles = user.Roles,
-            UserId = user.UserId,
+            Roles = roles.Select(r => r.Trim()).ToArray(),
+            UserId = user.Id.ToString(),
             Username = user.Username,
         };
     }
 
-    private sealed record AppUserDefinition(
-        string UserId,
-        string Username,
-        string Password,
-        string RealName,
-        string Avatar,
-        string HomePath,
-        IReadOnlyList<string> Roles,
-        IReadOnlyList<string> AccessCodes);
+    public UserInfoDto? ValidateUser(string username, string password)
+    {
+        var user = context.Users.FirstOrDefault(x => x.Username == username);
+        if (user == null) return null;
+
+        if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+        {
+            return null;
+        }
+
+        var roles = user.Roles.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+        return new UserInfoDto
+        {
+            Avatar = user.Avatar ?? string.Empty,
+            HomePath = "/growth/dashboard",
+            RealName = user.RealName,
+            Roles = roles.Select(r => r.Trim()).ToArray(),
+            UserId = user.Id.ToString(),
+            Username = user.Username,
+        };
+    }
 }

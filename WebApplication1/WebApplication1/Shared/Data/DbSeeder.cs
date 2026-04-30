@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Shared.Data;
 using WebApplication1.Shared.Enums;
+using WebApplication1.Features.Auth.Entities;
 using WebApplication1.Features.Work.Entities;
 
 namespace WebApplication1.Shared.Data;
@@ -11,20 +12,87 @@ public static class DbSeeder
     {
         Console.WriteLine("[DbSeeder] Starting seed...");
 
+        var hasUsers = await context.Users.AnyAsync();
+        Console.WriteLine($"[DbSeeder] Users has data: {hasUsers}");
+
+        if (!hasUsers)
+        {
+            Console.WriteLine("[DbSeeder] Seeding Users...");
+            var users = new List<AppUser>
+            {
+                new()
+                {
+                    Username = "vben",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+                    RealName = "超级管理员",
+                    Avatar = "https://avatar.vercel.sh/vben",
+                    Email = "vben@example.com",
+                    Status = AppUserStatus.Active,
+                    Roles = "super",
+                    CreatedAt = DateTime.UtcNow
+                },
+                new()
+                {
+                    Username = "admin",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+                    RealName = "系统管理员",
+                    Avatar = "https://avatar.vercel.sh/admin",
+                    Email = "admin@example.com",
+                    Status = AppUserStatus.Active,
+                    Roles = "admin",
+                    CreatedAt = DateTime.UtcNow
+                },
+                new()
+                {
+                    Username = "jack",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+                    RealName = "Jack Chen",
+                    Avatar = "https://avatar.vercel.sh/jack",
+                    Email = "jack@example.com",
+                    Status = AppUserStatus.Active,
+                    Roles = "user",
+                    CreatedAt = DateTime.UtcNow
+                },
+                new()
+                {
+                    Username = "lisa",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+                    RealName = "Lisa Wang",
+                    Avatar = "https://avatar.vercel.sh/lisa",
+                    Email = "lisa@example.com",
+                    Status = AppUserStatus.Active,
+                    Roles = "user",
+                    CreatedAt = DateTime.UtcNow
+                },
+                new()
+                {
+                    Username = "tom",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+                    RealName = "Tom Zhang",
+                    Avatar = "https://avatar.vercel.sh/tom",
+                    Email = "tom@example.com",
+                    Status = AppUserStatus.Inactive,
+                    Roles = "user",
+                    CreatedAt = DateTime.UtcNow
+                },
+            };
+            await context.Users.AddRangeAsync(users);
+            await context.SaveChangesAsync();
+        }
+
         var hasData = await context.WorkProjects.AnyAsync();
         Console.WriteLine($"[DbSeeder] WorkProjects has data: {hasData}");
 
-        if (hasData)
+        if (!hasData)
         {
-            Console.WriteLine("[DbSeeder] Data already exists, skipping seed.");
-            return;
-        }
+            var now = DateTime.UtcNow;
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            Console.WriteLine($"[DbSeeder] Seeding WorkProjects... Today: {today}");
 
-        var now = DateTime.UtcNow;
-        var today = DateOnly.FromDateTime(DateTime.Now);
-        Console.WriteLine($"[DbSeeder] Seeding WorkProjects... Today: {today}");
+            var adminUser = await context.Users.FirstOrDefaultAsync(u => u.Username == "admin");
+            var jackUser = await context.Users.FirstOrDefaultAsync(u => u.Username == "jack");
 
-        var projects = new List<WorkProject>
+            var projects = new List<WorkProject>
         {
             new()
             {
@@ -166,6 +234,7 @@ public static class DbSeeder
                 workLogs.Add(new WorkLog
                 {
                     Id = Guid.NewGuid(),
+                    UserId = adminUser?.Id,
                     WorkDate = date,
                     WeekDay = weekDay,
                     ProjectId = projects[projectIndex].Id,
@@ -184,6 +253,7 @@ public static class DbSeeder
         workLogs.Add(new WorkLog
         {
             Id = Guid.NewGuid(),
+            UserId = adminUser?.Id,
             WorkDate = today.AddDays(-1),
             WeekDay = weekDays[(int)today.AddDays(-1).DayOfWeek],
             ProjectId = projects[0].Id,
@@ -214,6 +284,7 @@ public static class DbSeeder
             dailyPlans.Add(new WorkDailyPlan
             {
                 Id = Guid.NewGuid(),
+                UserId = adminUser?.Id,
                 PlanDate = today,
                 Title = planTitles[titleIndex],
                 Content = planContents[titleIndex],
@@ -241,6 +312,7 @@ public static class DbSeeder
             dailyPlans.Add(new WorkDailyPlan
             {
                 Id = Guid.NewGuid(),
+                UserId = adminUser?.Id,
                 PlanDate = tomorrow,
                 Title = planTitles[titleIndex],
                 Content = planContents[titleIndex],
@@ -268,6 +340,7 @@ public static class DbSeeder
                 dailyPlans.Add(new WorkDailyPlan
                 {
                     Id = Guid.NewGuid(),
+                    UserId = jackUser?.Id,
                     PlanDate = date,
                     Title = planTitles[titleIndex],
                     Content = planContents[titleIndex],
@@ -303,5 +376,6 @@ public static class DbSeeder
         Console.WriteLine("[DbSeeder] Saving changes...");
         await context.SaveChangesAsync();
         Console.WriteLine("[DbSeeder] Seed completed successfully!");
+        }
     }
 }

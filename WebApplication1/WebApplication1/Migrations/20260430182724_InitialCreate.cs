@@ -36,6 +36,163 @@ namespace WebApplication1.Migrations
                 .Annotation("MySQL:Charset", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "ExamMaterials",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: true),
+                    Title = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false),
+                    Content = table.Column<string>(type: "varchar(10000)", maxLength: 10000, nullable: true),
+                    Subject = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    Tags = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true),
+                    Type = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ExamMaterials", x => x.Id);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "ExamMistakes",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: true),
+                    Question = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: false),
+                    Answer = table.Column<string>(type: "varchar(2000)", maxLength: 2000, nullable: true),
+                    Explanation = table.Column<string>(type: "varchar(2000)", maxLength: 2000, nullable: true),
+                    Subject = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    Tags = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true),
+                    ReviewCount = table.Column<int>(type: "int", nullable: false),
+                    LastReviewDate = table.Column<DateTime>(type: "date", nullable: true),
+                    NextReviewDate = table.Column<DateTime>(type: "date", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ExamMistakes", x => x.Id);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "GrowthProjects",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: true),
+                    Name = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: true),
+                    StartDate = table.Column<DateTime>(type: "date", nullable: true),
+                    EndDate = table.Column<DateTime>(type: "date", nullable: true),
+                    Progress = table.Column<int>(type: "int", nullable: false),
+                    TaskCount = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
+                    Type = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GrowthProjects", x => x.Id);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Habits",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: true),
+                    Name = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
+                    HabitType = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    Description = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true),
+                    TargetFrequency = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
+                    CurrentStreak = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    LongestStreak = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    TotalCheckIns = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    LastCheckInDate = table.Column<DateTime>(type: "date", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Habits", x => x.Id);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "KnowledgeArticles",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: true),
+                    Title = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false),
+                    Content = table.Column<string>(type: "varchar(10000)", maxLength: 10000, nullable: true),
+                    Category = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    Tags = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true),
+                    ViewCount = table.Column<int>(type: "int", nullable: false),
+                    IsPublished = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_KnowledgeArticles", x => x.Id);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "PostgraduateTasks",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: true),
+                    Title = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: true),
+                    DueDate = table.Column<DateTime>(type: "date", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    Priority = table.Column<int>(type: "int", nullable: false, defaultValue: 2),
+                    Type = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PostgraduateTasks", x => x.Id);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
+                    Username = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    PasswordHash = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
+                    RealName = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
+                    Avatar = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true),
+                    Email = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: true),
+                    Phone = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    LastLoginAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    LastLoginIp = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: true),
+                    Roles = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false, defaultValue: "user"),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "WorkImportBatches",
                 columns: table => new
                 {
@@ -104,6 +261,29 @@ namespace WebApplication1.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_WorkTaskTypes", x => x.Id);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "HabitCheckIns",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
+                    HabitId = table.Column<Guid>(type: "char(36)", nullable: false),
+                    CheckInDate = table.Column<DateTime>(type: "date", nullable: false),
+                    Remark = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HabitCheckIns", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_HabitCheckIns_Habits_HabitId",
+                        column: x => x.HabitId,
+                        principalTable: "Habits",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
 
@@ -286,6 +466,118 @@ namespace WebApplication1.Migrations
                 column: "Status");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ExamMaterials_Subject",
+                table: "ExamMaterials",
+                column: "Subject");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ExamMaterials_Type",
+                table: "ExamMaterials",
+                column: "Type");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ExamMaterials_UserId",
+                table: "ExamMaterials",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ExamMistakes_Status",
+                table: "ExamMistakes",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ExamMistakes_Subject",
+                table: "ExamMistakes",
+                column: "Subject");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ExamMistakes_UserId",
+                table: "ExamMistakes",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GrowthProjects_Name",
+                table: "GrowthProjects",
+                column: "Name");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GrowthProjects_Status",
+                table: "GrowthProjects",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GrowthProjects_UserId",
+                table: "GrowthProjects",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HabitCheckIns_CheckInDate",
+                table: "HabitCheckIns",
+                column: "CheckInDate");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HabitCheckIns_HabitId_CheckInDate",
+                table: "HabitCheckIns",
+                columns: new[] { "HabitId", "CheckInDate" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Habits_Name",
+                table: "Habits",
+                column: "Name");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Habits_Status",
+                table: "Habits",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Habits_UserId",
+                table: "Habits",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_KnowledgeArticles_Category",
+                table: "KnowledgeArticles",
+                column: "Category");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_KnowledgeArticles_Title",
+                table: "KnowledgeArticles",
+                column: "Title");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_KnowledgeArticles_UserId",
+                table: "KnowledgeArticles",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PostgraduateTasks_DueDate",
+                table: "PostgraduateTasks",
+                column: "DueDate");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PostgraduateTasks_Status",
+                table: "PostgraduateTasks",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PostgraduateTasks_UserId",
+                table: "PostgraduateTasks",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Username",
+                table: "Users",
+                column: "Username",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_WorkDailyPlans_PlanDate",
                 table: "WorkDailyPlans",
                 column: "PlanDate");
@@ -351,6 +643,11 @@ namespace WebApplication1.Migrations
                 column: "Status");
 
             migrationBuilder.CreateIndex(
+                name: "IX_WorkLogs_UserId",
+                table: "WorkLogs",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_WorkLogs_WorkDate",
                 table: "WorkLogs",
                 column: "WorkDate");
@@ -379,6 +676,27 @@ namespace WebApplication1.Migrations
                 name: "DailyPlans");
 
             migrationBuilder.DropTable(
+                name: "ExamMaterials");
+
+            migrationBuilder.DropTable(
+                name: "ExamMistakes");
+
+            migrationBuilder.DropTable(
+                name: "GrowthProjects");
+
+            migrationBuilder.DropTable(
+                name: "HabitCheckIns");
+
+            migrationBuilder.DropTable(
+                name: "KnowledgeArticles");
+
+            migrationBuilder.DropTable(
+                name: "PostgraduateTasks");
+
+            migrationBuilder.DropTable(
+                name: "Users");
+
+            migrationBuilder.DropTable(
                 name: "WorkDailyPlans");
 
             migrationBuilder.DropTable(
@@ -386,6 +704,9 @@ namespace WebApplication1.Migrations
 
             migrationBuilder.DropTable(
                 name: "WorkLogItems");
+
+            migrationBuilder.DropTable(
+                name: "Habits");
 
             migrationBuilder.DropTable(
                 name: "WorkImportBatches");

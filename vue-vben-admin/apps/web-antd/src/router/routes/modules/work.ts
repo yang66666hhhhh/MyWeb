@@ -30,7 +30,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         component: () => import('#/views/work/device/index.vue'),
-        meta: { icon: 'lucide:device-desktop', title: '设备管理' },
+        meta: { icon: 'lucide:monitor', title: '设备管理' },
         name: 'WorkDevice',
         path: '/work/device',
       },

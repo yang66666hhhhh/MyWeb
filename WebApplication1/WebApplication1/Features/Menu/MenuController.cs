@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,6 +12,13 @@ public class MenuController : ControllerBase
     [HttpGet("all")]
     public ActionResult GetAllMenus()
     {
+        var roles = User.Claims
+            .Where(c => c.Type == ClaimTypes.Role)
+            .Select(c => c.Value)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var isAdmin = roles.Contains("admin") || roles.Contains("super");
+
         var menus = new object[]
         {
             new
@@ -150,7 +158,7 @@ public class MenuController : ControllerBase
                     new
                     {
                         component = "/work/device/index",
-                        meta = new { icon = "lucide:device-desktop", title = "设备管理" },
+                        meta = new { icon = "lucide:monitor", title = "设备管理" },
                         name = "WorkDevice",
                         path = "/work/device"
                     },
@@ -202,12 +210,28 @@ public class MenuController : ControllerBase
             },
             new
             {
+                meta = new { icon = "lucide:user", order = 9996, title = "个人中心" },
+                name = "Profile",
+                path = "/profile",
+                component = "/system/profile/index"
+            },
+            isAdmin ? new
+            {
                 meta = new { icon = "lucide:settings", order = 9997, title = "系统" },
                 name = "System",
                 path = "/system",
                 component = "/system/index",
-                children = Array.Empty<object>()
-            },
+                children = new object[]
+                {
+                    new
+                    {
+                        component = "/system/user/index",
+                        meta = new { icon = "lucide:users", title = "用户管理" },
+                        name = "SystemUser",
+                        path = "/system/user"
+                    }
+                }
+            } : null,
             new
             {
                 meta = new { icon = "lucide:external-link", order = 9998, title = "外部链接" },
@@ -251,6 +275,7 @@ public class MenuController : ControllerBase
             }
         };
 
-        return Ok(new { code = 0, data = menus });
+        var filteredMenus = menus.Where(m => m != null).ToArray();
+        return Ok(new { code = 0, data = filteredMenus });
     }
 }

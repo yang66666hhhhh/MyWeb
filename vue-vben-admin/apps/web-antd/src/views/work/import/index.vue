@@ -91,7 +91,7 @@ async function handleFileChange(info: { file: UploadFile }) {
   previewLoading.value = true;
   try {
     const result = await previewWorkImportApi(file.originFileObj as File);
-    previewData.value = result.items;
+    previewData.value = result.Items;
     currentStep.value = 2;
     message.success('文件解析成功，请预览数据');
   } catch {

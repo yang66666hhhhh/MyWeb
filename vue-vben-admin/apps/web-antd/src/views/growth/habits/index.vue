@@ -6,6 +6,7 @@ import { Page } from '@vben/common-ui';
 import {
   Button,
   Card,
+  Form,
   Input,
   message,
   Modal,
@@ -51,12 +52,18 @@ const columns = [
   { dataIndex: 'targetFrequency', key: 'targetFrequency', title: '频率' },
   { dataIndex: 'currentStreak', key: 'currentStreak', title: '当前连续', width: 110 },
   { dataIndex: 'longestStreak', key: 'longestStreak', title: '最长连续', width: 110 },
-  { dataIndex: 'checkInCount', key: 'checkInCount', title: '打卡次数' },
-  { dataIndex: 'todayCompleted', key: 'todayCompleted', title: '今日完成', width: 110 },
+  { dataIndex: 'totalCheckIns', key: 'totalCheckIns', title: '打卡次数' },
+  { title: '今日完成', key: 'todayCompleted', width: 110 },
   { dataIndex: 'lastCheckInDate', key: 'lastCheckInDate', title: '最近打卡' },
   { dataIndex: 'status', key: 'status', title: '状态' },
   { key: 'action', title: '操作', width: 260 },
 ];
+
+function isTodayCompleted(habit: Habit): boolean {
+  if (!habit.lastCheckInDate) return false;
+  const today = new Date().toISOString().split('T')[0];
+  return habit.lastCheckInDate.split('T')[0] === today;
+}
 
 function handleTableChange(pagination: { current?: number; pageSize?: number }) {
   void changePage(pagination.current ?? 1, pagination.pageSize ?? 10);
@@ -93,7 +100,7 @@ function showDetail(record: Record<string, any>) {
 
 async function checkIn(record: Record<string, any>) {
   const habit = record as Habit;
-  if (habit.todayCompleted) {
+  if (isTodayCompleted(habit)) {
     message.info(`"${habit.name}" 今日已完成`);
     return;
   }
@@ -178,8 +185,8 @@ onMounted(() => {
             <Tag color="blue">{{ text }}</Tag>
           </template>
           <template v-else-if="column.key === 'todayCompleted'">
-            <Tag :color="text ? 'success' : 'default'">
-              {{ text ? '已完成' : '未完成' }}
+            <Tag :color="isTodayCompleted(record) ? 'success' : 'default'">
+              {{ isTodayCompleted(record) ? '已完成' : '未完成' }}
             </Tag>
           </template>
           <template v-else-if="column.key === 'currentStreak'"> {{ text }} 天 </template>

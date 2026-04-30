@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using WebApplication1.Features.Auth.Entities;
 using WebApplication1.Features.DailyPlans;
+using WebApplication1.Features.Growth.Entities;
 using WebApplication1.Features.Work.Entities;
 using WebApplication1.Shared;
 using WebApplication1.Shared.Enums;
@@ -11,6 +13,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 {
     public DbSet<DailyPlan> DailyPlans => Set<DailyPlan>();
 
+    public DbSet<AppUser> Users => Set<AppUser>();
+
     public DbSet<WorkProject> WorkProjects => Set<WorkProject>();
     public DbSet<WorkDevice> WorkDevices => Set<WorkDevice>();
     public DbSet<WorkTaskType> WorkTaskTypes => Set<WorkTaskType>();
@@ -19,6 +23,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<WorkImportBatch> WorkImportBatches => Set<WorkImportBatch>();
     public DbSet<WorkImportRow> WorkImportRows => Set<WorkImportRow>();
     public DbSet<WorkDailyPlan> WorkDailyPlans => Set<WorkDailyPlan>();
+
+    public DbSet<Habit> Habits => Set<Habit>();
+    public DbSet<HabitCheckIn> HabitCheckIns => Set<HabitCheckIn>();
+
+    public DbSet<GrowthProject> GrowthProjects => Set<GrowthProject>();
+    public DbSet<KnowledgeArticle> KnowledgeArticles => Set<KnowledgeArticle>();
+    public DbSet<PostgraduateTask> PostgraduateTasks => Set<PostgraduateTask>();
+    public DbSet<ExamMistake> ExamMistakes => Set<ExamMistake>();
+    public DbSet<ExamMaterial> ExamMaterials => Set<ExamMaterial>();
 
     public override int SaveChanges()
     {
@@ -57,6 +70,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         base.OnModelCreating(modelBuilder);
 
+        ConfigureUser(modelBuilder);
         ConfigureDailyPlan(modelBuilder);
         ConfigureWorkProject(modelBuilder);
         ConfigureWorkDevice(modelBuilder);
@@ -65,6 +79,29 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         ConfigureWorkLogItem(modelBuilder);
         ConfigureWorkImport(modelBuilder);
         ConfigureWorkDailyPlan(modelBuilder);
+        ConfigureHabit(modelBuilder);
+        ConfigureGrowth(modelBuilder);
+    }
+
+    private static void ConfigureUser(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AppUser>(entity =>
+        {
+            entity.ToTable("Users");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Username).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.PasswordHash).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.RealName).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Avatar).HasMaxLength(500);
+            entity.Property(x => x.Email).HasMaxLength(100);
+            entity.Property(x => x.Phone).HasMaxLength(20);
+            entity.Property(x => x.Roles).HasMaxLength(100).HasDefaultValue("user");
+            entity.Property(x => x.Status).HasConversion<int>().HasDefaultValue(AppUserStatus.Active);
+            entity.Property(x => x.LastLoginIp).HasMaxLength(50);
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+            entity.HasIndex(x => x.Username).IsUnique();
+            entity.HasIndex(x => x.Email);
+        });
     }
 
     private static void ConfigureWorkDailyPlan(ModelBuilder modelBuilder)
@@ -210,6 +247,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.HasIndex(x => x.WorkDate);
             entity.HasIndex(x => x.Status);
             entity.HasIndex(x => x.ProjectId);
+            entity.HasIndex(x => x.UserId);
         });
     }
 
@@ -277,6 +315,136 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .WithMany(x => x.Rows)
                 .HasForeignKey(x => x.BatchId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private static void ConfigureHabit(ModelBuilder modelBuilder)
+    {
+        var dateOnlyConverter = new ValueConverter<DateOnly, DateTime>(
+            v => v.ToDateTime(TimeOnly.MinValue),
+            v => DateOnly.FromDateTime(v));
+
+        modelBuilder.Entity<Habit>(entity =>
+        {
+            entity.ToTable("Habits");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.HabitType).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(500);
+            entity.Property(x => x.TargetFrequency).HasMaxLength(20);
+            entity.Property(x => x.Status).HasDefaultValue(1);
+            entity.Property(x => x.CurrentStreak).HasDefaultValue(0);
+            entity.Property(x => x.LongestStreak).HasDefaultValue(0);
+            entity.Property(x => x.TotalCheckIns).HasDefaultValue(0);
+            entity.Property(x => x.LastCheckInDate).HasColumnType("date").HasConversion(dateOnlyConverter);
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+
+            entity.HasIndex(x => x.Name);
+            entity.HasIndex(x => x.Status);
+            entity.HasIndex(x => x.UserId);
+        });
+
+        modelBuilder.Entity<HabitCheckIn>(entity =>
+        {
+            entity.ToTable("HabitCheckIns");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.CheckInDate).HasColumnType("date").HasConversion(dateOnlyConverter).IsRequired();
+            entity.Property(x => x.Remark).HasMaxLength(500);
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+
+            entity.HasOne(x => x.Habit)
+                .WithMany(x => x.CheckIns)
+                .HasForeignKey(x => x.HabitId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(x => x.CheckInDate);
+            entity.HasIndex(x => new { x.HabitId, x.CheckInDate }).IsUnique();
+        });
+    }
+
+    private static void ConfigureGrowth(ModelBuilder modelBuilder)
+    {
+        var dateOnlyConverter = new ValueConverter<DateOnly, DateTime>(
+            v => v.ToDateTime(TimeOnly.MinValue),
+            v => DateOnly.FromDateTime(v));
+
+        modelBuilder.Entity<GrowthProject>(entity =>
+        {
+            entity.ToTable("GrowthProjects");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(1000);
+            entity.Property(x => x.StartDate).HasColumnType("date").HasConversion(dateOnlyConverter);
+            entity.Property(x => x.EndDate).HasColumnType("date").HasConversion(dateOnlyConverter);
+            entity.Property(x => x.Status).HasConversion<int>().HasDefaultValue(GrowthProjectStatus.InProgress);
+            entity.Property(x => x.Type).HasConversion<int>().HasDefaultValue(GrowthProjectType.Personal);
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+            entity.HasIndex(x => x.Name);
+            entity.HasIndex(x => x.Status);
+            entity.HasIndex(x => x.UserId);
+        });
+
+        modelBuilder.Entity<KnowledgeArticle>(entity =>
+        {
+            entity.ToTable("KnowledgeArticles");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Content).HasMaxLength(10000);
+            entity.Property(x => x.Category).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Tags).HasMaxLength(500);
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+            entity.HasIndex(x => x.Title);
+            entity.HasIndex(x => x.Category);
+            entity.HasIndex(x => x.UserId);
+        });
+
+        modelBuilder.Entity<PostgraduateTask>(entity =>
+        {
+            entity.ToTable("PostgraduateTasks");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(1000);
+            entity.Property(x => x.DueDate).HasColumnType("date").HasConversion(dateOnlyConverter);
+            entity.Property(x => x.Status).HasConversion<int>().HasDefaultValue(PostgraduateTaskStatus.Pending);
+            entity.Property(x => x.Priority).HasConversion<int>().HasDefaultValue(PostgraduateTaskPriority.Medium);
+            entity.Property(x => x.Type).HasConversion<int>().HasDefaultValue(PostgraduateTaskType.Study);
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+            entity.HasIndex(x => x.Status);
+            entity.HasIndex(x => x.DueDate);
+            entity.HasIndex(x => x.UserId);
+        });
+
+        modelBuilder.Entity<ExamMistake>(entity =>
+        {
+            entity.ToTable("ExamMistakes");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Question).HasMaxLength(1000).IsRequired();
+            entity.Property(x => x.Answer).HasMaxLength(2000);
+            entity.Property(x => x.Explanation).HasMaxLength(2000);
+            entity.Property(x => x.Subject).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Tags).HasMaxLength(500);
+            entity.Property(x => x.Status).HasConversion<int>().HasDefaultValue(ExamMistakeStatus.Pending);
+            entity.Property(x => x.LastReviewDate).HasColumnType("date").HasConversion(dateOnlyConverter);
+            entity.Property(x => x.NextReviewDate).HasColumnType("date").HasConversion(dateOnlyConverter);
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+            entity.HasIndex(x => x.Subject);
+            entity.HasIndex(x => x.UserId);
+            entity.HasIndex(x => x.Status);
+        });
+
+        modelBuilder.Entity<ExamMaterial>(entity =>
+        {
+            entity.ToTable("ExamMaterials");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Content).HasMaxLength(10000);
+            entity.Property(x => x.Subject).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Tags).HasMaxLength(500);
+            entity.Property(x => x.Type).HasConversion<int>().HasDefaultValue(ExamMaterialType.Note);
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+            entity.HasIndex(x => x.Subject);
+            entity.HasIndex(x => x.Type);
+            entity.HasIndex(x => x.UserId);
         });
     }
 }

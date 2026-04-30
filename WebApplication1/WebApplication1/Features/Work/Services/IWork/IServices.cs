@@ -32,9 +32,9 @@ public interface IWorkTaskTypeService
 
 public interface IWorkLogService
 {
-    Task<PageResult<WorkLogDto>> GetPageAsync(WorkLogQueryDto query, CancellationToken cancellationToken = default);
+    Task<PageResult<WorkLogDto>> GetPageAsync(WorkLogQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default);
     Task<WorkLogDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<WorkLogDto> CreateAsync(CreateWorkLogDto input, CancellationToken cancellationToken = default);
+    Task<WorkLogDto> CreateAsync(CreateWorkLogDto input, Guid userId, CancellationToken cancellationToken = default);
     Task<WorkLogDto?> UpdateAsync(Guid id, UpdateWorkLogDto input, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }
@@ -50,9 +50,9 @@ public interface IWorkStatisticsService
 
 public interface IWorkDailyPlanService
 {
-    Task<PageResult<WorkDailyPlanDto>> GetPageAsync(WorkDailyPlanQueryDto query, CancellationToken cancellationToken = default);
+    Task<PageResult<WorkDailyPlanDto>> GetPageAsync(WorkDailyPlanQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default);
     Task<WorkDailyPlanDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<WorkDailyPlanDto> CreateAsync(CreateWorkDailyPlanDto input, CancellationToken cancellationToken = default);
+    Task<WorkDailyPlanDto> CreateAsync(CreateWorkDailyPlanDto input, Guid userId, CancellationToken cancellationToken = default);
     Task<WorkDailyPlanDto?> UpdateAsync(Guid id, UpdateWorkDailyPlanDto input, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     Task<WorkDailyPlanDto?> CompleteAsync(Guid id, CancellationToken cancellationToken = default);
@@ -62,7 +62,19 @@ public interface IWorkDailyPlanService
 public interface IWorkImportService
 {
     Task<PageResult<WorkImportBatchDto>> GetBatchPageAsync(WorkImportBatchQueryDto query, CancellationToken cancellationToken = default);
-    Task<WorkImportPreviewResultDto> PreviewAsync(Stream stream, string fileName, CancellationToken cancellationToken = default);
-    Task<WorkImportConfirmResultDto> ExecuteAsync(WorkImportConfirmDto input, CancellationToken cancellationToken = default);
-    byte[] GenerateTemplate();
+    Task<WorkImportPreviewResultDto> PreviewWorkLogAsync(Stream stream, string fileName, CancellationToken cancellationToken = default);
+    Task<WorkImportConfirmResultDto> ExecuteWorkLogImportAsync(WorkImportConfirmDto input, CancellationToken cancellationToken = default);
+    byte[] GenerateWorkLogTemplate();
+
+    Task<WorkImportPreviewResultDto> PreviewProjectAsync(Stream stream, string fileName, CancellationToken cancellationToken = default);
+    Task<WorkImportConfirmResultDto> ExecuteProjectImportAsync(WorkImportConfirmDto input, CancellationToken cancellationToken = default);
+    byte[] GenerateProjectTemplate();
+
+    Task<WorkImportPreviewResultDto> PreviewDeviceAsync(Stream stream, string fileName, CancellationToken cancellationToken = default);
+    Task<WorkImportConfirmResultDto> ExecuteDeviceImportAsync(WorkImportConfirmDto input, CancellationToken cancellationToken = default);
+    byte[] GenerateDeviceTemplate();
+
+    Task<WorkImportPreviewResultDto> PreviewTaskTypeAsync(Stream stream, string fileName, CancellationToken cancellationToken = default);
+    Task<WorkImportConfirmResultDto> ExecuteTaskTypeImportAsync(WorkImportConfirmDto input, CancellationToken cancellationToken = default);
+    byte[] GenerateTaskTypeTemplate();
 }

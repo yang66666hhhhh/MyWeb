@@ -15,11 +15,16 @@ public class WorkLogService : IWorkLogService
         _context = context;
     }
 
-    public async Task<PageResult<WorkLogDto>> GetPageAsync(WorkLogQueryDto query, CancellationToken cancellationToken = default)
+    public async Task<PageResult<WorkLogDto>> GetPageAsync(WorkLogQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         var q = _context.WorkLogs
             .Include(x => x.Project)
             .AsQueryable();
+
+        if (userId.HasValue)
+        {
+            q = q.Where(x => x.UserId == userId.Value);
+        }
 
         if (!string.IsNullOrWhiteSpace(query.Keyword))
         {
@@ -64,6 +69,7 @@ public class WorkLogService : IWorkLogService
                 Status = x.Status,
                 SourceType = x.SourceType,
                 Remark = x.Remark,
+                UserId = x.UserId,
                 CreatedAt = x.CreatedAt,
                 UpdatedAt = x.UpdatedAt
             })
@@ -92,15 +98,17 @@ public class WorkLogService : IWorkLogService
             Status = entity.Status,
             SourceType = entity.SourceType,
             Remark = entity.Remark,
+            UserId = entity.UserId,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt
         };
     }
 
-    public async Task<WorkLogDto> CreateAsync(CreateWorkLogDto input, CancellationToken cancellationToken = default)
+    public async Task<WorkLogDto> CreateAsync(CreateWorkLogDto input, Guid userId, CancellationToken cancellationToken = default)
     {
         var entity = new Work.Entities.WorkLog
         {
+            UserId = userId,
             WorkDate = input.WorkDate,
             WeekDay = input.WeekDay,
             ProjectId = input.ProjectId,
@@ -128,6 +136,7 @@ public class WorkLogService : IWorkLogService
             Status = entity.Status,
             SourceType = entity.SourceType,
             Remark = entity.Remark,
+            UserId = entity.UserId,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt
         };
@@ -164,6 +173,7 @@ public class WorkLogService : IWorkLogService
             Status = entity.Status,
             SourceType = entity.SourceType,
             Remark = entity.Remark,
+            UserId = entity.UserId,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt
         };

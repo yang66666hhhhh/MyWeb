@@ -6,6 +6,7 @@ namespace WebApplication1.Features.Work.Dtos;
 public class WorkLogDto
 {
     public Guid Id { get; set; }
+    public Guid? UserId { get; set; }
     public DateOnly WorkDate { get; set; }
     public string WeekDay { get; set; } = string.Empty;
     public Guid ProjectId { get; set; }
