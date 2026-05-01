@@ -106,6 +106,7 @@ builder.Services.AddScoped<IKnowledgeArticleService, KnowledgeArticleService>();
 builder.Services.AddScoped<IPostgraduateTaskService, PostgraduateTaskService>();
 builder.Services.AddScoped<IExamMistakeService, ExamMistakeService>();
 builder.Services.AddScoped<IExamMaterialService, ExamMaterialService>();
+builder.Services.AddScoped<ITemplateService, TemplateService>();
 
 var app = builder.Build();
 

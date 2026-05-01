@@ -4,7 +4,9 @@
     "\\WebApplication1",
     "\\WebApplication1\\bin",
     "\\WebApplication1\\Features",
-    "\\WebApplication1\\Features\\Menu"
+    "\\WebApplication1\\Features\\Menu",
+    "\\WebApplication1\\Migrations"
   ],
+  "SelectedNode": "\\WebApplication1\\Migrations",
   "PreviewInSolutionExplorer": false
 }

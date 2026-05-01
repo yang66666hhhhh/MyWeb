@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace WebApplication1.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class AddMenuAndTagSystem : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -127,6 +127,25 @@ namespace WebApplication1.Migrations
                 .Annotation("MySQL:Charset", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "IndustryTemplates",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
+                    TenantId = table.Column<Guid>(type: "char(36)", nullable: true),
+                    Name = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true),
+                    Industry = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    IsDefault = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_IndustryTemplates", x => x.Id);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "KnowledgeArticles",
                 columns: table => new
                 {
@@ -144,6 +163,33 @@ namespace WebApplication1.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_KnowledgeArticles", x => x.Id);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "MenuItems",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
+                    Name = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    Path = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false),
+                    Icon = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: true),
+                    ParentId = table.Column<Guid>(type: "char(36)", nullable: true),
+                    Sort = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    RequiredPermissions = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MenuItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MenuItems_MenuItems_ParentId",
+                        column: x => x.ParentId,
+                        principalTable: "MenuItems",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
 
@@ -169,26 +215,86 @@ namespace WebApplication1.Migrations
                 .Annotation("MySQL:Charset", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Users",
+                name: "Roles",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "char(36)", nullable: false),
-                    Username = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
-                    PasswordHash = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
-                    RealName = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
-                    Avatar = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true),
-                    Email = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: true),
-                    Phone = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: true),
-                    Status = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
-                    LastLoginAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    LastLoginIp = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: true),
-                    Roles = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false, defaultValue: "user"),
+                    Name = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    Code = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    Description = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true),
+                    Permissions = table.Column<string>(type: "varchar(2000)", maxLength: 2000, nullable: false),
+                    IsSystem = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Roles", x => x.Id);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Tags",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
+                    Name = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    Description = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true),
+                    Color = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false),
+                    Sort = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Users", x => x.Id);
+                    table.PrimaryKey("PK_Tags", x => x.Id);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Tenants",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
+                    Name = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
+                    Code = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    Description = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true),
+                    IsActive = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    MaxUsers = table.Column<int>(type: "int", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tenants", x => x.Id);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "WorkCategories",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
+                    TenantId = table.Column<Guid>(type: "char(36)", nullable: true),
+                    Name = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    Code = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    Level = table.Column<int>(type: "int", nullable: false),
+                    ParentId = table.Column<Guid>(type: "char(36)", nullable: true),
+                    Sort = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WorkCategories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_WorkCategories_WorkCategories_ParentId",
+                        column: x => x.ParentId,
+                        principalTable: "WorkCategories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
 
@@ -284,6 +390,90 @@ namespace WebApplication1.Migrations
                         principalTable: "Habits",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "TemplateFields",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
+                    TemplateId = table.Column<Guid>(type: "char(36)", nullable: false),
+                    FieldName = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    FieldLabel = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
+                    FieldType = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    Options = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: true),
+                    IsRequired = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    Sort = table.Column<int>(type: "int", nullable: false),
+                    DefaultValue = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TemplateFields", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TemplateFields_IndustryTemplates_TemplateId",
+                        column: x => x.TemplateId,
+                        principalTable: "IndustryTemplates",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "MenuTags",
+                columns: table => new
+                {
+                    MenuItemId = table.Column<Guid>(type: "char(36)", nullable: false),
+                    TagId = table.Column<Guid>(type: "char(36)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MenuTags", x => new { x.MenuItemId, x.TagId });
+                    table.ForeignKey(
+                        name: "FK_MenuTags_MenuItems_MenuItemId",
+                        column: x => x.MenuItemId,
+                        principalTable: "MenuItems",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_MenuTags_Tags_TagId",
+                        column: x => x.TagId,
+                        principalTable: "Tags",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
+                    TenantId = table.Column<Guid>(type: "char(36)", nullable: true),
+                    Username = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    PasswordHash = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
+                    RealName = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
+                    Avatar = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true),
+                    Email = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: true),
+                    Phone = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    LastLoginAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    LastLoginIp = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: true),
+                    Roles = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false, defaultValue: "user"),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Users_Tenants_TenantId",
+                        column: x => x.TenantId,
+                        principalTable: "Tenants",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
 
@@ -389,6 +579,7 @@ namespace WebApplication1.Migrations
                 {
                     Id = table.Column<Guid>(type: "char(36)", nullable: false),
                     UserId = table.Column<Guid>(type: "char(36)", nullable: true),
+                    TenantId = table.Column<Guid>(type: "char(36)", nullable: true),
                     WorkDate = table.Column<DateTime>(type: "date", nullable: false),
                     WeekDay = table.Column<string>(type: "varchar(10)", maxLength: 10, nullable: false),
                     ProjectId = table.Column<Guid>(type: "char(36)", nullable: false),
@@ -400,6 +591,10 @@ namespace WebApplication1.Migrations
                     SourceType = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
                     ImportBatchId = table.Column<Guid>(type: "char(36)", nullable: true),
                     Remark = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: true),
+                    TemplateId = table.Column<Guid>(type: "char(36)", nullable: true),
+                    CategoryId = table.Column<Guid>(type: "char(36)", nullable: true),
+                    IndustryTemplateId = table.Column<Guid>(type: "char(36)", nullable: true),
+                    WorkCategoryId = table.Column<Guid>(type: "char(36)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
                 },
@@ -407,11 +602,103 @@ namespace WebApplication1.Migrations
                 {
                     table.PrimaryKey("PK_WorkLogs", x => x.Id);
                     table.ForeignKey(
+                        name: "FK_WorkLogs_IndustryTemplates_IndustryTemplateId",
+                        column: x => x.IndustryTemplateId,
+                        principalTable: "IndustryTemplates",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_WorkLogs_IndustryTemplates_TemplateId",
+                        column: x => x.TemplateId,
+                        principalTable: "IndustryTemplates",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_WorkLogs_WorkCategories_WorkCategoryId",
+                        column: x => x.WorkCategoryId,
+                        principalTable: "WorkCategories",
+                        principalColumn: "Id");
+                    table.ForeignKey(
                         name: "FK_WorkLogs_WorkProjects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "WorkProjects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "UserRoles",
+                columns: table => new
+                {
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: false),
+                    RoleId = table.Column<Guid>(type: "char(36)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserRoles", x => new { x.UserId, x.RoleId });
+                    table.ForeignKey(
+                        name: "FK_UserRoles_Roles_RoleId",
+                        column: x => x.RoleId,
+                        principalTable: "Roles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserRoles_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "UserTags",
+                columns: table => new
+                {
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: false),
+                    TagId = table.Column<Guid>(type: "char(36)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserTags", x => new { x.UserId, x.TagId });
+                    table.ForeignKey(
+                        name: "FK_UserTags_Tags_TagId",
+                        column: x => x.TagId,
+                        principalTable: "Tags",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserTags_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySQL:Charset", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "WorkLogDynamicValues",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
+                    WorkLogId = table.Column<Guid>(type: "char(36)", nullable: false),
+                    FieldId = table.Column<Guid>(type: "char(36)", nullable: false),
+                    FieldName = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    StringValue = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: true),
+                    NumberValue = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    DateValue = table.Column<DateOnly>(type: "date", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WorkLogDynamicValues", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_WorkLogDynamicValues_WorkLogs_WorkLogId",
+                        column: x => x.WorkLogId,
+                        principalTable: "WorkLogs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySQL:Charset", "utf8mb4");
 
@@ -537,6 +824,12 @@ namespace WebApplication1.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_IndustryTemplates_Name",
+                table: "IndustryTemplates",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_KnowledgeArticles_Category",
                 table: "KnowledgeArticles",
                 column: "Category");
@@ -550,6 +843,22 @@ namespace WebApplication1.Migrations
                 name: "IX_KnowledgeArticles_UserId",
                 table: "KnowledgeArticles",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MenuItems_ParentId",
+                table: "MenuItems",
+                column: "ParentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MenuItems_Path",
+                table: "MenuItems",
+                column: "Path",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MenuTags_TagId",
+                table: "MenuTags",
+                column: "TagId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PostgraduateTasks_DueDate",
@@ -567,15 +876,65 @@ namespace WebApplication1.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Roles_Code",
+                table: "Roles",
+                column: "Code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tags_Name",
+                table: "Tags",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TemplateFields_TemplateId_FieldName",
+                table: "TemplateFields",
+                columns: new[] { "TemplateId", "FieldName" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tenants_Code",
+                table: "Tenants",
+                column: "Code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserRoles_RoleId",
+                table: "UserRoles",
+                column: "RoleId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_Email",
                 table: "Users",
                 column: "Email");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_TenantId",
+                table: "Users",
+                column: "TenantId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_Username",
                 table: "Users",
                 column: "Username",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserTags_TagId",
+                table: "UserTags",
+                column: "TagId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WorkCategories_Code",
+                table: "WorkCategories",
+                column: "Code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WorkCategories_ParentId",
+                table: "WorkCategories",
+                column: "ParentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WorkDailyPlans_PlanDate",
@@ -618,6 +977,12 @@ namespace WebApplication1.Migrations
                 column: "BatchId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_WorkLogDynamicValues_WorkLogId_FieldName",
+                table: "WorkLogDynamicValues",
+                columns: new[] { "WorkLogId", "FieldName" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_WorkLogItems_DeviceId",
                 table: "WorkLogItems",
                 column: "DeviceId");
@@ -633,6 +998,11 @@ namespace WebApplication1.Migrations
                 column: "WorkLogId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_WorkLogs_IndustryTemplateId",
+                table: "WorkLogs",
+                column: "IndustryTemplateId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_WorkLogs_ProjectId",
                 table: "WorkLogs",
                 column: "ProjectId");
@@ -643,9 +1013,19 @@ namespace WebApplication1.Migrations
                 column: "Status");
 
             migrationBuilder.CreateIndex(
+                name: "IX_WorkLogs_TemplateId",
+                table: "WorkLogs",
+                column: "TemplateId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_WorkLogs_UserId",
                 table: "WorkLogs",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WorkLogs_WorkCategoryId",
+                table: "WorkLogs",
+                column: "WorkCategoryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WorkLogs_WorkDate",
@@ -691,10 +1071,19 @@ namespace WebApplication1.Migrations
                 name: "KnowledgeArticles");
 
             migrationBuilder.DropTable(
+                name: "MenuTags");
+
+            migrationBuilder.DropTable(
                 name: "PostgraduateTasks");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "TemplateFields");
+
+            migrationBuilder.DropTable(
+                name: "UserRoles");
+
+            migrationBuilder.DropTable(
+                name: "UserTags");
 
             migrationBuilder.DropTable(
                 name: "WorkDailyPlans");
@@ -703,10 +1092,25 @@ namespace WebApplication1.Migrations
                 name: "WorkImportRows");
 
             migrationBuilder.DropTable(
+                name: "WorkLogDynamicValues");
+
+            migrationBuilder.DropTable(
                 name: "WorkLogItems");
 
             migrationBuilder.DropTable(
                 name: "Habits");
+
+            migrationBuilder.DropTable(
+                name: "MenuItems");
+
+            migrationBuilder.DropTable(
+                name: "Roles");
+
+            migrationBuilder.DropTable(
+                name: "Tags");
+
+            migrationBuilder.DropTable(
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "WorkImportBatches");
@@ -719,6 +1123,15 @@ namespace WebApplication1.Migrations
 
             migrationBuilder.DropTable(
                 name: "WorkTaskTypes");
+
+            migrationBuilder.DropTable(
+                name: "Tenants");
+
+            migrationBuilder.DropTable(
+                name: "IndustryTemplates");
+
+            migrationBuilder.DropTable(
+                name: "WorkCategories");
 
             migrationBuilder.DropTable(
                 name: "WorkProjects");

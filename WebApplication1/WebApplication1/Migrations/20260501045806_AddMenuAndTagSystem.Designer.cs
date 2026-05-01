@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebApplication1.Shared.Data;
 
@@ -10,9 +11,11 @@ using WebApplication1.Shared.Data;
 namespace WebApplication1.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260501045806_AddMenuAndTagSystem")]
+    partial class AddMenuAndTagSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -75,9 +78,6 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid?>("UserTypeId")
-                        .HasColumnType("char(36)");
-
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -89,56 +89,10 @@ namespace WebApplication1.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.HasIndex("UserTypeId");
-
                     b.HasIndex("Username")
                         .IsUnique();
 
                     b.ToTable("Users", (string)null);
-                });
-
-            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.MenuConfig", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
-
-                    b.Property<string>("Icon")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<string>("Path")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
-
-                    b.Property<int>("Sort")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Path")
-                        .IsUnique();
-
-                    b.ToTable("MenuConfigs", (string)null);
                 });
 
             modelBuilder.Entity("WebApplication1.Features.Auth.Entities.MenuItem", b =>
@@ -355,66 +309,6 @@ namespace WebApplication1.Migrations
                     b.HasIndex("TagId");
 
                     b.ToTable("UserTags", (string)null);
-                });
-
-            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.UserType", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<int>("Sort")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("UserTypes", (string)null);
-                });
-
-            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.UserTypeTag", b =>
-                {
-                    b.Property<Guid>("UserTypeId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("TagId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("UserTypeId", "TagId");
-
-                    b.HasIndex("TagId");
-
-                    b.ToTable("UserTypeTags", (string)null);
                 });
 
             modelBuilder.Entity("WebApplication1.Features.DailyPlans.DailyPlan", b =>
@@ -1546,13 +1440,7 @@ namespace WebApplication1.Migrations
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("WebApplication1.Features.Auth.Entities.UserType", "UserType")
-                        .WithMany("Users")
-                        .HasForeignKey("UserTypeId");
-
                     b.Navigation("Tenant");
-
-                    b.Navigation("UserType");
                 });
 
             modelBuilder.Entity("WebApplication1.Features.Auth.Entities.MenuItem", b =>
@@ -1620,25 +1508,6 @@ namespace WebApplication1.Migrations
                     b.Navigation("Tag");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.UserTypeTag", b =>
-                {
-                    b.HasOne("WebApplication1.Features.Auth.Entities.Tag", "Tag")
-                        .WithMany()
-                        .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("WebApplication1.Features.Auth.Entities.UserType", "UserType")
-                        .WithMany("UserTypeTags")
-                        .HasForeignKey("UserTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tag");
-
-                    b.Navigation("UserType");
                 });
 
             modelBuilder.Entity("WebApplication1.Features.Growth.Entities.HabitCheckIn", b =>
@@ -1787,13 +1656,6 @@ namespace WebApplication1.Migrations
 
             modelBuilder.Entity("WebApplication1.Features.Auth.Entities.Tenant", b =>
                 {
-                    b.Navigation("Users");
-                });
-
-            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.UserType", b =>
-                {
-                    b.Navigation("UserTypeTags");
-
                     b.Navigation("Users");
                 });
 

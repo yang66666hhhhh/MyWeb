@@ -7,6 +7,8 @@ public class WorkLog : EntityBase
 {
     public Guid? UserId { get; set; }
 
+    public Guid? TenantId { get; set; }
+
     public DateOnly WorkDate { get; set; }
 
     public string WeekDay { get; set; } = string.Empty;
@@ -29,9 +31,17 @@ public class WorkLog : EntityBase
 
     public string? Remark { get; set; }
 
+    public Guid? TemplateId { get; set; }
+
+    public Guid? CategoryId { get; set; }
+
     public WorkProject? Project { get; set; }
 
+    public IndustryTemplate? Template { get; set; }
+
     public ICollection<WorkLogItem> Items { get; set; } = new List<WorkLogItem>();
+
+    public ICollection<WorkLogDynamicValue> DynamicValues { get; set; } = new List<WorkLogDynamicValue>();
 }
 
 public class WorkLogItem : EntityBase

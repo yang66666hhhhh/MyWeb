@@ -4,6 +4,8 @@ namespace WebApplication1.Features.Auth.Entities;
 
 public class AppUser : EntityBase
 {
+    public Guid? TenantId { get; set; }
+
     public string Username { get; set; } = string.Empty;
 
     public string PasswordHash { get; set; } = string.Empty;
@@ -23,6 +25,14 @@ public class AppUser : EntityBase
     public string? LastLoginIp { get; set; }
 
     public string Roles { get; set; } = "user";
+
+    public Guid? UserTypeId { get; set; }
+
+    public UserType? UserType { get; set; }
+
+    public Tenant? Tenant { get; set; }
+
+    public ICollection<UserTag> UserTags { get; set; } = new List<UserTag>();
 }
 
 public enum AppUserStatus

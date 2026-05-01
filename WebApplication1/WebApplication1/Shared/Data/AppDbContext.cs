@@ -13,7 +13,17 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 {
     public DbSet<DailyPlan> DailyPlans => Set<DailyPlan>();
 
+    public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<AppUser> Users => Set<AppUser>();
+    public DbSet<Role> Roles => Set<Role>();
+    public DbSet<UserRole> UserRoles => Set<UserRole>();
+    public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<MenuItem> MenuItems => Set<MenuItem>();
+    public DbSet<MenuConfig> MenuConfigs => Set<MenuConfig>();
+    public DbSet<MenuTag> MenuTags => Set<MenuTag>();
+    public DbSet<UserTag> UserTags => Set<UserTag>();
+    public DbSet<UserType> UserTypes => Set<UserType>();
+    public DbSet<UserTypeTag> UserTypeTags => Set<UserTypeTag>();
 
     public DbSet<WorkProject> WorkProjects => Set<WorkProject>();
     public DbSet<WorkDevice> WorkDevices => Set<WorkDevice>();
@@ -32,6 +42,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<PostgraduateTask> PostgraduateTasks => Set<PostgraduateTask>();
     public DbSet<ExamMistake> ExamMistakes => Set<ExamMistake>();
     public DbSet<ExamMaterial> ExamMaterials => Set<ExamMaterial>();
+
+    public DbSet<IndustryTemplate> IndustryTemplates => Set<IndustryTemplate>();
+    public DbSet<TemplateField> TemplateFields => Set<TemplateField>();
+    public DbSet<WorkLogDynamicValue> WorkLogDynamicValues => Set<WorkLogDynamicValue>();
+    public DbSet<WorkCategory> WorkCategories => Set<WorkCategory>();
 
     public override int SaveChanges()
     {
@@ -70,6 +85,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         base.OnModelCreating(modelBuilder);
 
+        ConfigureTenant(modelBuilder);
+        ConfigureRole(modelBuilder);
+        ConfigureMenu(modelBuilder);
+        ConfigureMenuConfig(modelBuilder);
+        ConfigureUserType(modelBuilder);
         ConfigureUser(modelBuilder);
         ConfigureDailyPlan(modelBuilder);
         ConfigureWorkProject(modelBuilder);
@@ -81,6 +101,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         ConfigureWorkDailyPlan(modelBuilder);
         ConfigureHabit(modelBuilder);
         ConfigureGrowth(modelBuilder);
+        ConfigureDynamicFields(modelBuilder);
+        ConfigureWorkCategory(modelBuilder);
     }
 
     private static void ConfigureUser(ModelBuilder modelBuilder)
@@ -89,6 +111,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             entity.ToTable("Users");
             entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId);
             entity.Property(x => x.Username).HasMaxLength(50).IsRequired();
             entity.Property(x => x.PasswordHash).HasMaxLength(100).IsRequired();
             entity.Property(x => x.RealName).HasMaxLength(100).IsRequired();
@@ -99,8 +122,134 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(x => x.Status).HasConversion<int>().HasDefaultValue(AppUserStatus.Active);
             entity.Property(x => x.LastLoginIp).HasMaxLength(50);
             entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+
+            entity.HasOne(x => x.Tenant)
+                .WithMany(x => x.Users)
+                .HasForeignKey(x => x.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasIndex(x => x.Username).IsUnique();
             entity.HasIndex(x => x.Email);
+            entity.HasIndex(x => x.TenantId);
+        });
+    }
+
+    private static void ConfigureTenant(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Tenant>(entity =>
+        {
+            entity.ToTable("Tenants");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Code).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(500);
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+            entity.HasIndex(x => x.Code).IsUnique();
+        });
+    }
+
+    private static void ConfigureRole(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Role>(entity =>
+        {
+            entity.ToTable("Roles");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Code).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(500);
+            entity.Property(x => x.Permissions).HasMaxLength(2000);
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+            entity.HasIndex(x => x.Code).IsUnique();
+        });
+
+        modelBuilder.Entity<UserRole>(entity =>
+        {
+            entity.ToTable("UserRoles");
+            entity.HasKey(x => new { x.UserId, x.RoleId });
+            entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.Role).WithMany().HasForeignKey(x => x.RoleId).OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private static void ConfigureMenu(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Tag>(entity =>
+        {
+            entity.ToTable("Tags");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(500);
+            entity.Property(x => x.Color).HasMaxLength(20);
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+            entity.HasIndex(x => x.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<MenuItem>(entity =>
+        {
+            entity.ToTable("MenuItems");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Path).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Icon).HasMaxLength(100);
+            entity.Property(x => x.RequiredPermissions).HasMaxLength(500);
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+
+            entity.HasOne(x => x.Parent).WithMany(x => x.Children).HasForeignKey(x => x.ParentId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(x => x.Path).IsUnique();
+        });
+
+        modelBuilder.Entity<MenuTag>(entity =>
+        {
+            entity.ToTable("MenuTags");
+            entity.HasKey(x => new { x.MenuItemId, x.TagId });
+            entity.HasOne(x => x.MenuItem).WithMany(x => x.MenuTags).HasForeignKey(x => x.MenuItemId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.Tag).WithMany(x => x.MenuTags).HasForeignKey(x => x.TagId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserTag>(entity =>
+        {
+            entity.ToTable("UserTags");
+            entity.HasKey(x => new { x.UserId, x.TagId });
+            entity.HasOne(x => x.User).WithMany(x => x.UserTags).HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.Tag).WithMany(x => x.UserTags).HasForeignKey(x => x.TagId).OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private static void ConfigureMenuConfig(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<MenuConfig>(entity =>
+        {
+            entity.ToTable("MenuConfigs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Path).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Icon).HasMaxLength(100);
+            entity.Property(x => x.Description).HasMaxLength(500);
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+            entity.HasIndex(x => x.Path).IsUnique();
+        });
+    }
+
+    private static void ConfigureUserType(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<UserType>(entity =>
+        {
+            entity.ToTable("UserTypes");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Code).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(500);
+            entity.Property(x => x.Color).HasMaxLength(20);
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+            entity.HasIndex(x => x.Code).IsUnique();
+        });
+
+        modelBuilder.Entity<UserTypeTag>(entity =>
+        {
+            entity.ToTable("UserTypeTags");
+            entity.HasKey(x => new { x.UserTypeId, x.TagId });
+            entity.HasOne(x => x.UserType).WithMany(x => x.UserTypeTags).HasForeignKey(x => x.UserTypeId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.Tag).WithMany().HasForeignKey(x => x.TagId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 
@@ -243,6 +392,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .WithMany()
                 .HasForeignKey(x => x.ProjectId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Template)
+                .WithMany()
+                .HasForeignKey(x => x.TemplateId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasIndex(x => x.WorkDate);
             entity.HasIndex(x => x.Status);
@@ -445,6 +599,75 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.HasIndex(x => x.Subject);
             entity.HasIndex(x => x.Type);
             entity.HasIndex(x => x.UserId);
+        });
+    }
+
+    private static void ConfigureDynamicFields(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<IndustryTemplate>(entity =>
+        {
+            entity.ToTable("IndustryTemplates");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(500);
+            entity.Property(x => x.Industry).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+            entity.HasIndex(x => x.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<TemplateField>(entity =>
+        {
+            entity.ToTable("TemplateFields");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.FieldName).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.FieldLabel).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.FieldType).HasConversion<int>().HasDefaultValue(FieldType.Text);
+            entity.Property(x => x.Options).HasMaxLength(1000);
+            entity.Property(x => x.DefaultValue).HasMaxLength(500);
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+
+            entity.HasOne(x => x.Template)
+                .WithMany(x => x.Fields)
+                .HasForeignKey(x => x.TemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(x => new { x.TemplateId, x.FieldName }).IsUnique();
+        });
+
+        modelBuilder.Entity<WorkLogDynamicValue>(entity =>
+        {
+            entity.ToTable("WorkLogDynamicValues");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.FieldName).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.StringValue).HasMaxLength(1000);
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+
+            entity.HasOne(x => x.WorkLog)
+                .WithMany(x => x.DynamicValues)
+                .HasForeignKey(x => x.WorkLogId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(x => new { x.WorkLogId, x.FieldName }).IsUnique();
+        });
+    }
+
+    private static void ConfigureWorkCategory(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<WorkCategory>(entity =>
+        {
+            entity.ToTable("WorkCategories");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Code).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+
+            entity.HasOne(x => x.Parent)
+                .WithMany(x => x.Children)
+                .HasForeignKey(x => x.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => x.Code).IsUnique();
+            entity.HasIndex(x => x.ParentId);
         });
     }
 }
