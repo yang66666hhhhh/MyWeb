@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Card, Col, Row, Statistic } from 'ant-design-vue';
+import { Card, Col, Row, Statistic, message } from 'ant-design-vue';
 
 import type { WorkStatisticsOverview } from '#/api/work';
 import { getOverviewApi } from '#/api/work';
@@ -24,6 +24,8 @@ async function load() {
   loading.value = true;
   try {
     overview.value = await getOverviewApi();
+  } catch {
+    message.error('加载数据失败');
   } finally {
     loading.value = false;
   }

@@ -7,74 +7,62 @@ export interface UserDto {
   avatar?: string;
   email?: string;
   phone?: string;
-  roles: string;
+  roles?: string;
   status: number;
   lastLoginAt?: string;
-  lastLoginIp?: string;
   createdAt: string;
-  updatedAt?: string;
-}
-
-export interface UserQueryDto {
-  keyword?: string;
-  status?: number;
-  page?: number;
-  pageSize?: number;
 }
 
 export interface CreateUserDto {
   username: string;
   password: string;
   realName: string;
-  avatar?: string;
   email?: string;
   phone?: string;
   roles?: string;
 }
 
 export interface UpdateUserDto {
-  realName?: string;
-  avatar?: string;
+  realName: string;
   email?: string;
   phone?: string;
   roles?: string;
   status?: number;
 }
 
-export interface ChangePasswordDto {
-  oldPassword: string;
-  newPassword: string;
+export function getUserPageApi(params: {
+  page?: number;
+  pageSize?: number;
+  keyword?: string;
+  status?: number;
+}) {
+  return requestClient.get<{ items: UserDto[]; total: number }>('/users', { params });
 }
 
-export interface ResetPasswordDto {
-  newPassword: string;
+export function getUserApi(id: string) {
+  return requestClient.get<UserDto>(`/users/${id}`);
 }
 
-export interface PageResult<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+export function createUserApi(data: CreateUserDto) {
+  return requestClient.post<UserDto>('/users', data);
 }
 
-export const getUserPageApi = (params?: UserQueryDto) =>
-  requestClient.get<PageResult<UserDto>>('/users', { params });
+export function updateUserApi(id: string, data: UpdateUserDto) {
+  return requestClient.put<UserDto>(`/users/${id}`, data);
+}
 
-export const getUserApi = (id: string) =>
-  requestClient.get<UserDto>(`/users/${id}`);
+export function deleteUserApi(id: string) {
+  return requestClient.delete(`/users/${id}`);
+}
 
-export const createUserApi = (data: CreateUserDto) =>
-  requestClient.post<UserDto>('/users', data);
+export function switchUserPersonaApi(userId: string, personaTypeId: string) {
+  return requestClient.post(`/admin/users/${userId}/personas`, { personaTypeId });
+}
 
-export const updateUserApi = (id: string, data: UpdateUserDto) =>
-  requestClient.put<UserDto>(`/users/${id}`, data);
+export function resetPasswordApi(id: string, data: { newPassword: string }) {
+  return requestClient.post(`/users/${id}/reset-password`, data);
+}
 
-export const deleteUserApi = (id: string) =>
-  requestClient.delete(`/users/${id}`);
-
-export const changePasswordApi = (id: string, data: ChangePasswordDto) =>
-  requestClient.post(`/users/${id}/change-password`, data);
-
-export const resetPasswordApi = (id: string, data: ResetPasswordDto) =>
-  requestClient.post(`/users/${id}/reset-password`, data);
+export function changePasswordApi(id: string, data: { oldPassword: string; newPassword: string }) {
+  return requestClient.post(`/users/${id}/change-password`, data);
+}

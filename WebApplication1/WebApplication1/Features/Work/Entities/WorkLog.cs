@@ -35,6 +35,10 @@ public class WorkLog : EntityBase
 
     public Guid? CategoryId { get; set; }
 
+    public string? PersonaCode { get; set; }
+
+    public string? ExtraData { get; set; }
+
     public WorkProject? Project { get; set; }
 
     public IndustryTemplate? Template { get; set; }

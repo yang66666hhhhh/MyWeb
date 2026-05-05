@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using WebApplication1.Shared.Common;
 using WebApplication1.Shared.Data;
 using WebApplication1.Features.Work.Dtos;
@@ -11,10 +12,12 @@ namespace WebApplication1.Features.Work.Services;
 public class WorkLogService : IWorkLogService
 {
     private readonly AppDbContext _context;
+    private readonly ILogger<WorkLogService> _logger;
 
-    public WorkLogService(AppDbContext context)
+    public WorkLogService(AppDbContext context, ILogger<WorkLogService> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<PageResult<WorkLogDto>> GetPageAsync(WorkLogQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
@@ -22,7 +25,7 @@ public class WorkLogService : IWorkLogService
         var q = _context.WorkLogs
             .Include(x => x.Project)
             .Include(x => x.Template)
-            .Include(x => x.DynamicValues)
+            .AsNoTracking()
             .AsQueryable();
 
         if (userId.HasValue)
@@ -74,6 +77,7 @@ public class WorkLogService : IWorkLogService
             .Include(x => x.Project)
             .Include(x => x.Template)
             .Include(x => x.DynamicValues)
+            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         return entity is null ? null : ToDto(entity);
@@ -97,23 +101,33 @@ public class WorkLogService : IWorkLogService
             TemplateId = input.TemplateId
         };
 
-        _context.WorkLogs.Add(entity);
-        await _context.SaveChangesAsync(cancellationToken);
-
-        if (input.DynamicValues?.Count > 0)
+        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        try
         {
-            foreach (var dv in input.DynamicValues)
+            _context.WorkLogs.Add(entity);
+
+            if (input.DynamicValues?.Count > 0)
             {
-                entity.DynamicValues.Add(new WorkLogDynamicValue
+                foreach (var dv in input.DynamicValues)
                 {
-                    WorkLogId = entity.Id,
-                    FieldName = dv.FieldName,
-                    StringValue = dv.StringValue,
-                    NumberValue = dv.NumberValue,
-                    DateValue = dv.DateValue
-                });
+                    entity.DynamicValues.Add(new WorkLogDynamicValue
+                    {
+                        WorkLogId = entity.Id,
+                        FieldName = dv.FieldName,
+                        StringValue = dv.StringValue,
+                        NumberValue = dv.NumberValue,
+                        DateValue = dv.DateValue
+                    });
+                }
             }
+
             await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
         }
 
         await _context.Entry(entity).Reference(x => x.Project).LoadAsync(cancellationToken);
@@ -146,23 +160,37 @@ public class WorkLogService : IWorkLogService
 
         if (input.DynamicValues?.Count > 0)
         {
-            _context.WorkLogDynamicValues.RemoveRange(entity.DynamicValues);
-            entity.DynamicValues.Clear();
-
-            foreach (var dv in input.DynamicValues)
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            try
             {
-                entity.DynamicValues.Add(new WorkLogDynamicValue
+                _context.WorkLogDynamicValues.RemoveRange(entity.DynamicValues);
+                entity.DynamicValues.Clear();
+
+                foreach (var dv in input.DynamicValues)
                 {
-                    WorkLogId = entity.Id,
-                    FieldName = dv.FieldName,
-                    StringValue = dv.StringValue,
-                    NumberValue = dv.NumberValue,
-                    DateValue = dv.DateValue
-                });
+                    entity.DynamicValues.Add(new WorkLogDynamicValue
+                    {
+                        WorkLogId = entity.Id,
+                        FieldName = dv.FieldName,
+                        StringValue = dv.StringValue,
+                        NumberValue = dv.NumberValue,
+                        DateValue = dv.DateValue
+                    });
+                }
+
+                await _context.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
             }
         }
-
-        await _context.SaveChangesAsync(cancellationToken);
+        else
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
 
         await _context.Entry(entity).Reference(x => x.Project).LoadAsync(cancellationToken);
         if (entity.TemplateId.HasValue)

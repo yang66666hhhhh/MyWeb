@@ -1,7 +1,54 @@
-// Work module API - placeholder exports
-// Actual implementations need to be added
-export const workApi = {
-  getProjects: async () => ({ data: { items: [], total: 0 } }),
-  getDevices: async () => ({ data: { items: [], total: 0 } }),
-  getTaskTypes: async () => ({ data: { items: [], total: 0 } }),
+import type { PageQuery, PageResult } from '#/types/api';
+import { requestClient } from '#/api/request';
+import type { WorkProject } from './types';
+
+export type { WorkProject };
+
+export interface WorkProjectQuery extends PageQuery {
+  status?: number;
+  projectType?: number;
+}
+
+export interface CreateWorkProjectInput {
+  projectName: string;
+  projectCode?: string;
+  projectType?: number;
+  customerName?: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface UpdateWorkProjectInput {
+  projectName?: string;
+  projectCode?: string;
+  projectType?: number;
+  customerName?: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  status?: number;
+}
+
+export const projectApi = {
+  getPage: (params?: WorkProjectQuery) =>
+    requestClient.get<PageResult<WorkProject>>('/work/projects', { params }),
+
+  getById: (id: string) =>
+    requestClient.get<WorkProject>(`/work/projects/${id}`),
+
+  create: (data: CreateWorkProjectInput) =>
+    requestClient.post<WorkProject>('/work/projects', data),
+
+  update: (id: string, data: UpdateWorkProjectInput) =>
+    requestClient.put<WorkProject>(`/work/projects/${id}`, data),
+
+  delete: (id: string) =>
+    requestClient.delete(`/work/projects/${id}`),
 };
+
+export const getWorkProjectPageApi = projectApi.getPage;
+export const getWorkProjectApi = projectApi.getById;
+export const createWorkProjectApi = projectApi.create;
+export const updateWorkProjectApi = projectApi.update;
+export const deleteWorkProjectApi = projectApi.delete;

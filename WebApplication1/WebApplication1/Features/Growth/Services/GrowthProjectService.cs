@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using WebApplication1.Features.Growth.Dtos;
 using WebApplication1.Features.Growth.Entities;
 using WebApplication1.Features.Growth.Services.Interfaces;
@@ -7,7 +8,7 @@ using WebApplication1.Shared.Data;
 
 namespace WebApplication1.Features.Growth.Services;
 
-public class GrowthProjectService(AppDbContext dbContext) : IGrowthProjectService
+public class GrowthProjectService(AppDbContext dbContext, ILogger<GrowthProjectService> logger) : IGrowthProjectService
 {
     public async Task<PageResult<GrowthProjectDto>> GetPageAsync(GrowthProjectQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
     {

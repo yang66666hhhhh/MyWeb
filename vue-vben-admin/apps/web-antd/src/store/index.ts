@@ -1,9 +1,2 @@
 export { useAuthStore } from './auth';
-export { useAppStore } from './app';
-export { useUserStore } from './modules/user';
-export { useDashboardStore } from './modules/dashboard';
-export { useGrowthStore } from './modules/growth';
-export { useWorkStore } from './modules/work';
-export { useAnalyticsStore } from './modules/analytics';
-export { useAssetsStore } from './modules/assets';
-export { useSettingsStore } from './modules/settings';
+export { usePersonaStore } from './persona';

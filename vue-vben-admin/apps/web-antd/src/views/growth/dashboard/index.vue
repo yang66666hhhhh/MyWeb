@@ -13,6 +13,7 @@ import {
   Statistic,
   Tag,
   Timeline,
+  message,
 } from 'ant-design-vue';
 
 import type { DailyPlan } from '#/api/growth';
@@ -75,6 +76,8 @@ async function loadDashboard() {
       startDate: today,
     });
     todayPlans.value = result.items;
+  } catch {
+    message.error('加载看板数据失败');
   } finally {
     loading.value = false;
   }

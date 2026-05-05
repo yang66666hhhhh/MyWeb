@@ -19,14 +19,14 @@ import {
   message,
 } from 'ant-design-vue';
 
-import type { WorkDevice } from '#/api/growth/work';
+import type { WorkDevice } from '#/api/work/device';
 import {
   createWorkDeviceApi,
   deleteWorkDeviceApi,
   getWorkDeviceApi,
   getWorkDevicePageApi,
   updateWorkDeviceApi,
-} from '#/api/growth/work';
+} from '#/api/work/device';
 import { usePagedQuery } from '#/composables/usePagedQuery';
 import { WorkDeviceStatus, WorkDeviceStatusColor, WorkDeviceStatusLabel, WorkDeviceType, WorkDeviceTypeLabel } from '#/enums/workEnum';
 
@@ -94,18 +94,22 @@ function openCreate() {
 
 async function openEdit(record: WorkDevice) {
   editingId.value = record.id;
-  const detail = await getWorkDeviceApi(record.id);
-  if (detail) {
-    formState.value = {
-      description: detail.description || '',
-      deviceCode: detail.deviceCode || '',
-      deviceName: detail.deviceName,
-      deviceType: detail.deviceType ?? 0,
-      projectId: detail.projectId || '',
-      status: detail.status,
-    };
+  try {
+    const detail = await getWorkDeviceApi(record.id);
+    if (detail) {
+      formState.value = {
+        description: detail.description || '',
+        deviceCode: detail.deviceCode || '',
+        deviceName: detail.deviceName,
+        deviceType: detail.deviceType ?? 0,
+        projectId: detail.projectId || '',
+        status: detail.status,
+      };
+    }
+    formOpen.value = true;
+  } catch {
+    message.error('加载详情失败');
   }
-  formOpen.value = true;
 }
 
 function showDetail(record: WorkDevice) {
@@ -114,9 +118,13 @@ function showDetail(record: WorkDevice) {
 }
 
 async function handleRemove(id: string) {
-  await deleteWorkDeviceApi(id);
-  message.success('设备已删除');
-  await load();
+  try {
+    await deleteWorkDeviceApi(id);
+    message.success('设备已删除');
+    await load();
+  } catch {
+    message.error('删除失败');
+  }
 }
 
 async function handleSubmit() {
@@ -124,15 +132,19 @@ async function handleSubmit() {
     message.warning('请填写设备名称');
     return;
   }
-  if (editingId.value) {
-    await updateWorkDeviceApi(editingId.value, formState.value);
-    message.success('设备已更新');
-  } else {
-    await createWorkDeviceApi(formState.value);
-    message.success('设备已创建');
+  try {
+    if (editingId.value) {
+      await updateWorkDeviceApi(editingId.value, formState.value);
+      message.success('设备已更新');
+    } else {
+      await createWorkDeviceApi(formState.value);
+      message.success('设备已创建');
+    }
+    formOpen.value = false;
+    await load();
+  } catch {
+    message.error('保存失败');
   }
-  formOpen.value = false;
-  await load();
 }
 
 function resetFilters() {

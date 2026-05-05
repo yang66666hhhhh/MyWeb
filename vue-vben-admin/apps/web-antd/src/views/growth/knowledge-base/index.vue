@@ -84,9 +84,13 @@ function showDetail(record: Record<string, any>) {
 }
 
 async function remove(id: string) {
-  await deleteKnowledgeArticleApi(id);
-  message.success('笔记已删除');
-  await load();
+  try {
+    await deleteKnowledgeArticleApi(id);
+    message.success('笔记已删除');
+    await load();
+  } catch {
+    message.error('删除失败');
+  }
 }
 
 function handleTableChange(pagination: { current?: number; pageSize?: number }) {

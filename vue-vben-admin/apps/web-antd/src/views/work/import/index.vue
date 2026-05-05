@@ -23,13 +23,13 @@ import {
 import { DownloadOutlined, UploadOutlined } from '@ant-design/icons-vue';
 import type { UploadFile } from 'ant-design-vue';
 
-import type { WorkImportBatch, WorkImportPreviewItem } from '#/api/growth/work';
+import type { WorkImportBatch, WorkImportPreviewItem } from '#/api/work/import';
 import {
   confirmWorkImportApi,
   getWorkImportBatchPageApi,
   getWorkImportTemplateUrl,
   previewWorkImportApi,
-} from '#/api/growth/work';
+} from '#/api/work/import';
 import { usePagedQuery } from '#/composables/usePagedQuery';
 import {
   WorkImportStatus,

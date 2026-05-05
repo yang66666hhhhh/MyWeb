@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
-
 import { Page } from '@vben/common-ui';
+import { Select } from 'ant-design-vue';
 
 import {
   Button,
@@ -12,7 +12,6 @@ import {
   Input,
   Modal,
   Popconfirm,
-  Select,
   Space,
   Table,
   Tag,
@@ -24,25 +23,29 @@ import {
   deleteUserApi,
   getUserApi,
   getUserPageApi,
+  switchUserPersonaApi,
   updateUserApi,
   type CreateUserDto,
   type UpdateUserDto,
   type UserDto,
 } from '#/api/system/user';
+import { personaApi, type PersonaType } from '#/api/system/persona';
 import { usePagedQuery } from '#/composables/usePagedQuery';
 
 const formOpen = ref(false);
 const detailOpen = ref(false);
 const editingId = ref<null | string>(null);
 const selectedItem = ref<UserDto | null>(null);
+const personas = ref<PersonaType[]>([]);
 
 const formState = ref({
   email: '',
   phone: '',
   realName: '',
-  roles: 'user',
+  roles: 'member',
   username: '',
   password: '',
+  personaTypeId: '',
 });
 
 const statusOptions = [
@@ -53,18 +56,19 @@ const statusOptions = [
 ];
 
 const roleOptions = [
-  { label: '超级管理员', value: 'super' },
-  { label: '管理员', value: 'admin' },
-  { label: '普通用户', value: 'user' },
+  { label: 'Owner', value: 'owner' },
+  { label: 'Pro', value: 'pro' },
+  { label: 'Member', value: 'member' },
 ];
 
 const columns = [
   { dataIndex: 'username', key: 'username', title: '用户名', width: 120 },
   { dataIndex: 'realName', key: 'realName', title: '姓名', width: 120 },
   { dataIndex: 'roles', key: 'roles', title: '角色', width: 100 },
+  { dataIndex: 'personaName', key: 'persona', title: '身份', width: 120 },
   { dataIndex: 'email', key: 'email', title: '邮箱', width: 180 },
   { dataIndex: 'phone', key: 'phone', title: '电话', width: 140 },
-  { dataIndex: 'status', key: 'status', title: '状态', width: 90 },
+  { dataIndex: 'status', key: 'status', width: 90 },
   { key: 'action', title: '操作', width: 180, fixed: 'right' },
 ];
 
@@ -76,8 +80,18 @@ const { changePage, items, load, loading, query, resetQuery, search, total } = u
   fetcher: getUserPageApi,
 });
 
-onMounted(() => {
-  load();
+onMounted(async () => {
+  await load();
+  try {
+    const res = await personaApi.getAll();
+    if (Array.isArray(res)) {
+      personas.value = res;
+    } else if (res && (res as any).data) {
+      personas.value = (res as any).data;
+    }
+  } catch {
+    message.error('加载身份列表失败');
+  }
 });
 
 function openCreate() {
@@ -86,72 +100,108 @@ function openCreate() {
     email: '',
     phone: '',
     realName: '',
-    roles: 'user',
+    roles: 'member',
     username: '',
     password: '',
+    personaTypeId: '',
   };
   formOpen.value = true;
 }
 
 async function openEdit(record: UserDto) {
   editingId.value = record.id;
-  const detail = await getUserApi(record.id);
-  if (detail) {
-    formState.value = {
-      email: detail.email || '',
-      phone: detail.phone || '',
-      realName: detail.realName,
-      roles: detail.roles || 'user',
-      username: detail.username,
-      password: '',
-    };
+  try {
+    const detail = await getUserApi(record.id);
+    if (detail) {
+      formState.value = {
+        email: detail.email || '',
+        phone: detail.phone || '',
+        realName: detail.realName,
+        roles: detail.roles || 'member',
+        username: detail.username,
+        password: '',
+        personaTypeId: detail.currentPersonaTypeId || '',
+      };
+    }
+    formOpen.value = true;
+  } catch {
+    message.error('加载详情失败');
   }
-  formOpen.value = true;
 }
 
 async function showDetail(record: UserDto) {
-  const detail = await getUserApi(record.id);
-  if (detail) {
-    selectedItem.value = detail;
-    detailOpen.value = true;
+  try {
+    const detail = await getUserApi(record.id);
+    if (detail) {
+      selectedItem.value = detail;
+      detailOpen.value = true;
+    }
+  } catch {
+    message.error('加载详情失败');
   }
 }
 
 async function handleSubmit() {
-  if (editingId.value) {
-    const data: UpdateUserDto = {
-      realName: formState.value.realName,
-      email: formState.value.email || undefined,
-      phone: formState.value.phone || undefined,
-      roles: formState.value.roles,
-    };
-    await updateUserApi(editingId.value, data);
-    message.success('更新成功');
+  try {
+    if (editingId.value) {
+      const data: UpdateUserDto = {
+        realName: formState.value.realName,
+        email: formState.value.email || undefined,
+        phone: formState.value.phone || undefined,
+        roles: formState.value.roles,
+        personaTypeId: formState.value.personaTypeId || undefined,
+      };
+      await updateUserApi(editingId.value, data);
+      message.success('更新成功');
+    }
+    else {
+      const data: CreateUserDto = {
+        username: formState.value.username,
+        password: formState.value.password,
+        realName: formState.value.realName,
+        email: formState.value.email || undefined,
+        phone: formState.value.phone || undefined,
+        roles: formState.value.roles,
+        personaTypeId: formState.value.personaTypeId || undefined,
+      };
+      await createUserApi(data);
+      message.success('创建成功');
+    }
+    formOpen.value = false;
+    await load();
+  } catch {
+    message.error('保存失败');
   }
-  else {
-    const data: CreateUserDto = {
-      username: formState.value.username,
-      password: formState.value.password,
-      realName: formState.value.realName,
-      email: formState.value.email || undefined,
-      phone: formState.value.phone || undefined,
-      roles: formState.value.roles,
-    };
-    await createUserApi(data);
-    message.success('创建成功');
-  }
-  formOpen.value = false;
-  await load();
 }
 
 async function handleRemove(id: string) {
-  await deleteUserApi(id);
-  message.success('删除成功');
-  await load();
+  try {
+    await deleteUserApi(id);
+    message.success('删除成功');
+    await load();
+  } catch {
+    message.error('删除失败');
+  }
+}
+
+async function handlePersonaSwitch(userId: string, personaTypeId: string) {
+  try {
+    await switchUserPersonaApi(userId, { personaTypeId });
+    message.success('身份切换成功');
+    await load();
+  } catch {
+    message.error('身份切换失败');
+  }
 }
 
 function getRoleLabel(role: string) {
   return roleOptions.find(r => r.value === role)?.label || role;
+}
+
+function getPersonaLabel(personaTypeId?: string) {
+  if (!personaTypeId) return '-';
+  const persona = personas.value.find(p => p.id === personaTypeId);
+  return persona ? `${persona.icon} ${persona.name}` : '-';
 }
 </script>
 
@@ -197,9 +247,21 @@ function getRoleLabel(role: string) {
               <div class="font-medium">{{ record.username }}</div>
             </template>
             <template v-else-if="column.key === 'roles'">
-              <Tag :color="text === 'super' ? 'purple' : text === 'admin' ? 'blue' : 'green'">
-                {{ getRoleLabel(text) }}
+              <Tag :color="record.roles === 'owner' ? 'purple' : record.roles === 'pro' ? 'blue' : 'green'">
+                {{ getRoleLabel(record.roles) }}
               </Tag>
+            </template>
+            <template v-else-if="column.key === 'persona'">
+              <Select
+                :value="record.currentPersonaTypeId"
+                placeholder="选择身份"
+                style="width: 140px"
+                @change="(val: string) => handlePersonaSwitch(record.id, val)"
+              >
+                <Select.Option v-for="p in personas" :key="p.id" :value="p.id">
+                  {{ p.icon }} {{ p.name }}
+                </Select.Option>
+              </Select>
             </template>
             <template v-else-if="column.key === 'status'">
               <Tag :color="text === 0 ? 'success' : text === 1 ? 'default' : text === 2 ? 'warning' : 'error'">
@@ -250,6 +312,13 @@ function getRoleLabel(role: string) {
             </Select.Option>
           </Select>
         </Form.Item>
+        <Form.Item label="身份">
+          <Select v-model:value="formState.personaTypeId" placeholder="选择身份" allow-clear style="width: 200px">
+            <Select.Option v-for="p in personas" :key="p.id" :value="p.id">
+              {{ p.icon }} {{ p.name }}
+            </Select.Option>
+          </Select>
+        </Form.Item>
         <Form.Item label="邮箱">
           <Input v-model:value="formState.email" placeholder="邮箱" />
         </Form.Item>
@@ -268,9 +337,12 @@ function getRoleLabel(role: string) {
           {{ selectedItem.realName }}
         </Descriptions.Item>
         <Descriptions.Item label="角色">
-          <Tag :color="selectedItem.roles === 'super' ? 'purple' : selectedItem.roles === 'admin' ? 'blue' : 'green'">
+          <Tag :color="selectedItem.roles === 'owner' ? 'purple' : selectedItem.roles === 'pro' ? 'blue' : 'green'">
             {{ getRoleLabel(selectedItem.roles) }}
           </Tag>
+        </Descriptions.Item>
+        <Descriptions.Item label="身份">
+          {{ getPersonaLabel(selectedItem.currentPersonaTypeId) }}
         </Descriptions.Item>
         <Descriptions.Item label="邮箱">
           {{ selectedItem.email || '-' }}

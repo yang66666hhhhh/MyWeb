@@ -17,6 +17,7 @@ export interface PageResult<T> {
   total: number;
   page: number;
   pageSize: number;
+  totalPages: number;
 }
 
 export interface UploadResult {

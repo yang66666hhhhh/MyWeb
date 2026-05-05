@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using WebApplication1.Shared.Common;
 using WebApplication1.Shared.Data;
 using WebApplication1.Features.Work.Dtos;
@@ -9,10 +10,12 @@ namespace WebApplication1.Features.Work.Services;
 public class WorkProjectService : IWorkProjectService
 {
     private readonly AppDbContext _context;
+    private readonly ILogger<WorkProjectService> _logger;
 
-    public WorkProjectService(AppDbContext context)
+    public WorkProjectService(AppDbContext context, ILogger<WorkProjectService> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<PageResult<WorkProjectDto>> GetPageAsync(WorkProjectQueryDto query, CancellationToken cancellationToken = default)

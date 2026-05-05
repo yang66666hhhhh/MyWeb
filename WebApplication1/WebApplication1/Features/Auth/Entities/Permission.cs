@@ -32,6 +32,8 @@ public class Role
     public string Permissions { get; set; } = string.Empty;
     public bool IsSystem { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
 }
 
 public class UserRole
@@ -44,14 +46,13 @@ public class UserRole
 
 public static class DefaultRoles
 {
-    public const string SuperAdmin = "super_admin";
-    public const string TenantAdmin = "tenant_admin";
-    public const string Manager = "manager";
-    public const string Employee = "employee";
+    public const string Owner = "owner";
+    public const string Pro = "pro";
+    public const string Member = "member";
 
     public static readonly Dictionary<string, string[]> RolePermissions = new()
     {
-        [SuperAdmin] = new[]
+        [Owner] = new[]
         {
             Permissions.ViewLogs, Permissions.CreateLogs, Permissions.EditLogs, Permissions.DeleteLogs,
             Permissions.ViewProjects, Permissions.CreateProjects, Permissions.EditProjects, Permissions.DeleteProjects,
@@ -59,21 +60,14 @@ public static class DefaultRoles
             Permissions.ManageTemplates, Permissions.ManageCategories, Permissions.ManageUsers, Permissions.ManageTenants,
             Permissions.ViewAdminPages
         },
-        [TenantAdmin] = new[]
+        [Pro] = new[]
         {
             Permissions.ViewLogs, Permissions.CreateLogs, Permissions.EditLogs, Permissions.DeleteLogs,
             Permissions.ViewProjects, Permissions.CreateProjects, Permissions.EditProjects, Permissions.DeleteProjects,
             Permissions.ViewTeamLogs, Permissions.ViewTeamStats,
-            Permissions.ManageTemplates, Permissions.ManageCategories, Permissions.ManageUsers,
-            Permissions.ViewAdminPages
+            Permissions.ManageTemplates, Permissions.ManageCategories,
         },
-        [Manager] = new[]
-        {
-            Permissions.ViewLogs, Permissions.CreateLogs, Permissions.EditLogs,
-            Permissions.ViewProjects, Permissions.CreateProjects,
-            Permissions.ViewTeamLogs, Permissions.ViewTeamStats,
-        },
-        [Employee] = new[]
+        [Member] = new[]
         {
             Permissions.ViewLogs, Permissions.CreateLogs,
             Permissions.ViewProjects,

@@ -11,9 +11,9 @@ namespace WebApplication1.Features.User;
 public class UserController(IAuthService authService) : ControllerBase
 {
     [HttpGet("info")]
-    public ActionResult<ApiResult<UserInfoDto>> GetUserInfo()
+    public async Task<ActionResult<ApiResult<UserInfoDto>>> GetUserInfo()
     {
-        var userInfo = authService.GetUserInfo(User);
+        var userInfo = await authService.GetUserInfoAsync(User);
         if (userInfo is null)
         {
             return Unauthorized(ApiResult<UserInfoDto>.Fail("用户信息不存在", StatusCodes.Status401Unauthorized));

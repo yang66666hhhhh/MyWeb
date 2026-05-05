@@ -104,22 +104,34 @@ async function checkIn(record: Record<string, any>) {
     message.info(`"${habit.name}" 今日已完成`);
     return;
   }
-  await checkInHabitApi(habit.id);
-  message.success(`"${habit.name}" 已打卡`);
-  await load();
+  try {
+    await checkInHabitApi(habit.id);
+    message.success(`"${habit.name}" 已打卡`);
+    await load();
+  } catch {
+    message.error('打卡失败');
+  }
 }
 
 async function toggleStatus(record: Record<string, any>) {
   const habit = record as Habit;
-  await updateHabitStatusApi(habit.id, habit.status === 1 ? 0 : 1);
-  message.success(`"${habit.name}" 状态已更新`);
-  await load();
+  try {
+    await updateHabitStatusApi(habit.id, habit.status === 1 ? 0 : 1);
+    message.success(`"${habit.name}" 状态已更新`);
+    await load();
+  } catch {
+    message.error('状态更新失败');
+  }
 }
 
 async function remove(id: string) {
-  await deleteHabitApi(id);
-  message.success('习惯已删除');
-  await load();
+  try {
+    await deleteHabitApi(id);
+    message.success('习惯已删除');
+    await load();
+  } catch {
+    message.error('删除失败');
+  }
 }
 
 function handleFormOpenChange(value: boolean) {

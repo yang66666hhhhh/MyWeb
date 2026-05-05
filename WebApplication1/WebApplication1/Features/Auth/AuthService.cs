@@ -1,6 +1,9 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using WebApplication1.Features.Auth.Entities;
 using WebApplication1.Shared.Data;
@@ -9,11 +12,12 @@ namespace WebApplication1.Features.Auth;
 
 public class AuthService(
     IConfiguration configuration,
-    AppDbContext context) : IAuthService
+    AppDbContext context,
+    ILogger<AuthService> logger) : IAuthService
 {
-    public string CreateAccessToken(string username)
+    public async Task<string> CreateAccessTokenAsync(string username)
     {
-        var user = context.Users.FirstOrDefault(x => x.Username == username);
+        var user = await context.Users.FirstOrDefaultAsync(x => x.Username == username);
         if (user == null)
         {
             throw new InvalidOperationException("User does not exist.");
@@ -25,7 +29,7 @@ public class AuthService(
             ?? throw new InvalidOperationException("Jwt:Issuer is not configured.");
         var jwtAudience = configuration["Jwt:Audience"]
             ?? throw new InvalidOperationException("Jwt:Audience is not configured.");
-        var expireMinutes = configuration.GetValue("Jwt:ExpireMinutes", 120);
+        var expireMinutes = configuration.GetValue("Jwt:ExpireMinutes", 15);
 
         var roles = user.Roles.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
@@ -55,19 +59,67 @@ public class AuthService(
         return tokenHandler.WriteToken(token);
     }
 
-    public IReadOnlyList<string> GetAccessCodes(ClaimsPrincipal principal)
+    public async Task<string> CreateRefreshTokenAsync(Guid userId, string? createdByIp = null)
+    {
+        var refreshToken = new RefreshToken
+        {
+            UserId = userId,
+            Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+            ExpiresAt = DateTime.UtcNow.AddDays(configuration.GetValue("Jwt:RefreshTokenExpireDays", 7)),
+            CreatedByIp = createdByIp
+        };
+
+        context.RefreshTokens.Add(refreshToken);
+        await context.SaveChangesAsync();
+
+        return refreshToken.Token;
+    }
+
+    public async Task<bool> ValidateRefreshTokenAsync(string token, Guid userId)
+    {
+        var refreshToken = await context.RefreshTokens.FirstOrDefaultAsync(x =>
+            x.Token == token && x.UserId == userId);
+
+        if (refreshToken == null)
+            return false;
+
+        if (refreshToken.IsRevoked)
+            return false;
+
+        if (refreshToken.ExpiresAt <= DateTime.UtcNow)
+            return false;
+
+        return true;
+    }
+
+    public async Task<bool> RevokeRefreshTokenAsync(string token, Guid userId)
+    {
+        var refreshToken = await context.RefreshTokens.FirstOrDefaultAsync(x =>
+            x.Token == token && x.UserId == userId);
+
+        if (refreshToken == null)
+            return false;
+
+        refreshToken.IsRevoked = true;
+        refreshToken.RevokedAt = DateTime.UtcNow;
+        await context.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<IReadOnlyList<string>> GetAccessCodesAsync(ClaimsPrincipal principal)
     {
         var username = principal.Identity?.Name;
         if (username is null) return [];
-        var user = context.Users.FirstOrDefault(x => x.Username == username);
+        var user = await context.Users.FirstOrDefaultAsync(x => x.Username == username);
         return user != null ? new[] { "dashboard", "growth" } : [];
     }
 
-    public UserInfoDto? GetUserInfo(ClaimsPrincipal principal)
+    public async Task<UserInfoDto?> GetUserInfoAsync(ClaimsPrincipal principal)
     {
         var username = principal.Identity?.Name;
         if (username is null) return null;
-        var user = context.Users.FirstOrDefault(x => x.Username == username);
+        var user = await context.Users.FirstOrDefaultAsync(x => x.Username == username);
         if (user == null) return null;
 
         var roles = user.Roles.Split(',', StringSplitOptions.RemoveEmptyEntries);
@@ -83,9 +135,9 @@ public class AuthService(
         };
     }
 
-    public UserInfoDto? ValidateUser(string username, string password)
+    public async Task<UserInfoDto?> ValidateUserAsync(string username, string password)
     {
-        var user = context.Users.FirstOrDefault(x => x.Username == username);
+        var user = await context.Users.FirstOrDefaultAsync(x => x.Username == username);
         if (user == null) return null;
 
         if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))

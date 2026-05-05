@@ -1,22 +1,51 @@
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using WebApplication1.Shared.Data;
+using WebApplication1.Shared.Middleware;
 using WebApplication1.Features.Auth;
+using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Features.DailyPlans;
 using WebApplication1.Features.Work.Services;
 using WebApplication1.Features.Work.Services.Interfaces;
 using WebApplication1.Features.Growth.Services;
 using WebApplication1.Features.Growth.Services.Interfaces;
+using WebApplication1.Features.Ai.Services;
+using WebApplication1.Features.Admin.Services;
+using WebApplication1.Features.Auth.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 const string CorsPolicyName = "VueVbenAdmin";
 
-builder.Services.AddControllers().AddJsonOptions(options =>
+builder.Services.AddControllers(options =>
+{
+}).ConfigureApiBehaviorOptions(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errors = context.ModelState
+            .Where(e => e.Value?.Errors.Count > 0)
+            .SelectMany(e => e.Value!.Errors)
+            .Select(e => e.ErrorMessage)
+            .ToArray();
+
+        var result = new WebApplication1.Shared.Common.ApiResult
+        {
+            Code = 400,
+            Message = string.Join("; ", errors)
+        };
+
+        return new Microsoft.AspNetCore.Mvc.ObjectResult(result)
+        {
+            StatusCode = StatusCodes.Status400BadRequest
+        };
+    };
+}).AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
 });
@@ -51,12 +80,19 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(CorsPolicyName, policy =>
     {
+        var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
+            ?? ["http://localhost:5666", "http://localhost:5173"];
         policy
-            .WithOrigins("http://localhost:5666", "http://localhost:5173")
+            .WithOrigins(origins)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
     });
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>(options =>
+{
+    options.Limits.MaxRequestBodySize = 10 * 1024 * 1024;
 });
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -68,6 +104,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"]
     ?? throw new InvalidOperationException("Jwt:SecretKey is not configured.");
+if (string.IsNullOrWhiteSpace(jwtSecretKey) || jwtSecretKey.Length < 32)
+{
+    throw new InvalidOperationException("Jwt:SecretKey must be at least 32 characters long.");
+}
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey));
@@ -107,6 +147,18 @@ builder.Services.AddScoped<IPostgraduateTaskService, PostgraduateTaskService>();
 builder.Services.AddScoped<IExamMistakeService, ExamMistakeService>();
 builder.Services.AddScoped<IExamMaterialService, ExamMaterialService>();
 builder.Services.AddScoped<ITemplateService, TemplateService>();
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IAiService, AiService>();
+builder.Services.AddScoped<IPersonaService, PersonaService>();
+builder.Services.AddScoped<RoleMenuService>();
+builder.Services.AddScoped<IFeatureService, FeatureService>();
+
+builder.Services.AddHealthChecks()
+    .AddMySql(
+        builder.Configuration.GetConnectionString("DefaultConnection") ?? "",
+        name: "mysql",
+        timeout: TimeSpan.FromSeconds(3),
+        tags: ["db", "mysql"]);
 
 var app = builder.Build();
 
@@ -119,20 +171,66 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseExceptionHandler(appError =>
+{
+    appError.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+
+        var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogError(exception, "Unhandled exception occurred");
+
+        var result = new WebApplication1.Shared.Common.ApiResult
+        {
+            Code = 500,
+            Message = app.Environment.IsDevelopment()
+                ? (exception?.Message ?? "Internal server error")
+                : "Internal server error"
+        };
+
+        await context.Response.WriteAsJsonAsync(result);
+    });
+});
+
 app.UseHttpsRedirection();
 
 app.UseCors(CorsPolicyName);
+
+app.UseMiddleware<RateLimitingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
+app.MapHealthChecks("/healthz", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var result = new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                duration = e.Value.Duration.TotalMilliseconds,
+                description = e.Value.Description
+            })
+        };
+        await context.Response.WriteAsJsonAsync(result);
+    }
+});
+
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await DbSeeder.SeedAsync(context);
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    await DbSeeder.SeedAsync(context, logger);
 }
 
 app.Run();

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using WebApplication1.Shared.Common;
 
 namespace WebApplication1.Features.Work.Dtos;
@@ -93,13 +94,28 @@ public class WorkLogQueryDto : PageQueryDto
 
 public class CreateWorkLogDto
 {
+    [Required(ErrorMessage = "工作日期不能为空")]
     public DateOnly WorkDate { get; set; }
+
+    [Required(ErrorMessage = "项目不能为空")]
     public Guid ProjectId { get; set; }
+
+    [Required(ErrorMessage = "标题不能为空")]
+    [MaxLength(200, ErrorMessage = "标题不能超过200个字符")]
     public string Title { get; set; } = string.Empty;
+
+    [MaxLength(4000, ErrorMessage = "原始内容不能超过4000个字符")]
     public string? OriginalContent { get; set; }
+
+    [MaxLength(1000, ErrorMessage = "摘要不能超过1000个字符")]
     public string? Summary { get; set; }
+
+    [Range(0, 24, ErrorMessage = "工时必须在0-24之间")]
     public decimal TotalHours { get; set; }
+
+    [MaxLength(1000, ErrorMessage = "备注不能超过1000个字符")]
     public string? Remark { get; set; }
+
     public Guid? TemplateId { get; set; }
     public List<DynamicFieldInput> DynamicValues { get; set; } = new();
 }
@@ -108,12 +124,24 @@ public class UpdateWorkLogDto
 {
     public DateOnly? WorkDate { get; set; }
     public Guid? ProjectId { get; set; }
+
+    [MaxLength(200, ErrorMessage = "标题不能超过200个字符")]
     public string? Title { get; set; }
+
+    [MaxLength(4000, ErrorMessage = "原始内容不能超过4000个字符")]
     public string? OriginalContent { get; set; }
+
+    [MaxLength(1000, ErrorMessage = "摘要不能超过1000个字符")]
     public string? Summary { get; set; }
+
+    [Range(0, 24, ErrorMessage = "工时必须在0-24之间")]
     public decimal? TotalHours { get; set; }
+
     public int? Status { get; set; }
+
+    [MaxLength(1000, ErrorMessage = "备注不能超过1000个字符")]
     public string? Remark { get; set; }
+
     public Guid? TemplateId { get; set; }
     public List<DynamicFieldInput> DynamicValues { get; set; } = new();
 }

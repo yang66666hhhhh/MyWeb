@@ -13,16 +13,16 @@ const profileBaseSettingRef = ref();
 
 const MOCK_ROLES_OPTIONS: BasicOption[] = [
   {
-    label: '管理员',
-    value: 'super',
+    label: 'Owner',
+    value: 'owner',
   },
   {
-    label: '用户',
-    value: 'user',
+    label: 'Pro',
+    value: 'pro',
   },
   {
-    label: '测试',
-    value: 'test',
+    label: 'Member',
+    value: 'member',
   },
 ];
 

@@ -12,10 +12,12 @@ import { defineStore } from 'pinia';
 
 import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
 import { $t } from '#/locales';
+import { usePersonaStore } from './persona';
 
 export const useAuthStore = defineStore('auth', () => {
   const accessStore = useAccessStore();
   const userStore = useUserStore();
+  const personaStore = usePersonaStore();
   const router = useRouter();
 
   const loginLoading = ref(false);
@@ -50,6 +52,9 @@ export const useAuthStore = defineStore('auth', () => {
         userStore.setUserInfo(userInfo);
         accessStore.setAccessCodes(accessCodes);
 
+        // 加载 Persona 数据
+        await personaStore.loadPersonaData();
+
         if (accessStore.loginExpired) {
           accessStore.setLoginExpired(false);
         } else {
@@ -61,8 +66,11 @@ export const useAuthStore = defineStore('auth', () => {
         }
 
         if (userInfo?.realName) {
+          const personaName = personaStore.personaDisplay?.name;
           notification.success({
-            description: `${$t('authentication.loginSuccessDesc')}:${userInfo?.realName}`,
+            description: personaName
+              ? `${$t('authentication.loginSuccessDesc')}:${userInfo?.realName} (${personaName})`
+              : `${$t('authentication.loginSuccessDesc')}:${userInfo?.realName}`,
             duration: 3,
             message: $t('authentication.loginSuccess'),
           });
@@ -84,6 +92,7 @@ export const useAuthStore = defineStore('auth', () => {
       // 不做任何处理
     }
     resetAllStores();
+    personaStore.$reset();
     accessStore.setLoginExpired(false);
 
     // 回登录页带上当前路由地址

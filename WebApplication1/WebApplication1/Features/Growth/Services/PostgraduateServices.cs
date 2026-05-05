@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using WebApplication1.Features.Growth.Dtos;
 using WebApplication1.Features.Growth.Entities;
 using WebApplication1.Features.Growth.Services.Interfaces;
@@ -7,7 +8,7 @@ using WebApplication1.Shared.Data;
 
 namespace WebApplication1.Features.Growth.Services;
 
-public class PostgraduateTaskService(AppDbContext dbContext) : IPostgraduateTaskService
+public class PostgraduateTaskService(AppDbContext dbContext, ILogger<PostgraduateTaskService> logger) : IPostgraduateTaskService
 {
     public async Task<PageResult<PostgraduateTaskDto>> GetPageAsync(PostgraduateTaskQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
     {
@@ -113,7 +114,7 @@ public class PostgraduateTaskService(AppDbContext dbContext) : IPostgraduateTask
     };
 }
 
-public class ExamMistakeService(AppDbContext dbContext) : IExamMistakeService
+public class ExamMistakeService(AppDbContext dbContext, ILogger<ExamMistakeService> logger) : IExamMistakeService
 {
     public async Task<PageResult<ExamMistakeDto>> GetPageAsync(ExamMistakeQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
     {
@@ -219,7 +220,7 @@ public class ExamMistakeService(AppDbContext dbContext) : IExamMistakeService
     };
 }
 
-public class ExamMaterialService(AppDbContext dbContext) : IExamMaterialService
+public class ExamMaterialService(AppDbContext dbContext, ILogger<ExamMaterialService> logger) : IExamMaterialService
 {
     public async Task<PageResult<ExamMaterialDto>> GetPageAsync(ExamMaterialQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
     {

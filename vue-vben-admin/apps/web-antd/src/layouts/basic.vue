@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { NotificationItem } from '@vben/layouts';
 
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
@@ -19,7 +19,7 @@ import { useAccessStore, useUserStore } from '@vben/stores';
 import { openWindow } from '@vben/utils';
 
 import { $t } from '#/locales';
-import { useAuthStore } from '#/store';
+import { useAuthStore, usePersonaStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
 
 const notifications = ref<NotificationItem[]>([
@@ -78,6 +78,7 @@ const notifications = ref<NotificationItem[]>([
 const router = useRouter();
 const userStore = useUserStore();
 const authStore = useAuthStore();
+const personaStore = usePersonaStore();
 const accessStore = useAccessStore();
 const { destroyWatermark, updateWatermark } = useWatermark();
 const showDot = computed(() =>
@@ -125,6 +126,19 @@ const avatar = computed(() => {
   return userStore.userInfo?.avatar ?? preferences.app.defaultAvatar;
 });
 
+const personaDisplay = computed(() => personaStore.personaDisplay);
+
+const tagText = computed(() => {
+  const role = userStore.userInfo?.roles?.[0];
+  if (!role) return '';
+  const roleMap: Record<string, string> = {
+    owner: 'Owner',
+    pro: 'Pro',
+    member: 'Member',
+  };
+  return roleMap[role.toLowerCase()] || role.toUpperCase();
+});
+
 async function handleLogout() {
   await authStore.logout(false);
 }
@@ -151,7 +165,6 @@ function handleMakeAll() {
 const viewAll = () => {};
 
 const handleClick = (item: NotificationItem) => {
-  // 如果通知项有链接，点击时跳转
   if (item.link) {
     navigateTo(item.link, item.query, item.state);
   }
@@ -163,10 +176,8 @@ function navigateTo(
   state?: Record<string, any>,
 ) {
   if (link.startsWith('http://') || link.startsWith('https://')) {
-    // 外部链接，在新标签页打开
     window.open(link, '_blank');
   } else {
-    // 内部路由链接，支持 query 参数和 state
     router.push({
       path: link,
       query: query || {},
@@ -174,6 +185,12 @@ function navigateTo(
     });
   }
 }
+
+onMounted(() => {
+  if (!personaStore.initialized) {
+    personaStore.loadPersonaData();
+  }
+});
 
 watch(
   () => ({
@@ -200,14 +217,24 @@ watch(
 <template>
   <BasicLayout @clear-preferences-and-logout="handleLogout">
     <template #user-dropdown>
-      <UserDropdown
-        :avatar
-        :menus
-        :text="userStore.userInfo?.realName"
-        description="ann.vben@gmail.com"
-        tag-text="Pro"
-        @logout="handleLogout"
-      />
+      <div class="flex items-center gap-2">
+        <!-- 身份标识 -->
+        <div
+          v-if="personaDisplay"
+          class="flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+        >
+          <span>{{ personaDisplay.icon }}</span>
+          <span>{{ personaDisplay.name }}</span>
+        </div>
+        <UserDropdown
+          :avatar
+          :menus
+          :text="userStore.userInfo?.realName"
+          :description="userStore.userInfo?.username"
+          :tag-text="tagText"
+          @logout="handleLogout"
+        />
+      </div>
     </template>
     <template #notification>
       <Notification

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using WebApplication1.Shared.Common;
 using WebApplication1.Shared.Data;
 using WebApplication1.Shared.Enums;
@@ -13,15 +14,17 @@ namespace WebApplication1.Features.Work.Services;
 public class WorkImportService : IWorkImportService
 {
     private readonly AppDbContext _context;
+    private readonly ILogger<WorkImportService> _logger;
 
-    public WorkImportService(AppDbContext context)
+    public WorkImportService(AppDbContext context, ILogger<WorkImportService> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<PageResult<WorkImportBatchDto>> GetBatchPageAsync(WorkImportBatchQueryDto query, CancellationToken cancellationToken = default)
     {
-        var q = _context.WorkImportBatches.AsQueryable();
+        var q = _context.WorkImportBatches.AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(query.Keyword))
             q = q.Where(x => x.FileName.Contains(query.Keyword));
@@ -71,7 +74,7 @@ public class WorkImportService : IWorkImportService
         var worksheet = workbook.Worksheets.First();
         var rows = worksheet.RangeUsed()?.RowsUsed().Skip(1) ?? Enumerable.Empty<IXLRangeRow>();
 
-        var projects = await _context.WorkProjects.ToListAsync(cancellationToken);
+        var projectNames = await _context.WorkProjects.Select(p => p.ProjectName).ToHashSetAsync(cancellationToken);
 
         foreach (var row in rows)
         {
@@ -106,7 +109,7 @@ public class WorkImportService : IWorkImportService
                 validationErrors.Add("项目名称不能为空");
                 preview.ValidationStatus = WorkImportValidationStatus.Error;
             }
-            else if (!projects.Any(p => p.ProjectName == projectName))
+            else if (!projectNames.Contains(projectName))
             {
                 validationErrors.Add("项目不存在");
                 preview.ValidationStatus = WorkImportValidationStatus.Warning;
@@ -156,7 +159,8 @@ public class WorkImportService : IWorkImportService
 
         try
         {
-            var projects = await _context.WorkProjects.ToListAsync(cancellationToken);
+            var projectDict = await _context.WorkProjects.AsNoTracking()
+                .ToDictionaryAsync(p => p.ProjectName, cancellationToken);
 
             var workLogs = new List<WorkLog>();
 
@@ -171,7 +175,7 @@ public class WorkImportService : IWorkImportService
                     continue;
                 }
 
-                var project = projects.FirstOrDefault(p => p.ProjectName == item.ProjectName);
+                projectDict.TryGetValue(item.ProjectName ?? "", out var project);
                 var workDate = DateOnly.TryParse(item.WorkDate, out var d) ? d : DateOnly.FromDateTime(DateTime.Now);
 
                 workLogs.Add(new WorkLog
@@ -253,7 +257,7 @@ public class WorkImportService : IWorkImportService
         var worksheet = workbook.Worksheets.First();
         var rows = worksheet.RangeUsed()?.RowsUsed().Skip(1) ?? Enumerable.Empty<IXLRangeRow>();
 
-        var existingProjects = await _context.WorkProjects.ToListAsync(cancellationToken);
+        var existingProjectNames = await _context.WorkProjects.Select(p => p.ProjectName).ToHashSetAsync(cancellationToken);
 
         foreach (var row in rows)
         {
@@ -282,7 +286,7 @@ public class WorkImportService : IWorkImportService
                 validationErrors.Add("项目名称不能为空");
                 preview.ValidationStatus = WorkImportValidationStatus.Error;
             }
-            else if (existingProjects.Any(p => p.ProjectName == projectName))
+            else if (existingProjectNames.Contains(projectName))
             {
                 validationErrors.Add("项目已存在");
                 preview.ValidationStatus = WorkImportValidationStatus.Warning;
@@ -321,7 +325,7 @@ public class WorkImportService : IWorkImportService
 
         try
         {
-            var existingProjects = await _context.WorkProjects.ToListAsync();
+            var existingProjectNames = await _context.WorkProjects.Select(p => p.ProjectName).ToHashSetAsync();
             var newProjects = new List<WorkProject>();
 
             foreach (var item in input.Items)
@@ -422,8 +426,8 @@ public class WorkImportService : IWorkImportService
         var worksheet = workbook.Worksheets.First();
         var rows = worksheet.RangeUsed()?.RowsUsed().Skip(1) ?? Enumerable.Empty<IXLRangeRow>();
 
-        var existingDevices = await _context.WorkDevices.ToListAsync(cancellationToken);
-        var projects = await _context.WorkProjects.ToListAsync(cancellationToken);
+        var existingDeviceNames = await _context.WorkDevices.Select(d => d.DeviceName).ToHashSetAsync(cancellationToken);
+        var projectNames = await _context.WorkProjects.Select(p => p.ProjectName).ToHashSetAsync(cancellationToken);
 
         foreach (var row in rows)
         {
@@ -452,14 +456,14 @@ public class WorkImportService : IWorkImportService
                 validationErrors.Add("设备名称不能为空");
                 preview.ValidationStatus = WorkImportValidationStatus.Error;
             }
-            else if (existingDevices.Any(d => d.DeviceName == deviceName))
+            else if (existingDeviceNames.Contains(deviceName))
             {
                 validationErrors.Add("设备已存在");
                 preview.ValidationStatus = WorkImportValidationStatus.Warning;
                 preview.DuplicateStatus = 1;
             }
 
-            if (!string.IsNullOrWhiteSpace(projectName) && !projects.Any(p => p.ProjectName == projectName))
+            if (!string.IsNullOrWhiteSpace(projectName) && !projectNames.Contains(projectName))
             {
                 validationErrors.Add("项目不存在");
                 preview.ValidationStatus = WorkImportValidationStatus.Warning;
@@ -497,7 +501,8 @@ public class WorkImportService : IWorkImportService
 
         try
         {
-            var projects = await _context.WorkProjects.ToListAsync();
+            var projectDict = await _context.WorkProjects.AsNoTracking()
+                .ToDictionaryAsync(p => p.ProjectName, cancellationToken);
             var newDevices = new List<WorkDevice>();
 
             foreach (var item in input.Items)
@@ -522,7 +527,7 @@ public class WorkImportService : IWorkImportService
                     _ => WorkDeviceType.Equipment
                 };
 
-                var project = projects.FirstOrDefault(p => p.ProjectName == item.Remark);
+                projectDict.TryGetValue(item.Remark ?? "", out var project);
 
                 newDevices.Add(new WorkDevice
                 {
@@ -599,7 +604,7 @@ public class WorkImportService : IWorkImportService
         var worksheet = workbook.Worksheets.First();
         var rows = worksheet.RangeUsed()?.RowsUsed().Skip(1) ?? Enumerable.Empty<IXLRangeRow>();
 
-        var existingTypes = await _context.WorkTaskTypes.ToListAsync(cancellationToken);
+        var existingTypeNames = await _context.WorkTaskTypes.Select(t => t.TypeName).ToHashSetAsync(cancellationToken);
 
         foreach (var row in rows)
         {
@@ -624,7 +629,7 @@ public class WorkImportService : IWorkImportService
                 validationErrors.Add("任务类型名称不能为空");
                 preview.ValidationStatus = WorkImportValidationStatus.Error;
             }
-            else if (existingTypes.Any(t => t.TypeName == typeName))
+            else if (existingTypeNames.Contains(typeName))
             {
                 validationErrors.Add("任务类型已存在");
                 preview.ValidationStatus = WorkImportValidationStatus.Warning;

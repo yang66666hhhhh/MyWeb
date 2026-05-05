@@ -40,15 +40,6 @@ const routes: RouteRecordRaw[] = [
         path: '/growth/habits',
       },
       {
-        component: () => import('#/views/growth/work-log/index.vue'),
-        meta: {
-          icon: 'lucide:book-open-check',
-          title: '工作日志',
-        },
-        name: 'GrowthWorkLog',
-        path: '/growth/work-log',
-      },
-      {
         component: () => import('#/views/growth/knowledge-base/index.vue'),
         meta: {
           icon: 'lucide:library',
@@ -58,47 +49,67 @@ const routes: RouteRecordRaw[] = [
         path: '/growth/knowledge-base',
       },
       {
+        component: () => import('#/views/growth/skills/index.vue'),
         meta: {
-          icon: 'lucide:graduation-cap',
-          title: '备考中心',
+          icon: 'lucide:award',
+          title: '技能管理',
         },
-        name: 'GrowthPostgraduate',
-        path: '/growth/postgraduate',
-        children: [
-          {
-            component: () => import('#/views/growth/postgraduate/index.vue'),
-            meta: { icon: 'lucide:home', title: '备考首页' },
-            name: 'GrowthPostgraduateHome',
-            path: '/growth/postgraduate',
-          },
-          {
-            component: () => import('#/views/growth/postgraduate/materials/index.vue'),
-            meta: { icon: 'lucide:file-text', title: '备考资料' },
-            name: 'GrowthPostgraduateMaterials',
-            path: '/growth/postgraduate/materials',
-          },
-          {
-            component: () => import('#/views/growth/postgraduate/mistakes/index.vue'),
-            meta: { icon: 'lucide:x-circle', title: '错题本' },
-            name: 'GrowthPostgraduateMistakes',
-            path: '/growth/postgraduate/mistakes',
-          },
-          {
-            component: () => import('#/views/growth/postgraduate/study-plans/index.vue'),
-            meta: { icon: 'lucide:list-todo', title: '学习计划' },
-            name: 'GrowthPostgraduateStudyPlans',
-            path: '/growth/postgraduate/study-plans',
-          },
-        ],
+        name: 'GrowthSkills',
+        path: '/growth/skills',
       },
       {
-        component: () => import('#/views/growth/project/index.vue'),
+        component: () => import('#/views/growth/reading-list/index.vue'),
         meta: {
-          icon: 'lucide:kanban',
-          title: '项目管理',
+          icon: 'lucide:book-open',
+          title: '阅读清单',
         },
-        name: 'GrowthProjects',
-        path: '/growth/projects',
+        name: 'GrowthReadingList',
+        path: '/growth/reading-list',
+      },
+      {
+        component: () => import('#/views/growth/mood-tracker/index.vue'),
+        meta: {
+          icon: 'lucide:smile',
+          title: '心情追踪',
+        },
+        name: 'GrowthMoodTracker',
+        path: '/growth/mood-tracker',
+      },
+      {
+        component: () => import('#/views/growth/fitness/index.vue'),
+        meta: {
+          icon: 'lucide:dumbbell',
+          title: '健身管理',
+        },
+        name: 'GrowthFitness',
+        path: '/growth/fitness',
+      },
+      {
+        component: () => import('#/views/growth/focus-timer/index.vue'),
+        meta: {
+          icon: 'lucide:timer',
+          title: '专注计时',
+        },
+        name: 'GrowthFocusTimer',
+        path: '/growth/focus-timer',
+      },
+      {
+        component: () => import('#/views/growth/monthly-review/index.vue'),
+        meta: {
+          icon: 'lucide:calendar',
+          title: '月度复盘',
+        },
+        name: 'GrowthMonthlyReview',
+        path: '/growth/monthly-review',
+      },
+      {
+        component: () => import('#/views/growth/year-plans/index.vue'),
+        meta: {
+          icon: 'lucide:flag',
+          title: '年度计划',
+        },
+        name: 'GrowthYearPlans',
+        path: '/growth/year-plans',
       },
     ],
   },

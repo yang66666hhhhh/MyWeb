@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
-import { DatePicker, Form, Input, InputNumber, Modal } from 'ant-design-vue';
+import { DatePicker, Form, Input, InputNumber, Modal, message } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
-import { createWorkLogApi, getWorkLogApi, updateWorkLogApi } from '#/api/growth/work-log';
-import type { WorkLog } from '#/api/growth/work-log';
+import { workLogApi } from '#/api/work/workLog';
+import type { WorkLog } from '#/api/work/workLog';
 import type { DynamicValue } from '#/components/DynamicForm';
 
 const props = defineProps<{
@@ -48,7 +48,7 @@ async function loadDetail() {
   if (!props.id) return;
   loading.value = true;
   try {
-    const result = await getWorkLogApi(props.id);
+    const result = await workLogApi.getById(props.id);
     if (result) {
       Object.assign(formState, {
         workDate: result.workDate || dayjs().format('YYYY-MM-DD'),
@@ -63,6 +63,8 @@ async function loadDetail() {
         dynamicValues.value = result.dynamicValues;
       }
     }
+  } catch {
+    message.error('加载详情失败');
   } finally {
     loading.value = false;
   }
@@ -85,9 +87,9 @@ async function submit() {
       dynamicValues: dynamicValues.value,
     };
     if (props.id) {
-      await updateWorkLogApi(props.id, data);
+      await workLogApi.update(props.id, data);
     } else {
-      await createWorkLogApi(data);
+      await workLogApi.create(data);
     }
     emit('update:open', false);
     emit('success');

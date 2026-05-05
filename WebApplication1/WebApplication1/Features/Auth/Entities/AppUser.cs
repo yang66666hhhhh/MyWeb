@@ -24,7 +24,7 @@ public class AppUser : EntityBase
 
     public string? LastLoginIp { get; set; }
 
-    public string Roles { get; set; } = "user";
+    public string Roles { get; set; } = "member";
 
     public Guid? UserTypeId { get; set; }
 
@@ -33,6 +33,7 @@ public class AppUser : EntityBase
     public Tenant? Tenant { get; set; }
 
     public ICollection<UserTag> UserTags { get; set; } = new List<UserTag>();
+    public ICollection<UserPersona> UserPersonas { get; set; } = new List<UserPersona>();
 }
 
 public enum AppUserStatus

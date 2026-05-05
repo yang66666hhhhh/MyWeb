@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Features.Growth.Dtos;
@@ -9,32 +8,18 @@ namespace WebApplication1.Features.Growth.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/postgraduate")]
+[Route("api/growth/postgraduate")]
 public class PostgraduateController(
     IPostgraduateTaskService taskService,
     IExamMistakeService mistakeService,
-    IExamMaterialService materialService) : ControllerBase
+    IExamMaterialService materialService) : BaseApiController
 {
-    private Guid? GetUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
-    }
-
-    private bool IsAdmin()
-    {
-        return User.Claims
-            .Where(c => c.Type == ClaimTypes.Role)
-            .Any(c => c.Value.Equals("admin", StringComparison.OrdinalIgnoreCase) ||
-                       c.Value.Equals("super", StringComparison.OrdinalIgnoreCase));
-    }
-
     [HttpGet("tasks")]
     public async Task<ActionResult<ApiResult<PageResult<PostgraduateTaskDto>>>> GetTasks(
         [FromQuery] PostgraduateTaskQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = IsAdmin() ? null : GetUserId();
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
         var result = await taskService.GetPageAsync(query, userId, cancellationToken);
         return Ok(ApiResult<PageResult<PostgraduateTaskDto>>.Success(result));
     }
@@ -51,7 +36,7 @@ public class PostgraduateController(
     [HttpGet("dashboard")]
     public async Task<ActionResult<ApiResult<ExamDashboardDto>>> GetDashboard(CancellationToken cancellationToken)
     {
-        var userId = IsAdmin() ? null : GetUserId();
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var weekStart = today.AddDays(-(int)today.DayOfWeek);
@@ -97,7 +82,7 @@ public class PostgraduateController(
         [FromBody] CreatePostgraduateTaskDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetUserId();
+        var userId = GetCurrentUserId();
         if (!userId.HasValue)
             return Unauthorized(ApiResult.Fail("无法获取用户信息"));
 
@@ -131,7 +116,7 @@ public class PostgraduateController(
         [FromQuery] ExamMistakeQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = IsAdmin() ? null : GetUserId();
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
         var result = await mistakeService.GetPageAsync(query, userId, cancellationToken);
         return Ok(ApiResult<PageResult<ExamMistakeDto>>.Success(result));
     }
@@ -150,7 +135,7 @@ public class PostgraduateController(
         [FromBody] CreateExamMistakeDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetUserId();
+        var userId = GetCurrentUserId();
         if (!userId.HasValue)
             return Unauthorized(ApiResult.Fail("无法获取用户信息"));
 
@@ -184,7 +169,7 @@ public class PostgraduateController(
         [FromQuery] ExamMaterialQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = IsAdmin() ? null : GetUserId();
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
         var result = await materialService.GetPageAsync(query, userId, cancellationToken);
         return Ok(ApiResult<PageResult<ExamMaterialDto>>.Success(result));
     }
@@ -203,7 +188,7 @@ public class PostgraduateController(
         [FromBody] CreateExamMaterialDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetUserId();
+        var userId = GetCurrentUserId();
         if (!userId.HasValue)
             return Unauthorized(ApiResult.Fail("无法获取用户信息"));
 

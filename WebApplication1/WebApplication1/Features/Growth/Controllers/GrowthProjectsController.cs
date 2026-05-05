@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Features.Growth.Dtos;
@@ -9,29 +8,15 @@ namespace WebApplication1.Features.Growth.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/projects")]
-public class GrowthProjectsController(IGrowthProjectService projectService) : ControllerBase
+[Route("api/growth/projects")]
+public class GrowthProjectsController(IGrowthProjectService projectService) : BaseApiController
 {
-    private Guid? GetUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
-    }
-
-    private bool IsAdmin()
-    {
-        return User.Claims
-            .Where(c => c.Type == ClaimTypes.Role)
-            .Any(c => c.Value.Equals("admin", StringComparison.OrdinalIgnoreCase) ||
-                       c.Value.Equals("super", StringComparison.OrdinalIgnoreCase));
-    }
-
     [HttpGet]
     public async Task<ActionResult<ApiResult<PageResult<GrowthProjectDto>>>> GetPage(
         [FromQuery] GrowthProjectQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = IsAdmin() ? null : GetUserId();
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
         var result = await projectService.GetPageAsync(query, userId, cancellationToken);
         return Ok(ApiResult<PageResult<GrowthProjectDto>>.Success(result));
     }
@@ -43,8 +28,8 @@ public class GrowthProjectsController(IGrowthProjectService projectService) : Co
         if (result is null)
             return NotFound(ApiResult<GrowthProjectDto>.Fail("项目不存在", StatusCodes.Status404NotFound));
 
-        var currentUserId = GetUserId();
-        if (!IsAdmin() && result.UserId != currentUserId)
+        var currentUserId = GetCurrentUserId();
+        if (!IsProOrAbove() && result.UserId != currentUserId)
             return NotFound(ApiResult<GrowthProjectDto>.Fail("项目不存在", StatusCodes.Status404NotFound));
 
         return Ok(ApiResult<GrowthProjectDto>.Success(result));
@@ -55,7 +40,7 @@ public class GrowthProjectsController(IGrowthProjectService projectService) : Co
         [FromBody] CreateGrowthProjectDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetUserId();
+        var userId = GetCurrentUserId();
         if (!userId.HasValue)
             return Unauthorized(ApiResult.Fail("无法获取用户信息"));
 
@@ -73,8 +58,8 @@ public class GrowthProjectsController(IGrowthProjectService projectService) : Co
         if (existing is null)
             return NotFound(ApiResult<GrowthProjectDto>.Fail("项目不存在", StatusCodes.Status404NotFound));
 
-        var currentUserId = GetUserId();
-        if (!IsAdmin() && existing.UserId != currentUserId)
+        var currentUserId = GetCurrentUserId();
+        if (!IsProOrAbove() && existing.UserId != currentUserId)
             return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改此项目"));
 
         var result = await projectService.UpdateAsync(id, input, cancellationToken);
@@ -88,8 +73,8 @@ public class GrowthProjectsController(IGrowthProjectService projectService) : Co
         if (existing is null)
             return NotFound(ApiResult.Fail("项目不存在"));
 
-        var currentUserId = GetUserId();
-        if (!IsAdmin() && existing.UserId != currentUserId)
+        var currentUserId = GetCurrentUserId();
+        if (!IsProOrAbove() && existing.UserId != currentUserId)
             return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限删除此项目"));
 
         var deleted = await projectService.DeleteAsync(id, cancellationToken);

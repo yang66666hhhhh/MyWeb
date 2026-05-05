@@ -10,13 +10,13 @@ namespace WebApplication1.Features.Auth.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/users")]
-[Authorize(Roles = "admin,super")]
+[Authorize(Roles = "pro,owner")]
 public class UsersController(IUserService userService) : ControllerBase
 {
-    private bool IsSuperAdmin() =>
+    private bool IsOwner() =>
         User.Claims
             .Where(c => c.Type == ClaimTypes.Role)
-            .Any(c => c.Value.Equals("super", StringComparison.OrdinalIgnoreCase));
+            .Any(c => c.Value.Equals("owner", StringComparison.OrdinalIgnoreCase));
 
     [HttpGet]
     public async Task<ActionResult<ApiResult<PageResult<UserDto>>>> GetPage(
@@ -41,7 +41,7 @@ public class UsersController(IUserService userService) : ControllerBase
         [FromBody] CreateUserDto input,
         CancellationToken cancellationToken)
     {
-        if (input.Roles?.Contains("super", StringComparison.OrdinalIgnoreCase) == true && !IsSuperAdmin())
+        if (input.Roles?.Contains("owner", StringComparison.OrdinalIgnoreCase) == true && !IsOwner())
         {
             return Forbid();
         }
@@ -59,12 +59,12 @@ public class UsersController(IUserService userService) : ControllerBase
         if (existing == null)
             return NotFound(ApiResult<UserDto>.Fail("用户不存在", StatusCodes.Status404NotFound));
 
-        if (existing.Roles.Contains("super", StringComparison.OrdinalIgnoreCase) && !IsSuperAdmin())
+        if (existing.Roles.Contains("owner", StringComparison.OrdinalIgnoreCase) && !IsOwner())
         {
             return Forbid();
         }
 
-        if (input.Roles?.Contains("super", StringComparison.OrdinalIgnoreCase) == true && !IsSuperAdmin())
+        if (input.Roles?.Contains("owner", StringComparison.OrdinalIgnoreCase) == true && !IsOwner())
         {
             return Forbid();
         }
@@ -82,9 +82,9 @@ public class UsersController(IUserService userService) : ControllerBase
         if (existing == null)
             return NotFound(ApiResult.Fail("用户不存在", StatusCodes.Status404NotFound));
 
-        if (existing.Roles.Contains("super", StringComparison.OrdinalIgnoreCase))
+        if (existing.Roles.Contains("owner", StringComparison.OrdinalIgnoreCase))
         {
-            return BadRequest(ApiResult.Fail("无法删除超级管理员账号"));
+            return BadRequest(ApiResult.Fail("无法删除平台所有者账号"));
         }
 
         var deleted = await userService.DeleteAsync(id, cancellationToken);
@@ -100,7 +100,7 @@ public class UsersController(IUserService userService) : ControllerBase
         CancellationToken cancellationToken)
     {
         var existing = await userService.GetByIdAsync(id, cancellationToken);
-        if (existing != null && existing.Roles.Contains("super", StringComparison.OrdinalIgnoreCase) && !IsSuperAdmin())
+        if (existing != null && existing.Roles.Contains("owner", StringComparison.OrdinalIgnoreCase) && !IsOwner())
         {
             return Forbid();
         }
@@ -118,7 +118,7 @@ public class UsersController(IUserService userService) : ControllerBase
         CancellationToken cancellationToken)
     {
         var existing = await userService.GetByIdAsync(id, cancellationToken);
-        if (existing != null && existing.Roles.Contains("super", StringComparison.OrdinalIgnoreCase) && !IsSuperAdmin())
+        if (existing != null && existing.Roles.Contains("owner", StringComparison.OrdinalIgnoreCase) && !IsOwner())
         {
             return Forbid();
         }

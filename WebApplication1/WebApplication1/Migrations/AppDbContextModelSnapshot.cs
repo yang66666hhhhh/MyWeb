@@ -16,8 +16,343 @@ namespace WebApplication1.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.7")
+                .HasAnnotation("ProductVersion", "10.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
+
+            modelBuilder.Entity("WebApplication1.Features.Admin.Entities.PersonaMenuItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Icon")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsVisible")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("MenuName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("MenuPath")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("PersonaTypeId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("Sort")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MenuPath");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("PersonaTypeId");
+
+                    b.ToTable("PersonaMenuItems", (string)null);
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Admin.Entities.PersonaType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("DefaultHomeRoute")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<int>("Sort")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive");
+
+                    b.ToTable("PersonaTypes", (string)null);
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Admin.Entities.UserPersonaRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<Guid>("PersonaTypeId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Remark")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<DateTime>("SwitchedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonaTypeId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserPersonaRecords", (string)null);
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Ai.Entities.AiChatMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("varchar(4000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId");
+
+                    b.ToTable("AiChatMessages", (string)null);
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Ai.Entities.AiChatSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("LastMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("MessageCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AiChatSessions", (string)null);
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Ai.Entities.AiPlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("GeneratedContent")
+                        .HasMaxLength(10000)
+                        .HasColumnType("varchar(10000)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Remark")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("Type");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AiPlans", (string)null);
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Ai.Entities.AiReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Content")
+                        .HasMaxLength(10000)
+                        .HasColumnType("varchar(10000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Remark")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Type");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AiReports", (string)null);
+                });
 
             modelBuilder.Entity("WebApplication1.Features.Auth.Entities.AppUser", b =>
                 {
@@ -32,9 +367,15 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Email")
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime?>("LastLoginAt")
                         .HasColumnType("datetime(6)");
@@ -62,7 +403,7 @@ namespace WebApplication1.Migrations
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)")
-                        .HasDefaultValue("user");
+                        .HasDefaultValue("member");
 
                     b.Property<int>("Status")
                         .ValueGeneratedOnAdd()
@@ -97,6 +438,46 @@ namespace WebApplication1.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.MenuAction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("ActionCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("ActionName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<Guid>("MenuId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("Sort")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MenuId", "ActionCode")
+                        .IsUnique();
+
+                    b.ToTable("MenuActions", (string)null);
+                });
+
             modelBuilder.Entity("WebApplication1.Features.Auth.Entities.MenuConfig", b =>
                 {
                     b.Property<Guid>("Id")
@@ -105,6 +486,9 @@ namespace WebApplication1.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -115,6 +499,9 @@ namespace WebApplication1.Migrations
                         .HasColumnType("varchar(100)");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
@@ -150,11 +537,17 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Icon")
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
@@ -205,6 +598,45 @@ namespace WebApplication1.Migrations
                     b.ToTable("MenuTags", (string)null);
                 });
 
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("CreatedByIp")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token");
+
+                    b.HasIndex("UserId", "Token");
+
+                    b.ToTable("RefreshTokens", (string)null);
+                });
+
             modelBuilder.Entity("WebApplication1.Features.Auth.Entities.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -244,6 +676,312 @@ namespace WebApplication1.Migrations
                     b.ToTable("Roles", (string)null);
                 });
 
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.RoleMenu", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Badge")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Component")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("FeatureCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Icon")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<bool>("IsBaseMenu")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsExternal")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsVisible")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("MenuCategory")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasDefaultValue("General");
+
+                    b.Property<int>("MinRoleLevel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("Permission")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("PersonaTag")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Redirect")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int>("Sort")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Tag")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FeatureCode");
+
+                    b.HasIndex("MenuCategory");
+
+                    b.HasIndex("MinRoleLevel");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("PersonaTag");
+
+                    b.ToTable("RoleMenus", (string)null);
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.RolePermission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("ActionCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<bool>("IsAllowed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true);
+
+                    b.Property<Guid>("MenuId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MenuId");
+
+                    b.HasIndex("RoleId", "MenuId", "ActionCode")
+                        .IsUnique();
+
+                    b.ToTable("RolePermissions", (string)null);
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.Subscription.Feature", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Features", (string)null);
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.Subscription.PersonaFeature", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<Guid>("FeatureId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("PersonaCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FeatureId");
+
+                    b.HasIndex("PersonaCode", "FeatureId")
+                        .IsUnique();
+
+                    b.ToTable("PersonaFeatures", (string)null);
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.Subscription.Plan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("BillingCycle")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("Sort")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Plans", (string)null);
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.Subscription.PlanFeature", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<Guid>("FeatureId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FeatureId");
+
+                    b.HasIndex("PlanId", "FeatureId")
+                        .IsUnique();
+
+                    b.ToTable("PlanFeatures", (string)null);
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.Subscription.UserSubscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("ExpireAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("StartAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlanId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserSubscriptions", (string)null);
+                });
+
             modelBuilder.Entity("WebApplication1.Features.Auth.Entities.Tag", b =>
                 {
                     b.Property<Guid>("Id")
@@ -258,11 +996,17 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
@@ -298,6 +1042,9 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
@@ -306,6 +1053,9 @@ namespace WebApplication1.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<int>("MaxUsers")
@@ -325,6 +1075,36 @@ namespace WebApplication1.Migrations
                         .IsUnique();
 
                     b.ToTable("Tenants", (string)null);
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.UserPersona", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<bool>("IsPrimary")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false);
+
+                    b.Property<Guid>("PersonaTypeId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonaTypeId");
+
+                    b.HasIndex("UserId", "PersonaTypeId")
+                        .IsUnique();
+
+                    b.ToTable("UserPersonas", (string)null);
                 });
 
             modelBuilder.Entity("WebApplication1.Features.Auth.Entities.UserRole", b =>
@@ -376,11 +1156,17 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
@@ -429,9 +1215,15 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
                         .HasColumnType("varchar(1000)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("PlanDate")
                         .HasColumnType("date");
@@ -479,6 +1271,12 @@ namespace WebApplication1.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Subject")
                         .IsRequired()
@@ -529,9 +1327,15 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Explanation")
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime?>("LastReviewDate")
                         .HasColumnType("date");
@@ -587,12 +1391,18 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
                         .HasColumnType("varchar(1000)");
 
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("date");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -649,6 +1459,9 @@ namespace WebApplication1.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(0);
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
@@ -657,6 +1470,9 @@ namespace WebApplication1.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime?>("LastCheckInDate")
                         .HasColumnType("date");
@@ -715,8 +1531,14 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<Guid>("HabitId")
                         .HasColumnType("char(36)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Remark")
                         .HasMaxLength(500)
@@ -752,6 +1574,12 @@ namespace WebApplication1.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("IsPublished")
                         .HasColumnType("tinyint(1)");
@@ -794,12 +1622,18 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
                         .HasColumnType("varchar(1000)");
 
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("date");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int>("Priority")
                         .ValueGeneratedOnAdd()
@@ -847,6 +1681,9 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
@@ -857,6 +1694,9 @@ namespace WebApplication1.Migrations
                         .HasColumnType("varchar(50)");
 
                     b.Property<bool>("IsDefault")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
@@ -891,6 +1731,9 @@ namespace WebApplication1.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("FieldLabel")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -905,6 +1748,9 @@ namespace WebApplication1.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(0);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("IsRequired")
                         .HasColumnType("tinyint(1)");
@@ -938,13 +1784,18 @@ namespace WebApplication1.Migrations
 
                     b.Property<string>("Code")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<int>("Level")
@@ -952,8 +1803,7 @@ namespace WebApplication1.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("longtext");
 
                     b.Property<Guid?>("ParentId")
                         .HasColumnType("char(36)");
@@ -969,12 +1819,9 @@ namespace WebApplication1.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Code")
-                        .IsUnique();
-
                     b.HasIndex("ParentId");
 
-                    b.ToTable("WorkCategories", (string)null);
+                    b.ToTable("WorkCategories");
                 });
 
             modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkDailyPlan", b =>
@@ -996,12 +1843,18 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("EndTime")
                         .HasMaxLength(10)
                         .HasColumnType("varchar(10)");
 
                     b.Property<decimal?>("EstimatedHours")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("PlanDate")
                         .HasColumnType("date");
@@ -1058,6 +1911,9 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
                         .HasColumnType("varchar(1000)");
@@ -1075,6 +1931,9 @@ namespace WebApplication1.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(1);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<Guid?>("ProjectId")
                         .HasColumnType("char(36)");
@@ -1110,6 +1969,9 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int>("DuplicateRows")
                         .HasColumnType("int");
 
@@ -1138,6 +2000,9 @@ namespace WebApplication1.Migrations
 
                     b.Property<int>("ImportType")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int>("SkippedRows")
                         .HasColumnType("int");
@@ -1181,6 +2046,9 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int>("DuplicateStatus")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
@@ -1192,6 +2060,9 @@ namespace WebApplication1.Migrations
 
                     b.Property<Guid?>("ImportedWorkLogId")
                         .HasColumnType("char(36)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateOnly?>("ParsedDate")
                         .HasColumnType("date");
@@ -1261,15 +2132,29 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("ExtraData")
+                        .HasMaxLength(4000)
+                        .HasColumnType("varchar(4000)");
+
                     b.Property<Guid?>("ImportBatchId")
                         .HasColumnType("char(36)");
 
                     b.Property<Guid?>("IndustryTemplateId")
                         .HasColumnType("char(36)");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("OriginalContent")
                         .HasMaxLength(4000)
                         .HasColumnType("varchar(4000)");
+
+                    b.Property<string>("PersonaCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
 
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("char(36)");
@@ -1324,9 +2209,14 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("WorkDate")
                         .HasColumnType("date");
 
+                    b.Property<Guid?>("WorkLogTemplateId")
+                        .HasColumnType("char(36)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("IndustryTemplateId");
+
+                    b.HasIndex("PersonaCode");
 
                     b.HasIndex("ProjectId");
 
@@ -1339,6 +2229,8 @@ namespace WebApplication1.Migrations
                     b.HasIndex("WorkCategoryId");
 
                     b.HasIndex("WorkDate");
+
+                    b.HasIndex("WorkLogTemplateId");
 
                     b.ToTable("WorkLogs", (string)null);
                 });
@@ -1355,6 +2247,9 @@ namespace WebApplication1.Migrations
                     b.Property<DateOnly?>("DateValue")
                         .HasColumnType("date");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<Guid>("FieldId")
                         .HasColumnType("char(36)");
 
@@ -1362,6 +2257,9 @@ namespace WebApplication1.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<decimal?>("NumberValue")
                         .HasColumnType("decimal(18,2)");
@@ -1398,12 +2296,18 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<Guid?>("DeviceId")
                         .HasColumnType("char(36)");
 
                     b.Property<decimal?>("Hours")
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int?>("ProgressPercent")
                         .HasColumnType("int");
@@ -1435,6 +2339,57 @@ namespace WebApplication1.Migrations
                     b.ToTable("WorkLogItems", (string)null);
                 });
 
+            modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkLogTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("FieldDefinitions")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("varchar(4000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("PersonaCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<int>("Sort")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonaCode")
+                        .IsUnique();
+
+                    b.ToTable("WorkLogTemplates", (string)null);
+                });
+
             modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkProject", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1448,12 +2403,18 @@ namespace WebApplication1.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
                         .HasColumnType("varchar(1000)");
 
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("date");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("ProjectCode")
                         .HasMaxLength(50)
@@ -1504,6 +2465,9 @@ namespace WebApplication1.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
@@ -1512,6 +2476,9 @@ namespace WebApplication1.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("tinyint(1)")
                         .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int>("Sort")
                         .HasColumnType("int");
@@ -1539,6 +2506,54 @@ namespace WebApplication1.Migrations
                     b.ToTable("WorkTaskTypes", (string)null);
                 });
 
+            modelBuilder.Entity("WebApplication1.Features.Admin.Entities.PersonaMenuItem", b =>
+                {
+                    b.HasOne("WebApplication1.Features.Admin.Entities.PersonaMenuItem", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("WebApplication1.Features.Admin.Entities.PersonaType", "PersonaType")
+                        .WithMany("MenuItems")
+                        .HasForeignKey("PersonaTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Parent");
+
+                    b.Navigation("PersonaType");
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Admin.Entities.UserPersonaRecord", b =>
+                {
+                    b.HasOne("WebApplication1.Features.Admin.Entities.PersonaType", "PersonaType")
+                        .WithMany("UserPersonaRecords")
+                        .HasForeignKey("PersonaTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("WebApplication1.Features.Auth.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PersonaType");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Ai.Entities.AiChatMessage", b =>
+                {
+                    b.HasOne("WebApplication1.Features.Ai.Entities.AiChatSession", "Session")
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
+                });
+
             modelBuilder.Entity("WebApplication1.Features.Auth.Entities.AppUser", b =>
                 {
                     b.HasOne("WebApplication1.Features.Auth.Entities.Tenant", "Tenant")
@@ -1553,6 +2568,17 @@ namespace WebApplication1.Migrations
                     b.Navigation("Tenant");
 
                     b.Navigation("UserType");
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.MenuAction", b =>
+                {
+                    b.HasOne("WebApplication1.Features.Auth.Entities.RoleMenu", "Menu")
+                        .WithMany("Actions")
+                        .HasForeignKey("MenuId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Menu");
                 });
 
             modelBuilder.Entity("WebApplication1.Features.Auth.Entities.MenuItem", b =>
@@ -1582,6 +2608,95 @@ namespace WebApplication1.Migrations
                     b.Navigation("MenuItem");
 
                     b.Navigation("Tag");
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.RoleMenu", b =>
+                {
+                    b.HasOne("WebApplication1.Features.Auth.Entities.RoleMenu", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.RolePermission", b =>
+                {
+                    b.HasOne("WebApplication1.Features.Auth.Entities.RoleMenu", "Menu")
+                        .WithMany()
+                        .HasForeignKey("MenuId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WebApplication1.Features.Auth.Entities.Role", "Role")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Menu");
+
+                    b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.Subscription.PersonaFeature", b =>
+                {
+                    b.HasOne("WebApplication1.Features.Auth.Entities.Subscription.Feature", "Feature")
+                        .WithMany()
+                        .HasForeignKey("FeatureId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Feature");
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.Subscription.PlanFeature", b =>
+                {
+                    b.HasOne("WebApplication1.Features.Auth.Entities.Subscription.Feature", "Feature")
+                        .WithMany()
+                        .HasForeignKey("FeatureId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WebApplication1.Features.Auth.Entities.Subscription.Plan", "Plan")
+                        .WithMany("PlanFeatures")
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Feature");
+
+                    b.Navigation("Plan");
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.Subscription.UserSubscription", b =>
+                {
+                    b.HasOne("WebApplication1.Features.Auth.Entities.Subscription.Plan", "Plan")
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Plan");
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.UserPersona", b =>
+                {
+                    b.HasOne("WebApplication1.Features.Admin.Entities.PersonaType", "PersonaType")
+                        .WithMany()
+                        .HasForeignKey("PersonaTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WebApplication1.Features.Auth.Entities.AppUser", "User")
+                        .WithMany("UserPersonas")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PersonaType");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("WebApplication1.Features.Auth.Entities.UserRole", b =>
@@ -1667,8 +2782,7 @@ namespace WebApplication1.Migrations
                 {
                     b.HasOne("WebApplication1.Features.Work.Entities.WorkCategory", "Parent")
                         .WithMany("Children")
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("ParentId");
 
                     b.Navigation("Parent");
                 });
@@ -1725,6 +2839,10 @@ namespace WebApplication1.Migrations
                         .WithMany("WorkLogs")
                         .HasForeignKey("WorkCategoryId");
 
+                    b.HasOne("WebApplication1.Features.Work.Entities.WorkLogTemplate", null)
+                        .WithMany("WorkLogs")
+                        .HasForeignKey("WorkLogTemplateId");
+
                     b.Navigation("Project");
 
                     b.Navigation("Template");
@@ -1766,8 +2884,22 @@ namespace WebApplication1.Migrations
                     b.Navigation("WorkLog");
                 });
 
+            modelBuilder.Entity("WebApplication1.Features.Admin.Entities.PersonaMenuItem", b =>
+                {
+                    b.Navigation("Children");
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Admin.Entities.PersonaType", b =>
+                {
+                    b.Navigation("MenuItems");
+
+                    b.Navigation("UserPersonaRecords");
+                });
+
             modelBuilder.Entity("WebApplication1.Features.Auth.Entities.AppUser", b =>
                 {
+                    b.Navigation("UserPersonas");
+
                     b.Navigation("UserTags");
                 });
 
@@ -1776,6 +2908,23 @@ namespace WebApplication1.Migrations
                     b.Navigation("Children");
 
                     b.Navigation("MenuTags");
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.Role", b =>
+                {
+                    b.Navigation("RolePermissions");
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.RoleMenu", b =>
+                {
+                    b.Navigation("Actions");
+
+                    b.Navigation("Children");
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Auth.Entities.Subscription.Plan", b =>
+                {
+                    b.Navigation("PlanFeatures");
                 });
 
             modelBuilder.Entity("WebApplication1.Features.Auth.Entities.Tag", b =>
@@ -1826,6 +2975,11 @@ namespace WebApplication1.Migrations
                     b.Navigation("DynamicValues");
 
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("WebApplication1.Features.Work.Entities.WorkLogTemplate", b =>
+                {
+                    b.Navigation("WorkLogs");
                 });
 #pragma warning restore 612, 618
         }

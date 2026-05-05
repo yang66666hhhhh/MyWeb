@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Features.Work.Dtos;
@@ -10,29 +9,15 @@ namespace WebApplication1.Features.Work.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/templates")]
-public class TemplatesController(ITemplateService templateService) : ControllerBase
+[Route("api/work/templates")]
+public class TemplatesController(ITemplateService templateService) : BaseApiController
 {
-    private Guid? GetUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
-    }
-
-    private bool IsAdmin()
-    {
-        return User.Claims
-            .Where(c => c.Type == ClaimTypes.Role)
-            .Any(c => c.Value.Equals("admin", StringComparison.OrdinalIgnoreCase) ||
-                       c.Value.Equals("super", StringComparison.OrdinalIgnoreCase));
-    }
-
     [HttpGet]
     public async Task<ActionResult<ApiResult<PageResult<IndustryTemplateDto>>>> GetPage(
         [FromQuery] PageQueryDto query,
         CancellationToken cancellationToken)
     {
-        if (!IsAdmin())
+        if (!IsProOrAbove())
             return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限"));
 
         var result = await templateService.GetPageAsync(query, cancellationToken);
@@ -60,7 +45,7 @@ public class TemplatesController(ITemplateService templateService) : ControllerB
         [FromBody] CreateTemplateDto input,
         CancellationToken cancellationToken)
     {
-        if (!IsAdmin())
+        if (!IsProOrAbove())
             return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限创建模板"));
 
         var result = await templateService.CreateAsync(input, cancellationToken);
@@ -73,7 +58,7 @@ public class TemplatesController(ITemplateService templateService) : ControllerB
         [FromBody] CreateTemplateDto input,
         CancellationToken cancellationToken)
     {
-        if (!IsAdmin())
+        if (!IsProOrAbove())
             return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改模板"));
 
         var result = await templateService.UpdateAsync(id, input, cancellationToken);
@@ -85,7 +70,7 @@ public class TemplatesController(ITemplateService templateService) : ControllerB
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<ApiResult>> Delete(Guid id, CancellationToken cancellationToken)
     {
-        if (!IsAdmin())
+        if (!IsProOrAbove())
             return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限删除模板"));
 
         var deleted = await templateService.DeleteAsync(id, cancellationToken);
@@ -97,7 +82,7 @@ public class TemplatesController(ITemplateService templateService) : ControllerB
     [HttpPost("{id:guid}/set-default")]
     public async Task<ActionResult<ApiResult>> SetDefault(Guid id, CancellationToken cancellationToken)
     {
-        if (!IsAdmin())
+        if (!IsProOrAbove())
             return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限"));
 
         var result = await templateService.SetDefaultAsync(id, cancellationToken);

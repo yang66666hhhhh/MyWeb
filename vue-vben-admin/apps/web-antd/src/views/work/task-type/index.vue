@@ -20,14 +20,14 @@ import {
   message,
 } from 'ant-design-vue';
 
-import type { WorkTaskType } from '#/api/growth/work';
+import type { WorkTaskType } from '#/api/work/taskType';
 import {
   createWorkTaskTypeApi,
   deleteWorkTaskTypeApi,
   getWorkTaskTypeApi,
   getWorkTaskTypePageApi,
   updateWorkTaskTypeApi,
-} from '#/api/growth/work';
+} from '#/api/work/taskType';
 import { usePagedQuery } from '#/composables/usePagedQuery';
 
 const formOpen = ref(false);
@@ -74,17 +74,21 @@ function openCreate() {
 
 async function openEdit(record: WorkTaskType) {
   editingId.value = record.id;
-  const detail = await getWorkTaskTypeApi(record.id);
-  if (detail) {
-    formState.value = {
-      description: detail.description || '',
-      enabled: detail.enabled,
-      sort: detail.sort || 0,
-      typeCode: detail.typeCode || '',
-      typeName: detail.typeName,
-    };
+  try {
+    const detail = await getWorkTaskTypeApi(record.id);
+    if (detail) {
+      formState.value = {
+        description: detail.description || '',
+        enabled: detail.enabled,
+        sort: detail.sort || 0,
+        typeCode: detail.typeCode || '',
+        typeName: detail.typeName,
+      };
+    }
+    formOpen.value = true;
+  } catch {
+    message.error('加载详情失败');
   }
-  formOpen.value = true;
 }
 
 function showDetail(record: WorkTaskType) {
@@ -93,9 +97,13 @@ function showDetail(record: WorkTaskType) {
 }
 
 async function handleRemove(id: string) {
-  await deleteWorkTaskTypeApi(id);
-  message.success('任务类型已删除');
-  await load();
+  try {
+    await deleteWorkTaskTypeApi(id);
+    message.success('任务类型已删除');
+    await load();
+  } catch {
+    message.error('删除失败');
+  }
 }
 
 async function handleSubmit() {
@@ -103,21 +111,29 @@ async function handleSubmit() {
     message.warning('请填写类型名称');
     return;
   }
-  if (editingId.value) {
-    await updateWorkTaskTypeApi(editingId.value, formState.value);
-    message.success('任务类型已更新');
-  } else {
-    await createWorkTaskTypeApi(formState.value);
-    message.success('任务类型已创建');
+  try {
+    if (editingId.value) {
+      await updateWorkTaskTypeApi(editingId.value, formState.value);
+      message.success('任务类型已更新');
+    } else {
+      await createWorkTaskTypeApi(formState.value);
+      message.success('任务类型已创建');
+    }
+    formOpen.value = false;
+    await load();
+  } catch {
+    message.error('保存失败');
   }
-  formOpen.value = false;
-  await load();
 }
 
 async function handleToggleEnabled(record: WorkTaskType) {
-  await updateWorkTaskTypeApi(record.id, { enabled: !record.enabled });
-  message.success(`已${record.enabled ? '停用' : '启用'}`);
-  await load();
+  try {
+    await updateWorkTaskTypeApi(record.id, { enabled: !record.enabled });
+    message.success(`已${record.enabled ? '停用' : '启用'}`);
+    await load();
+  } catch {
+    message.error('状态更新失败');
+  }
 }
 
 function resetFilters() {

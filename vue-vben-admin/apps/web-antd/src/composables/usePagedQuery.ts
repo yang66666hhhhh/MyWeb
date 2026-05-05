@@ -1,47 +1,54 @@
-import { reactive, ref, shallowRef } from 'vue';
+import { reactive, ref } from 'vue';
 
-import type { PageQuery, PageResult } from '#/api/growth';
-
-export interface UsePagedQueryOptions<T, Q extends PageQuery> {
-  defaultQuery: Q;
-  fetcher: (query: Q) => Promise<PageResult<T>>;
+interface PagedResult<T> {
+  items: T[];
+  total: number;
 }
 
-export function usePagedQuery<T, Q extends PageQuery>({
-  defaultQuery,
-  fetcher,
-}: UsePagedQueryOptions<T, Q>) {
+interface PagedQueryOptions<T, Q> {
+  defaultQuery: Q;
+  fetcher: (query: Q) => Promise<PagedResult<T>>;
+}
+
+export function usePagedQuery<T, Q extends { page: number; pageSize: number }>(
+  options: PagedQueryOptions<T, Q>
+) {
+  const { defaultQuery, fetcher } = options;
+
   const loading = ref(false);
-  const items = shallowRef<T[]>([]);
+  const items = ref<T[]>([]) as any;
   const total = ref(0);
-  const query = reactive({ ...defaultQuery }) as Q;
+  const query = reactive<Q>({ ...defaultQuery });
 
   async function load() {
     loading.value = true;
     try {
-      const result = await fetcher({ ...query });
+      const result = await fetcher(query);
       items.value = result.items;
       total.value = result.total;
-      query.page = result.page;
-      query.pageSize = result.pageSize;
+    } catch (error) {
+      console.error('Failed to load data:', error);
     } finally {
       loading.value = false;
     }
   }
 
-  async function search() {
+  function search() {
     query.page = 1;
-    await load();
+    load();
   }
 
-  async function changePage(page: number, pageSize: number) {
+  function resetQuery() {
+    Object.assign(query, { ...defaultQuery });
+    load();
+  }
+
+  function changePage(page: number, pageSize?: number) {
     query.page = page;
-    query.pageSize = pageSize;
-    await load();
-  }
-
-  function resetQuery(nextQuery?: Partial<Q>) {
-    Object.assign(query, defaultQuery, nextQuery);
+    if (pageSize) {
+      query.pageSize = pageSize;
+    }
+    load();
   }
 
   return {

@@ -10,6 +10,7 @@ namespace WebApplication1.Features.Work.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/work/import")]
+[RequestSizeLimit(10 * 1024 * 1024)]
 public class WorkImportsController(IWorkImportService importService) : ControllerBase
 {
     [HttpGet]

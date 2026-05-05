@@ -8,11 +8,35 @@ import { preferences } from '@vben/preferences';
 
 import { message } from 'ant-design-vue';
 
-import { getAllMenusApi } from '#/api';
+import { getMyMenusApi, type RoleMenuItem } from '#/api/core/menu';
 import { BasicLayout, IFrameView } from '#/layouts';
 import { $t } from '#/locales';
 
 const forbiddenComponent = () => import('#/views/_core/fallback/forbidden.vue');
+
+function convertToRouteRecords(menus: RoleMenuItem[]): any[] {
+  return menus
+    .filter((menu) => menu && menu.path && typeof menu.path === 'string' && menu.path.length > 0)
+    .map((menu) => {
+      const childRoutes = menu.children && menu.children.length > 0
+        ? convertToRouteRecords(menu.children)
+        : [];
+
+      return {
+        component: menu.component || undefined,
+        meta: {
+          icon: menu.icon,
+          title: menu.name,
+          badge: menu.badge,
+          tag: menu.tag,
+        },
+        name: `${menu.path.replace(/\//g, '-').replace(/^-/, '')}`,
+        path: menu.path,
+        ...(menu.redirect ? { redirect: menu.redirect } : {}),
+        ...(childRoutes.length > 0 ? { children: childRoutes } : {}),
+      };
+    });
+}
 
 async function generateAccess(options: GenerateMenuAndRoutesOptions) {
   const pageMap: ComponentRecordType = import.meta.glob('../views/**/*.vue');
@@ -29,11 +53,10 @@ async function generateAccess(options: GenerateMenuAndRoutesOptions) {
         content: `${$t('common.loadingMenu')}...`,
         duration: 1.5,
       });
-      return await getAllMenusApi();
+      const menus = await getMyMenusApi();
+      return convertToRouteRecords(menus);
     },
-    // 可以指定没有权限跳转403页面
     forbiddenComponent,
-    // 如果 route.meta.menuVisibleWithForbidden = true
     layoutMap,
     pageMap,
   });

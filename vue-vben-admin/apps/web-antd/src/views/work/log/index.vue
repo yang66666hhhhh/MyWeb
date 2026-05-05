@@ -26,14 +26,14 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { storeToRefs } from 'pinia';
 
-import type { WorkLog, WorkLogStatus } from '#/api/growth/work';
+import type { WorkLog, WorkLogStatus } from '#/api/work/workLog';
 import {
   createWorkLogApi,
   deleteWorkLogApi,
   getWorkLogApi,
   getWorkLogPageApi,
   updateWorkLogApi,
-} from '#/api/growth/work';
+} from '#/api/work/workLog';
 import { usePagedQuery } from '#/composables/usePagedQuery';
 import {
   WorkLogSourceType,
@@ -123,9 +123,13 @@ function showDetail(record: WorkLog) {
 }
 
 async function handleRemove(id: string) {
-  await deleteWorkLogApi(id);
-  message.success('工作日志已删除');
-  await load();
+  try {
+    await deleteWorkLogApi(id);
+    message.success('工作日志已删除');
+    await load();
+  } catch {
+    message.error('删除失败');
+  }
 }
 
 function handleTableChange(pagination: { current?: number; pageSize?: number }) {

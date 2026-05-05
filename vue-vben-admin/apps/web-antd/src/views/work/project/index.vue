@@ -21,14 +21,14 @@ import {
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
-import type { WorkProject } from '#/api/growth/work';
+import type { WorkProject } from '#/api/work/project';
 import {
   createWorkProjectApi,
   deleteWorkProjectApi,
   getWorkProjectApi,
   getWorkProjectPageApi,
   updateWorkProjectApi,
-} from '#/api/growth/work';
+} from '#/api/work/project';
 import { usePagedQuery } from '#/composables/usePagedQuery';
 import {
   WorkProjectStatus,
@@ -103,19 +103,23 @@ function openCreate() {
 
 async function openEdit(record: WorkProject) {
   editingId.value = record.id;
-  const detail = await getWorkProjectApi(record.id);
-  if (detail) {
-    formState.value = {
-      description: detail.description || '',
-      endDate: detail.endDate || '',
-      projectCode: detail.projectCode || '',
-      projectName: detail.projectName,
-      projectType: detail.projectType ?? 0,
-      startDate: detail.startDate || '',
-      status: detail.status,
-    };
+  try {
+    const detail = await getWorkProjectApi(record.id);
+    if (detail) {
+      formState.value = {
+        description: detail.description || '',
+        endDate: detail.endDate || '',
+        projectCode: detail.projectCode || '',
+        projectName: detail.projectName,
+        projectType: detail.projectType ?? 0,
+        startDate: detail.startDate || '',
+        status: detail.status,
+      };
+    }
+    formOpen.value = true;
+  } catch {
+    message.error('加载详情失败');
   }
-  formOpen.value = true;
 }
 
 function showDetail(record: WorkProject) {
@@ -124,9 +128,13 @@ function showDetail(record: WorkProject) {
 }
 
 async function handleRemove(id: string) {
-  await deleteWorkProjectApi(id);
-  message.success('项目已删除');
-  await load();
+  try {
+    await deleteWorkProjectApi(id);
+    message.success('项目已删除');
+    await load();
+  } catch {
+    message.error('删除失败');
+  }
 }
 
 async function handleSubmit() {
@@ -134,15 +142,19 @@ async function handleSubmit() {
     message.warning('请填写项目名称');
     return;
   }
-  if (editingId.value) {
-    await updateWorkProjectApi(editingId.value, formState.value);
-    message.success('项目已更新');
-  } else {
-    await createWorkProjectApi(formState.value);
-    message.success('项目已创建');
+  try {
+    if (editingId.value) {
+      await updateWorkProjectApi(editingId.value, formState.value);
+      message.success('项目已更新');
+    } else {
+      await createWorkProjectApi(formState.value);
+      message.success('项目已创建');
+    }
+    formOpen.value = false;
+    await load();
+  } catch {
+    message.error('保存失败');
   }
-  formOpen.value = false;
-  await load();
 }
 
 function resetFilters() {

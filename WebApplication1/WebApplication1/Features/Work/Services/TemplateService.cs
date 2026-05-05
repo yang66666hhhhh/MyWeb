@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using WebApplication1.Features.Work.Dtos;
 using WebApplication1.Features.Work.Entities;
 using WebApplication1.Features.Work.Services.Interfaces;
@@ -7,7 +8,7 @@ using WebApplication1.Shared.Data;
 
 namespace WebApplication1.Features.Work.Services;
 
-public class TemplateService(AppDbContext dbContext) : ITemplateService
+public class TemplateService(AppDbContext dbContext, ILogger<TemplateService> logger) : ITemplateService
 {
     public async Task<PageResult<IndustryTemplateDto>> GetPageAsync(PageQueryDto query, CancellationToken cancellationToken = default)
     {

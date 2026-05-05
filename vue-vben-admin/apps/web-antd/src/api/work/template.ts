@@ -1,3 +1,4 @@
+import type { PageQuery, PageResult } from '#/types/api';
 import { requestClient } from '#/api/request';
 
 export interface IndustryTemplate {
@@ -50,19 +51,6 @@ export interface CreateTemplateFieldInput {
   isRequired?: boolean;
   sort: number;
   defaultValue?: string;
-}
-
-export interface PageResult<T> {
-  items: T[];
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
-
-export interface PageQuery {
-  page?: number;
-  pageSize?: number;
 }
 
 export async function getTemplatePageApi(params?: PageQuery) {

@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Card, Col, DatePicker, Form, Row, Select, Space, Statistic, Table, Tag } from 'ant-design-vue';
+import { Card, Col, DatePicker, Form, Row, Select, Space, Statistic, Table, Tag, message } from 'ant-design-vue';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 
@@ -13,14 +13,14 @@ import type {
   WorkStatisticsOverview,
   WorkStatisticsProjectHours,
   WorkStatisticsTaskTypeDistribution,
-} from '#/api/growth/work';
+} from '#/api/work/statistics';
 import {
   getWorkStatisticsDeviceRankingApi,
   getWorkStatisticsDailyHoursApi,
   getWorkStatisticsOverviewApi,
   getWorkStatisticsProjectHoursApi,
   getWorkStatisticsTaskTypeDistributionApi,
-} from '#/api/growth/work';
+} from '#/api/work/statistics';
 
 const loading = ref(false);
 const overview = ref<WorkStatisticsOverview>({
@@ -65,6 +65,8 @@ async function load() {
     projectHours.value = projectData;
     taskTypeDistribution.value = taskTypeData;
     deviceRanking.value = deviceData;
+  } catch {
+    message.error('加载统计数据失败');
   } finally {
     loading.value = false;
   }
