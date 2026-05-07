@@ -16,7 +16,7 @@ public class RoleMenuService
     }
 
     public async Task<List<RoleMenu>> GetMenusForUserAsync(
-        Guid userId, string roleCode, List<string> personaCodes,
+        Guid userId, string roleCode,
         HashSet<string> availableFeatureCodes, CancellationToken ct = default)
     {
         var userRoleLevel = roleCode.ToLower() switch
@@ -26,13 +26,19 @@ public class RoleMenuService
             _ => 1
         };
 
+        var userPersonaCodes = await _context.UserPersonas
+            .AsNoTracking()
+            .Where(x => x.UserId == userId)
+            .Select(x => x.PersonaType!.Code)
+            .ToListAsync(ct);
+
         var allMenus = await _context.RoleMenus
             .AsNoTracking()
             .Where(x => x.IsEnabled)
             .ToListAsync(ct);
 
         var matched = allMenus
-            .Where(m => UserCanViewMenu(m, userRoleLevel, personaCodes, availableFeatureCodes))
+            .Where(m => UserCanViewMenu(m, userRoleLevel, userPersonaCodes, availableFeatureCodes))
             .ToList();
 
         var matchedIds = matched.Select(x => x.Id).ToHashSet();
@@ -54,7 +60,7 @@ public class RoleMenuService
         return MergeByPath(tree);
     }
 
-    private static bool UserCanViewMenu(RoleMenu menu, int userRoleLevel, List<string> personaCodes, HashSet<string> availableFeatureCodes)
+    private static bool UserCanViewMenu(RoleMenu menu, int userRoleLevel, List<string> userPersonaCodes, HashSet<string> availableFeatureCodes)
     {
         if (!menu.IsVisible || !menu.IsEnabled)
             return false;
@@ -62,7 +68,7 @@ public class RoleMenuService
         if (menu.MinRoleLevel > userRoleLevel)
             return false;
 
-        if (menu.PersonaTag != null && !personaCodes.Contains(menu.PersonaTag))
+        if (menu.PersonaTag != null && !userPersonaCodes.Contains(menu.PersonaTag))
             return false;
 
         if (!string.IsNullOrEmpty(menu.FeatureCode) && !availableFeatureCodes.Contains(menu.FeatureCode))

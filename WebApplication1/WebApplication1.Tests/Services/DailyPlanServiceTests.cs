@@ -168,7 +168,9 @@ public class DailyPlanServiceTests : IDisposable
         var success = await _service.DeleteAsync(plan.Id);
 
         Assert.True(success);
-        Assert.Null(await _context.DailyPlans.FindAsync(plan.Id));
+        var deleted = await _context.DailyPlans.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Id == plan.Id);
+        Assert.NotNull(deleted);
+        Assert.True(deleted.IsDeleted);
     }
 
     [Fact]

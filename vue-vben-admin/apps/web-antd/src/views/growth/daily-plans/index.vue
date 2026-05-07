@@ -19,7 +19,8 @@ import {
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
-import { getDailyPlanPageApi, updateDailyPlanApi, deleteDailyPlanApi, createDailyPlanApi } from '#/api/growth';
+import { taskApi } from '#/api/growth';
+import type { TaskItem, TaskItemQuery, CreateTaskItemInput, UpdateTaskItemInput } from '#/api/growth';
 
 import DailyPlanForm from './components/DailyPlanForm.vue';
 
@@ -87,7 +88,12 @@ const summaryText = computed(() => {
 async function fetchPage() {
   loading.value = true;
   try {
-    const result = await getDailyPlanPageApi(query);
+    const params: TaskItemQuery = {
+      ...query,
+      taskType: 'Personal',
+      source: 'Growth',
+    };
+    const result = await taskApi.getPage(params);
     items.value = result.items;
     total.value = result.total;
   } catch {
@@ -140,7 +146,7 @@ function openEdit(id: string) {
 
 async function handleRemove(id: string) {
   try {
-    await deleteDailyPlanApi(id);
+    await taskApi.delete(id);
     message.success('已删除');
     fetchPage();
   } catch {
@@ -148,9 +154,9 @@ async function handleRemove(id: string) {
   }
 }
 
-async function handleChangeStatus(record: any, status: number) {
+async function handleChangeStatus(record: TaskItem, status: number) {
   try {
-    await updateDailyPlanApi(record.id, { status } as any);
+    await taskApi.update(record.id, { status } as any);
     message.success('状态已更新');
     fetchPage();
   } catch {

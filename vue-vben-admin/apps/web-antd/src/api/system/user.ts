@@ -1,5 +1,13 @@
 import { requestClient } from '#/api/request';
 
+export interface PersonaTypeInfo {
+  id: string;
+  code: string;
+  name: string;
+  icon: string;
+  isPrimary: boolean;
+}
+
 export interface UserDto {
   id: string;
   username: string;
@@ -9,6 +17,7 @@ export interface UserDto {
   phone?: string;
   roles?: string;
   status: number;
+  personas: PersonaTypeInfo[];
   lastLoginAt?: string;
   createdAt: string;
 }
@@ -53,10 +62,6 @@ export function updateUserApi(id: string, data: UpdateUserDto) {
 
 export function deleteUserApi(id: string) {
   return requestClient.delete(`/users/${id}`);
-}
-
-export function switchUserPersonaApi(userId: string, personaTypeId: string) {
-  return requestClient.post(`/admin/users/${userId}/personas`, { personaTypeId });
 }
 
 export function resetPasswordApi(id: string, data: { newPassword: string }) {

@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
 import { Page } from '@vben/common-ui';
-import { Select } from 'ant-design-vue';
 
 import {
   Button,
@@ -12,6 +11,7 @@ import {
   Input,
   Modal,
   Popconfirm,
+  Select,
   Space,
   Table,
   Tag,
@@ -23,20 +23,17 @@ import {
   deleteUserApi,
   getUserApi,
   getUserPageApi,
-  switchUserPersonaApi,
   updateUserApi,
   type CreateUserDto,
   type UpdateUserDto,
   type UserDto,
 } from '#/api/system/user';
-import { personaApi, type PersonaType } from '#/api/system/persona';
 import { usePagedQuery } from '#/composables/usePagedQuery';
 
 const formOpen = ref(false);
 const detailOpen = ref(false);
 const editingId = ref<null | string>(null);
 const selectedItem = ref<UserDto | null>(null);
-const personas = ref<PersonaType[]>([]);
 
 const formState = ref({
   email: '',
@@ -45,7 +42,6 @@ const formState = ref({
   roles: 'member',
   username: '',
   password: '',
-  personaTypeId: '',
 });
 
 const statusOptions = [
@@ -82,16 +78,6 @@ const { changePage, items, load, loading, query, resetQuery, search, total } = u
 
 onMounted(async () => {
   await load();
-  try {
-    const res = await personaApi.getAll();
-    if (Array.isArray(res)) {
-      personas.value = res;
-    } else if (res && (res as any).data) {
-      personas.value = (res as any).data;
-    }
-  } catch {
-    message.error('加载身份列表失败');
-  }
 });
 
 function openCreate() {
@@ -103,7 +89,6 @@ function openCreate() {
     roles: 'member',
     username: '',
     password: '',
-    personaTypeId: '',
   };
   formOpen.value = true;
 }
@@ -120,7 +105,6 @@ async function openEdit(record: UserDto) {
         roles: detail.roles || 'member',
         username: detail.username,
         password: '',
-        personaTypeId: detail.currentPersonaTypeId || '',
       };
     }
     formOpen.value = true;
@@ -149,7 +133,6 @@ async function handleSubmit() {
         email: formState.value.email || undefined,
         phone: formState.value.phone || undefined,
         roles: formState.value.roles,
-        personaTypeId: formState.value.personaTypeId || undefined,
       };
       await updateUserApi(editingId.value, data);
       message.success('更新成功');
@@ -162,7 +145,6 @@ async function handleSubmit() {
         email: formState.value.email || undefined,
         phone: formState.value.phone || undefined,
         roles: formState.value.roles,
-        personaTypeId: formState.value.personaTypeId || undefined,
       };
       await createUserApi(data);
       message.success('创建成功');
@@ -184,24 +166,8 @@ async function handleRemove(id: string) {
   }
 }
 
-async function handlePersonaSwitch(userId: string, personaTypeId: string) {
-  try {
-    await switchUserPersonaApi(userId, { personaTypeId });
-    message.success('身份切换成功');
-    await load();
-  } catch {
-    message.error('身份切换失败');
-  }
-}
-
 function getRoleLabel(role: string) {
   return roleOptions.find(r => r.value === role)?.label || role;
-}
-
-function getPersonaLabel(personaTypeId?: string) {
-  if (!personaTypeId) return '-';
-  const persona = personas.value.find(p => p.id === personaTypeId);
-  return persona ? `${persona.icon} ${persona.name}` : '-';
 }
 </script>
 
@@ -252,16 +218,12 @@ function getPersonaLabel(personaTypeId?: string) {
               </Tag>
             </template>
             <template v-else-if="column.key === 'persona'">
-              <Select
-                :value="record.currentPersonaTypeId"
-                placeholder="选择身份"
-                style="width: 140px"
-                @change="(val: string) => handlePersonaSwitch(record.id, val)"
-              >
-                <Select.Option v-for="p in personas" :key="p.id" :value="p.id">
+              <template v-if="record.personas && record.personas.length > 0">
+                <Tag v-for="p in record.personas" :key="p.id" :color="p.isPrimary ? 'blue' : 'default'">
                   {{ p.icon }} {{ p.name }}
-                </Select.Option>
-              </Select>
+                </Tag>
+              </template>
+              <span v-else>-</span>
             </template>
             <template v-else-if="column.key === 'status'">
               <Tag :color="text === 0 ? 'success' : text === 1 ? 'default' : text === 2 ? 'warning' : 'error'">
@@ -312,13 +274,6 @@ function getPersonaLabel(personaTypeId?: string) {
             </Select.Option>
           </Select>
         </Form.Item>
-        <Form.Item label="身份">
-          <Select v-model:value="formState.personaTypeId" placeholder="选择身份" allow-clear style="width: 200px">
-            <Select.Option v-for="p in personas" :key="p.id" :value="p.id">
-              {{ p.icon }} {{ p.name }}
-            </Select.Option>
-          </Select>
-        </Form.Item>
         <Form.Item label="邮箱">
           <Input v-model:value="formState.email" placeholder="邮箱" />
         </Form.Item>
@@ -342,7 +297,12 @@ function getPersonaLabel(personaTypeId?: string) {
           </Tag>
         </Descriptions.Item>
         <Descriptions.Item label="身份">
-          {{ getPersonaLabel(selectedItem.currentPersonaTypeId) }}
+          <template v-if="selectedItem.personas && selectedItem.personas.length > 0">
+            <Tag v-for="p in selectedItem.personas" :key="p.id" :color="p.isPrimary ? 'blue' : 'default'">
+              {{ p.icon }} {{ p.name }}
+            </Tag>
+          </template>
+          <span v-else>-</span>
         </Descriptions.Item>
         <Descriptions.Item label="邮箱">
           {{ selectedItem.email || '-' }}

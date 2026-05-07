@@ -31,6 +31,9 @@ export interface UpdatePersonaTypeDto {
 }
 
 export const personaApi = {
+  getAll(params?: { isActive?: boolean }) {
+    return requestClient.get<PersonaType[]>('/admin/persona-types/all', { params });
+  },
   list(params?: { isActive?: boolean }) {
     return requestClient.get<PersonaType[]>('/admin/persona-types/all', { params });
   },

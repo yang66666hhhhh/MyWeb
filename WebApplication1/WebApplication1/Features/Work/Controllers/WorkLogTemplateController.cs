@@ -40,15 +40,12 @@ public class WorkLogTemplateController(AppDbContext context) : BaseApiController
         if (!userId.HasValue)
             return Unauthorized();
 
-        var personaCodes = await context.UserPersonas
-            .Where(x => x.UserId == userId.Value)
-            .Select(x => x.PersonaType!.Code)
-            .ToListAsync(ct);
-
         var template = await context.WorkLogTemplates
             .AsNoTracking()
-            .Where(x => x.IsActive && personaCodes.Contains(x.PersonaCode))
-            .OrderByDescending(x => x.PersonaCode == personaCodes.FirstOrDefault())
+            .Where(x => x.IsActive &&
+                context.UserPersonas.Any(up => up.UserId == userId.Value && up.PersonaType!.Code == x.PersonaCode))
+            .OrderByDescending(x => context.UserPersonas
+                .Any(up => up.UserId == userId.Value && up.PersonaType!.Code == x.PersonaCode && up.IsPrimary))
             .ThenBy(x => x.Sort)
             .FirstOrDefaultAsync(ct);
 

@@ -10,6 +10,7 @@ using WebApplication1.Shared.Middleware;
 using WebApplication1.Features.Auth;
 using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Features.DailyPlans;
+using WebApplication1.Features.Tasks;
 using WebApplication1.Features.Work.Services;
 using WebApplication1.Features.Work.Services.Interfaces;
 using WebApplication1.Features.Growth.Services;
@@ -17,6 +18,7 @@ using WebApplication1.Features.Growth.Services.Interfaces;
 using WebApplication1.Features.Ai.Services;
 using WebApplication1.Features.Admin.Services;
 using WebApplication1.Features.Auth.Services;
+using WebApplication1.Features.Analytics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -98,11 +100,13 @@ builder.Services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServe
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? Environment.GetEnvironmentVariable("DB_CONNECTION")
         ?? throw new InvalidOperationException("DefaultConnection is not configured.");
     options.UseMySQL(connectionString);
 });
 
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"]
+    ?? Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
     ?? throw new InvalidOperationException("Jwt:SecretKey is not configured.");
 if (string.IsNullOrWhiteSpace(jwtSecretKey) || jwtSecretKey.Length < 32)
 {
@@ -133,6 +137,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IDailyPlanService, DailyPlanService>();
+builder.Services.AddScoped<ITaskItemService, TaskItemService>();
 builder.Services.AddScoped<IWorkProjectService, WorkProjectService>();
 builder.Services.AddScoped<IWorkDeviceService, WorkDeviceService>();
 builder.Services.AddScoped<IWorkTaskTypeService, WorkTaskTypeService>();
@@ -152,6 +157,7 @@ builder.Services.AddScoped<IAiService, AiService>();
 builder.Services.AddScoped<IPersonaService, PersonaService>();
 builder.Services.AddScoped<RoleMenuService>();
 builder.Services.AddScoped<IFeatureService, FeatureService>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
 builder.Services.AddHealthChecks()
     .AddMySql(

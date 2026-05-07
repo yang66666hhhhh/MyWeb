@@ -65,16 +65,6 @@ const routes: RouteRecordRaw[] = [
       title: '关于',
     },
   },
-  {
-    name: 'Profile',
-    path: '/profile',
-    component: () => import('#/views/_core/profile/index.vue'),
-    meta: {
-      icon: 'lucide:user',
-      hideInMenu: true,
-      title: '个人设置',
-    },
-  },
 ];
 
 export default routes;

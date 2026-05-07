@@ -175,7 +175,9 @@ public class WorkProjectServiceTests : IDisposable
         var result = await _service.DeleteAsync(project.Id);
 
         Assert.True(result);
-        Assert.Null(await _context.WorkProjects.FindAsync(project.Id));
+        var deleted = await _context.WorkProjects.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Id == project.Id);
+        Assert.NotNull(deleted);
+        Assert.True(deleted.IsDeleted);
     }
 
     [Fact]

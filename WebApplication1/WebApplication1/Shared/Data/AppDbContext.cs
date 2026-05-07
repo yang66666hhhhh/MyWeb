@@ -5,6 +5,7 @@ using WebApplication1.Features.Auth.Entities;
 using WebApplication1.Features.Auth.Entities.Subscription;
 using WebApplication1.Features.DailyPlans;
 using WebApplication1.Features.Growth.Entities;
+using WebApplication1.Features.Tasks;
 using WebApplication1.Features.Work.Entities;
 using WebApplication1.Shared;
 
@@ -13,6 +14,8 @@ namespace WebApplication1.Shared.Data;
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
     public DbSet<DailyPlan> DailyPlans => Set<DailyPlan>();
+
+    public DbSet<TaskItem> Tasks => Set<TaskItem>();
 
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<AppUser> Users => Set<AppUser>();

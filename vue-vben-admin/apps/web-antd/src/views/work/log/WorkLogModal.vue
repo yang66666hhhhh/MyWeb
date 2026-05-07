@@ -21,7 +21,7 @@ const loading = ref(false);
 const dynamicValues = ref<DynamicValue[]>([]);
 
 const formState = reactive({
-  workDate: dayjs().format('YYYY-MM-DD'),
+  workDate: dayjs(),
   projectId: '',
   title: '',
   totalHours: 0,
@@ -51,7 +51,7 @@ async function loadDetail() {
     const result = await workLogApi.getById(props.id);
     if (result) {
       Object.assign(formState, {
-        workDate: result.workDate || dayjs().format('YYYY-MM-DD'),
+        workDate: result.workDate ? dayjs(result.workDate) : dayjs(),
         projectId: result.projectId || '',
         title: result.title || '',
         totalHours: result.totalHours || 0,
@@ -77,7 +77,7 @@ async function submit() {
   loading.value = true;
   try {
     const data: any = {
-      workDate: formState.workDate,
+      workDate: formState.workDate.format('YYYY-MM-DD'),
       projectId: formState.projectId,
       title: formState.title,
       totalHours: formState.totalHours,

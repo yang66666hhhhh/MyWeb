@@ -47,15 +47,11 @@ public class RequireFeatureAttribute : Attribute, IAsyncAuthorizationFilter
 
         if (hasFeatureInPlan) return; // 计划包含，通过
 
-        // 检查 Persona 是否包含该功能
-        var personaCodes = await db.UserPersonas
-            .Where(x => x.UserId == userId)
-            .Select(x => x.PersonaType!.Code)
-            .ToListAsync();
-
+        // 检查 Persona 是否包含该功能（使用子查询避免 EF Core 类型映射问题）
         var hasFeatureInPersona = await db.PersonaFeatures
             .AsNoTracking()
-            .AnyAsync(x => personaCodes.Contains(x.PersonaCode) && x.Feature!.Code == FeatureCode);
+            .AnyAsync(x => x.Feature!.Code == FeatureCode &&
+                db.UserPersonas.Any(up => up.UserId == userId && up.PersonaType!.Code == x.PersonaCode));
 
         if (!hasFeatureInPersona)
         {

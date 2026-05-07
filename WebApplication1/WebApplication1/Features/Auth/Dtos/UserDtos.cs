@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using WebApplication1.Shared.Common;
 using WebApplication1.Features.Auth.Entities;
+using WebApplication1.Features.Admin.Dtos;
 
 namespace WebApplication1.Features.Auth.Dtos;
 
@@ -14,6 +15,7 @@ public class UserDto
     public string? Phone { get; set; }
     public string Roles { get; set; } = "member";
     public AppUserStatus Status { get; set; }
+    public List<PersonaTypeDto> Personas { get; set; } = new();
     public DateTime? LastLoginAt { get; set; }
     public string? LastLoginIp { get; set; }
     public DateTime CreatedAt { get; set; }

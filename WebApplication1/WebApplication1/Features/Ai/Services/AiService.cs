@@ -6,6 +6,7 @@ using WebApplication1.Features.Ai.Dtos;
 using WebApplication1.Shared.Common;
 using WebApplication1.Shared.Data;
 using WebApplication1.Shared.Enums;
+using WebApplication1.Features.Tasks;
 using WebApplication1.Features.Work.Entities;
 using WebApplication1.Features.Work.Dtos;
 
@@ -28,7 +29,7 @@ public class AiService : IAiService
         _context = context;
         _httpClientFactory = httpClientFactory;
         _logger = logger;
-        _openAiApiKey = configuration["OpenAI:ApiKey"];
+        _openAiApiKey = configuration["OpenAI:ApiKey"] ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY");
         _openAiModel = configuration["OpenAI:Model"] ?? "gpt-3.5-turbo";
     }
 
@@ -67,7 +68,7 @@ public class AiService : IAiService
         var planType = Enum.TryParse<AiPlanType>(request.Type, true, out var pt) ? pt : AiPlanType.Daily;
         var targetDate = DateOnly.TryParse(request.TargetDate, out var td) ? td : DateOnly.FromDateTime(DateTime.Today);
 
-        var recentPlans = await _context.WorkDailyPlans
+        var recentPlans = await _context.Tasks
             .Where(x => x.UserId == userId)
             .Where(x => x.PlanDate >= targetDate.AddDays(-7) && x.PlanDate <= targetDate.AddDays(7))
             .OrderByDescending(x => x.PlanDate)
@@ -157,7 +158,7 @@ public class AiService : IAiService
             .OrderByDescending(x => x.WorkDate)
             .ToListAsync(cancellationToken);
 
-        var dailyPlans = await _context.WorkDailyPlans
+        var dailyPlans = await _context.Tasks
             .Where(x => x.UserId == userId)
             .Where(x => x.PlanDate >= startDate && x.PlanDate <= endDate)
             .ToListAsync(cancellationToken);
@@ -335,7 +336,7 @@ public class AiService : IAiService
         return sb.ToString();
     }
 
-    private string BuildPlanPrompt(AiPlanType planType, DateOnly targetDate, string? description, List<WorkDailyPlan> recentPlans, List<WorkLog> recentLogs)
+    private string BuildPlanPrompt(AiPlanType planType, DateOnly targetDate, string? description, List<TaskItem> recentPlans, List<WorkLog> recentLogs)
     {
         var sb = new StringBuilder();
         sb.AppendLine($"请为 {targetDate:yyyy年MM月dd日} 生成一个");
@@ -349,7 +350,7 @@ public class AiService : IAiService
         {
             sb.AppendLine("\n用户最近的工作计划:");
             foreach (var p in recentPlans.Take(5))
-                sb.AppendLine($"- [{p.PlanDate}] {p.Title}: {p.Content}");
+                sb.AppendLine($"- [{p.PlanDate}] {p.Title}: {p.Description}");
         }
 
         if (recentLogs.Any())
@@ -368,7 +369,7 @@ public class AiService : IAiService
         return sb.ToString();
     }
 
-    private string BuildReportPrompt(AiReportType reportType, DateOnly startDate, DateOnly endDate, List<WorkLog> workLogs, List<WorkDailyPlan> dailyPlans, bool includeStats)
+    private string BuildReportPrompt(AiReportType reportType, DateOnly startDate, DateOnly endDate, List<WorkLog> workLogs, List<TaskItem> dailyPlans, bool includeStats)
     {
         var sb = new StringBuilder();
         sb.AppendLine($"请生成 {startDate:yyyy年MM月dd日} 至 {endDate:yyyy年MM月dd日} 的");
@@ -393,7 +394,7 @@ public class AiService : IAiService
 
         if (dailyPlans.Any())
         {
-            var completed = dailyPlans.Count(x => x.Status == WorkDailyPlanStatus.Completed);
+            var completed = dailyPlans.Count(x => x.Status == TaskItemStatus.Completed);
             var total = dailyPlans.Count;
             sb.AppendLine($"\n计划完成情况: {completed}/{total} ({completed * 100 / Math.Max(1, total)}%)");
         }

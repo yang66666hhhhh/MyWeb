@@ -26,24 +26,24 @@ export interface SaveKnowledgeArticleInput {
 }
 
 export async function getKnowledgeArticlePageApi(params: KnowledgeArticleQuery) {
-  return requestClient.get<PageResult<KnowledgeArticle>>('/knowledge-base', { params });
+  return requestClient.get<PageResult<KnowledgeArticle>>('/growth/knowledge-base', { params });
 }
 
 export async function getKnowledgeArticleApi(id: string) {
-  return requestClient.get<KnowledgeArticle>(`/knowledge-base/${id}`);
+  return requestClient.get<KnowledgeArticle>(`/growth/knowledge-base/${id}`);
 }
 
 export async function createKnowledgeArticleApi(data: SaveKnowledgeArticleInput) {
-  return requestClient.post<KnowledgeArticle>('/knowledge-base', data);
+  return requestClient.post<KnowledgeArticle>('/growth/knowledge-base', data);
 }
 
 export async function updateKnowledgeArticleApi(
   id: string,
   data: SaveKnowledgeArticleInput,
 ) {
-  return requestClient.put<KnowledgeArticle>(`/knowledge-base/${id}`, data);
+  return requestClient.put<KnowledgeArticle>(`/growth/knowledge-base/${id}`, data);
 }
 
 export async function deleteKnowledgeArticleApi(id: string) {
-  return requestClient.delete(`/knowledge-base/${id}`);
+  return requestClient.delete(`/growth/knowledge-base/${id}`);
 }

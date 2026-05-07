@@ -57,7 +57,7 @@
 
 每个功能点有唯一 Code，按 Category 分组：
 - **Work**: WORK_LOG, WORK_PROJECT, WORK_DEVICE, WORK_TASK, WORK_IMPORT, WORK_TEMPLATE, WORK_OKR, WORK_GANTT, WORK_RISK
-- **Growth**: GROWTH_DAILY_PLAN, GROWTH_HABIT, GROWTH_KNOWLEDGE, GROWTH_SKILL, GROWTH_FITNESS
+- **Growth**: TASK_UNIFIED, GROWTH_DAILY_PLAN, GROWTH_HABIT, GROWTH_KNOWLEDGE, GROWTH_SKILL, GROWTH_FITNESS
 - **AI**: AI_ASSISTANT, AI_PLANNER, AI_REPORT, AI_INSIGHTS
 - **Assets**: ASSET_DASHBOARD, ASSET_INCOME, ASSET_EXPENSE, ASSET_BUDGET, ASSET_INVEST
 - **Analytics**: ANALYTICS_GROWTH, ANALYTICS_WORK, ANALYTICS_FINANCE
@@ -282,7 +282,7 @@
 
 ### 4.4 其他核心表
 
-- **DailyPlans** - 每日计划
+- **Tasks** - 统一任务系统（个人+工作，通过 Type/Source 区分）
 - **WorkProjects** - 工作项目
 - **WorkDevices** - 工作设备
 - **WorkTaskTypes** - 任务类型
@@ -292,6 +292,8 @@
 - **AiPlans** / **AiReports** / **AiChatSessions** - AI模块
 - **RoleMenus** - 角色菜单
 - **MenuActions** / **RolePermissions** - 按钮级权限
+
+> 注意：原 DailyPlans 表已废弃，功能合并到 Tasks 表
 
 ---
 
@@ -367,6 +369,20 @@
 | `/api/growth/habits` | 习惯管理 |
 | `/api/growth/projects` | 成长项目 |
 | `/api/growth/knowledge-base` | 知识库 |
+
+### 5.9 统一任务 `/api/tasks`
+
+| 方法 | 端点 | 描述 |
+|---|---|---|
+| GET | `/` | 分页查询（支持 taskType/source 筛选） |
+| GET | `/{id}` | 获取详情 |
+| POST | `/` | 创建任务 |
+| PUT | `/{id}` | 更新任务 |
+| DELETE | `/{id}` | 删除任务 |
+| POST | `/{id}/complete` | 完成任务 |
+| POST | `/convert-to-log` | 转为工作日志 |
+
+### 5.10 AI模块 `/api/ai`
 
 ### 5.9 AI模块 `/api/ai`
 
@@ -533,6 +549,35 @@ public async Task<HashSet<string>> GetUserFeaturesAsync(Guid userId)
 
 ## 11. 已知问题
 
-1. **两套每日计划**：`/api/daily-plans`（个人）和 `/api/work/daily-plans`（工作）功能重叠
-2. **部分API桩代码**：AI模块部分接口返回硬编码数据
-3. **前端角色选项**：部分旧页面可能仍显示 super/admin/user（已修复大部分）
+1. ~~两套每日计划~~（已修复 → 统一为 Tasks 表）
+2. **AI模块桩代码**：需配置 OPENAI_API_KEY 环境变量启用真实AI
+3. ~~前端角色选项~~（已修复）
+
+## 12. 环境变量
+
+生产环境需设置以下环境变量：
+
+| 变量 | 说明 | 必需 |
+|---|---|---|
+| `DB_CONNECTION` | MySQL 连接字符串 | 是 |
+| `JWT_SECRET_KEY` | JWT 密钥（最少32字符） | 是 |
+| `OPENAI_API_KEY` | OpenAI API Key | 否（不设置则返回模拟响应） |
+
+## 13. 数据库迁移
+
+```bash
+cd WebApplication1
+dotnet ef database drop --force  # 首次或重置
+dotnet ef database update
+```
+
+---
+
+## 14. 测试
+
+```bash
+cd WebApplication1
+dotnet test
+```
+
+当前测试覆盖：TaskItemService, KnowledgeArticleService, DailyPlanService, WorkProjectService, RoleMenuService

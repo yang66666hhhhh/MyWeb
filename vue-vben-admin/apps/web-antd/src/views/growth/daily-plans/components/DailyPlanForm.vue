@@ -2,7 +2,6 @@
 import { computed, reactive, ref, watch } from 'vue';
 
 import {
-  Alert,
   DatePicker,
   Form,
   Input,
@@ -13,9 +12,7 @@ import {
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
-import type { DailyPlan, DailyPlanPriority, DailyPlanStatus } from '#/api/growth';
-
-import { createDailyPlanApi, getDailyPlanApi, updateDailyPlanApi } from '#/api/growth';
+import { taskApi } from '#/api/growth';
 
 const props = defineProps<{
   id?: null | string;
@@ -29,31 +26,34 @@ const emit = defineEmits<{
 
 const loading = ref(false);
 const Textarea = Input.TextArea;
-const completedAtDisplay = ref<string>('');
 
-interface DailyPlanFormState {
+interface TaskFormState {
   description: string;
   endTime: string;
   planDate: string;
-  priority: DailyPlanPriority;
+  priority: number;
   remark: string;
   startTime: string;
-  status: DailyPlanStatus;
+  status: number;
   title: string;
+  taskType: string;
+  source: string;
 }
 
-const formState = reactive<DailyPlanFormState>({
+const formState = reactive<TaskFormState>({
   description: '',
   endTime: '',
   planDate: '',
-  priority: 3,
+  priority: 2,
   remark: '',
   startTime: '',
   status: 0,
   title: '',
+  taskType: 'Personal',
+  source: 'Growth',
 });
 
-const modalTitle = computed(() => (props.id ? '编辑每日计划' : '新增每日计划'));
+const modalTitle = computed(() => (props.id ? '编辑任务' : '新增任务'));
 
 const statusOptions = [
   { label: '未开始', value: 0 },
@@ -67,23 +67,32 @@ const priorityOptions = [
   { label: '中', value: 2 },
   { label: '高', value: 3 },
   { label: '紧急', value: 4 },
-  { label: '紧急+', value: 5 },
 ];
 
-function fillForm(plan?: DailyPlan) {
+const priorityStringToNumber: Record<string, number> = {
+  Low: 1,
+  Medium: 2,
+  High: 3,
+  Urgent: 4,
+};
+
+function fillForm(plan?: any) {
   Object.assign(formState, {
     description: plan?.description ?? '',
     endTime: plan?.endTime ?? '',
     planDate: plan?.planDate ?? new Date().toISOString().slice(0, 10),
-    priority: plan?.priority ?? 3,
+    priority: typeof plan?.priority === 'string'
+      ? (priorityStringToNumber[plan.priority] ?? 2)
+      : (plan?.priority ?? 2),
     remark: plan?.remark ?? '',
     startTime: plan?.startTime ?? '',
-    status: plan?.status ?? 0,
+    status: typeof plan?.status === 'string'
+      ? ({ Pending: 0, InProgress: 1, Completed: 2, Cancelled: 3 }[plan.status] ?? 0)
+      : (plan?.status ?? 0),
     title: plan?.title ?? '',
+    taskType: plan?.type ?? 'Personal',
+    source: plan?.source ?? 'Growth',
   });
-  completedAtDisplay.value = plan?.completedAt
-    ? dayjs(plan.completedAt).format('YYYY-MM-DD HH:mm')
-    : '';
 }
 
 function onPlanDateChange(val: null | string | dayjs.Dayjs) {
@@ -106,7 +115,8 @@ async function loadDetail() {
 
   loading.value = true;
   try {
-    fillForm(await getDailyPlanApi(props.id));
+    const result = await taskApi.getById(props.id);
+    fillForm(result);
   } catch {
     message.error('加载详情失败');
   } finally {
@@ -120,34 +130,26 @@ async function submit() {
     return;
   }
 
-  if (
-    formState.startTime &&
-    formState.endTime &&
-    formState.startTime > formState.endTime
-  ) {
-    message.warning('结束时间不能早于开始时间');
-    return;
-  }
-
   loading.value = true;
   try {
     const payload = {
-      description: formState.description || null,
-      endTime: formState.endTime || null,
+      description: formState.description || undefined,
+      endTime: formState.endTime || undefined,
       planDate: formState.planDate,
-      priority: formState.priority,
-      remark: formState.remark || null,
-      startTime: formState.startTime || null,
-      status: formState.status,
+      priority: Number(formState.priority) || 2,
+      remark: formState.remark || undefined,
+      startTime: formState.startTime || undefined,
       title: formState.title.trim(),
+      taskType: formState.taskType,
+      source: formState.source,
     };
 
     if (props.id) {
-      await updateDailyPlanApi(props.id, payload);
-      message.success('每日计划已更新');
+      await taskApi.update(props.id, payload);
+      message.success('任务已更新');
     } else {
-      await createDailyPlanApi(payload);
-      message.success('每日计划已创建');
+      await taskApi.create(payload);
+      message.success('任务已创建');
     }
 
     emit('update:open', false);
@@ -179,20 +181,15 @@ watch(
     @ok="submit"
   >
     <div class="space-y-4">
-      <Alert
-        message="开始时间和结束时间当前先由前端本地预留保存，后端 DailyPlan 真实接口暂未提供对应字段。"
-        type="info"
-        show-icon
-      />
       <Form :model="formState" layout="vertical">
-        <Form.Item label="计划标题" required>
+        <Form.Item label="任务标题" required>
           <Input v-model:value="formState.title" placeholder="今天最重要的任务" />
         </Form.Item>
-        <Form.Item label="计划内容">
+        <Form.Item label="任务内容">
           <Textarea
             v-model:value="formState.description"
             :auto-size="{ minRows: 3, maxRows: 6 }"
-            placeholder="补充计划内容、关键步骤或验收标准"
+            placeholder="补充任务内容、关键步骤或验收标准"
           />
         </Form.Item>
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -233,9 +230,6 @@ watch(
             :auto-size="{ minRows: 2, maxRows: 4 }"
             placeholder="复盘记录、阻塞点或临时想法"
           />
-        </Form.Item>
-        <Form.Item v-if="completedAtDisplay" label="完成时间">
-          <Input :value="completedAtDisplay" disabled />
         </Form.Item>
       </Form>
     </div>

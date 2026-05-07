@@ -29,15 +29,10 @@ public class RoleMenuController(RoleMenuService roleMenuService, AppDbContext co
 
         var roleCode = GetHighestRole(user.Roles);
 
-        var personaCodes = await context.UserPersonas
-            .Where(x => x.UserId == userId.Value)
-            .Select(x => x.PersonaType!.Code)
-            .ToListAsync(cancellationToken);
-
         var availableFeatures = await GetUserAvailableFeaturesAsync(userId.Value, cancellationToken);
 
         var menus = await roleMenuService.GetMenusForUserAsync(
-            userId.Value, roleCode, personaCodes, availableFeatures, cancellationToken);
+            userId.Value, roleCode, availableFeatures, cancellationToken);
 
         return Ok(ApiResult<List<RoleMenu>>.Success(menus));
     }

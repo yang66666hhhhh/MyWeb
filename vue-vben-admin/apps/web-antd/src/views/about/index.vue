@@ -69,18 +69,19 @@ const modules = [
       <Card title="项目结构">
         <Text type="secondary">
           <pre class="text-xs">MyWebSite/
-├── vue-vben-admin/          # 前端项目
-│   ├── apps/web-antd/       # 主应用
-│   └── apps/backend-mock/   # Mock 服务
-└── WebApplication1/         # 后端项目
+├── vue-vben-admin/          # 前端项目 (Vue 3 + Vite + Ant Design Vue)
+│   └── apps/web-antd/       # 主应用
+└── WebApplication1/         # 后端项目 (ASP.NET Core 10 + EF Core + MySQL)
     ├── Features/             # 功能模块
-    │   ├── Auth/           # 认证
-    │   ├── DailyPlans/     # 每日计划
-    │   ├── Menu/           # 菜单
-    │   └── Work/           # 工作中心
+    │   ├── Auth/           # 认证、用户、角色、菜单
+    │   ├── Tasks/         # 统一任务系统
+    │   ├── Growth/        # 成长模块（习惯、知识库等）
+    │   ├── Work/          # 工作中心（日志、项目、设备等）
+    │   ├── AI/            # AI 模块
+    │   └── Admin/         # 管理功能
     └── Shared/              # 共享模块
         ├── Common/         # 工具类
-        ├── Data/          # 数据层
+        ├── Data/           # 数据层、Seeder
         └── Enums/          # 枚举</pre>
         </Text>
       </Card>

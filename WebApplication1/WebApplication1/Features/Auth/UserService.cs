@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using WebApplication1.Features.Admin.Dtos;
 using WebApplication1.Features.Auth.Dtos;
 using WebApplication1.Features.Auth.Entities;
 using WebApplication1.Shared.Common;
@@ -27,26 +28,39 @@ public class UserService(AppDbContext context, ILogger<UserService> logger) : IU
         }
 
         var total = await q.CountAsync(cancellationToken);
-        var items = await q
+        var users = await q
             .OrderByDescending(x => x.CreatedAt)
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
-            .Select(x => new UserDto
-            {
-                Id = x.Id,
-                Username = x.Username,
-                RealName = x.RealName,
-                Avatar = x.Avatar,
-                Email = x.Email,
-                Phone = x.Phone,
-                Roles = x.Roles,
-                Status = x.Status,
-                LastLoginAt = x.LastLoginAt,
-                LastLoginIp = x.LastLoginIp,
-                CreatedAt = x.CreatedAt,
-                UpdatedAt = x.UpdatedAt
-            })
             .ToListAsync(cancellationToken);
+
+        var items = users.Select(x => new UserDto
+        {
+            Id = x.Id,
+            Username = x.Username,
+            RealName = x.RealName,
+            Avatar = x.Avatar,
+            Email = x.Email,
+            Phone = x.Phone,
+            Roles = x.Roles,
+            Status = x.Status,
+            Personas = context.UserPersonas
+                .Where(up => up.UserId == x.Id)
+                .Include(up => up.PersonaType)
+                .Select(up => new PersonaTypeDto
+                {
+                    Id = up.PersonaType.Id,
+                    Code = up.PersonaType.Code,
+                    Name = up.PersonaType.Name,
+                    Icon = up.PersonaType.Icon,
+                    IsPrimary = up.IsPrimary
+                })
+                .ToList(),
+            LastLoginAt = x.LastLoginAt,
+            LastLoginIp = x.LastLoginIp,
+            CreatedAt = x.CreatedAt,
+            UpdatedAt = x.UpdatedAt
+        }).ToList();
 
         return PageResult<UserDto>.Create(items, total, query.Page, query.PageSize);
     }
@@ -55,6 +69,19 @@ public class UserService(AppDbContext context, ILogger<UserService> logger) : IU
     {
         var user = await context.Users.FindAsync([id], cancellationToken);
         if (user == null) return null;
+
+        var personas = await context.UserPersonas
+            .Where(x => x.UserId == id)
+            .Include(x => x.PersonaType)
+            .Select(x => new PersonaTypeDto
+            {
+                Id = x.PersonaType.Id,
+                Code = x.PersonaType.Code,
+                Name = x.PersonaType.Name,
+                Icon = x.PersonaType.Icon,
+                IsPrimary = x.IsPrimary
+            })
+            .ToListAsync(cancellationToken);
 
         return new UserDto
         {
@@ -66,6 +93,7 @@ public class UserService(AppDbContext context, ILogger<UserService> logger) : IU
             Phone = user.Phone,
             Roles = user.Roles,
             Status = user.Status,
+            Personas = personas,
             LastLoginAt = user.LastLoginAt,
             LastLoginIp = user.LastLoginIp,
             CreatedAt = user.CreatedAt,

@@ -6,6 +6,7 @@ using WebApplication1.Features.Auth.Entities.Subscription;
 using WebApplication1.Features.Work.Entities;
 using WebApplication1.Features.Admin.Entities;
 using WebApplication1.Features.DailyPlans;
+using WebApplication1.Features.Tasks;
 using FieldType = WebApplication1.Features.Work.Entities.FieldType;
 
 namespace WebApplication1.Shared.Data;
@@ -501,6 +502,84 @@ public static class DbSeeder
             logger?.LogInformation("[DbSeeder] DailyPlans seeded.");
         }
 
+        // Tasks - 统一任务系统
+        if (!await context.Tasks.AnyAsync())
+        {
+            logger?.LogInformation("[DbSeeder] Seeding Tasks...");
+            var user = await context.Users.FirstAsync(u => u.Username == "vben");
+            var tasks = new List<TaskItem>();
+
+            var todayTasks = new[]
+            {
+                ("完成生产线A的调试工作", "正在调试中发现参数异常", TaskPriority.High, TaskType.Work, TaskSource.Work),
+                ("参加质量分析会议", "准备汇报材料", TaskPriority.Medium, TaskType.Work, TaskSource.Work),
+                ("设备日常点检", null, TaskPriority.Low, TaskType.Work, TaskSource.Work),
+                ("阅读《设计模式》章节", "复习单例模式", TaskPriority.Medium, TaskType.Personal, TaskSource.Growth),
+                ("30分钟有氧运动", null, TaskPriority.Medium, TaskType.Personal, TaskSource.Growth),
+            };
+            foreach (var (title, remark, priority, type, source) in todayTasks)
+            {
+                tasks.Add(new TaskItem
+                {
+                    UserId = user.Id,
+                    PlanDate = today,
+                    Title = title,
+                    Description = remark,
+                    Remark = remark,
+                    Priority = priority,
+                    Type = type,
+                    Source = source,
+                    Status = priority == TaskPriority.High ? TaskItemStatus.Completed : TaskItemStatus.Pending,
+                    CreatedAt = now
+                });
+            }
+
+            var tomorrowTasks = new[]
+            {
+                ("完成设备B的维护保养", "准备维护工具和配件", TaskPriority.High, TaskType.Work, TaskSource.Work),
+                ("编写设备操作SOP", "参考现有文档", TaskPriority.Medium, TaskType.Work, TaskSource.Work),
+                ("参加项目例会", "准备进度汇报", TaskPriority.Medium, TaskType.Work, TaskSource.Work),
+                ("整理月度数据报告", null, TaskPriority.Low, TaskType.Work, TaskSource.Work),
+                ("学习英语口语", "30分钟听力练习", TaskPriority.Medium, TaskType.Personal, TaskSource.Growth),
+            };
+            foreach (var (title, remark, priority, type, source) in tomorrowTasks)
+            {
+                tasks.Add(new TaskItem
+                {
+                    UserId = user.Id,
+                    PlanDate = today.AddDays(1),
+                    Title = title,
+                    Description = remark,
+                    Remark = remark,
+                    Priority = priority,
+                    Type = type,
+                    Source = source,
+                    Status = TaskItemStatus.Pending,
+                    CreatedAt = now
+                });
+            }
+
+            for (int day = -3; day <= -1; day++)
+            {
+                tasks.Add(new TaskItem
+                {
+                    UserId = user.Id,
+                    PlanDate = today.AddDays(day),
+                    Title = $"已完成任务 - {Math.Abs(day)}天前",
+                    Description = "已完成的工作内容",
+                    Priority = TaskPriority.Medium,
+                    Type = TaskType.Work,
+                    Source = TaskSource.Work,
+                    Status = TaskItemStatus.Completed,
+                    CreatedAt = now.AddDays(day)
+                });
+            }
+
+            context.Tasks.AddRange(tasks);
+            await context.SaveChangesAsync();
+            logger?.LogInformation("[DbSeeder] Tasks seeded.");
+        }
+
         // WorkLogTemplates
         if (!await context.WorkLogTemplates.AnyAsync())
         {
@@ -659,6 +738,7 @@ public static class DbSeeder
                 new() { Code = "WORK_RISK", Name = "风险管理", Category = "Work", Description = "项目风险管理" },
 
                 // 成长模块
+                new() { Code = "TASK_UNIFIED", Name = "统一任务", Category = "Growth", Description = "统一任务系统（个人+工作）" },
                 new() { Code = "GROWTH_DAILY_PLAN", Name = "每日计划", Category = "Growth", Description = "每日计划管理" },
                 new() { Code = "GROWTH_HABIT", Name = "习惯打卡", Category = "Growth", Description = "习惯养成和打卡" },
                 new() { Code = "GROWTH_KNOWLEDGE", Name = "知识库", Category = "Growth", Description = "知识文章管理" },

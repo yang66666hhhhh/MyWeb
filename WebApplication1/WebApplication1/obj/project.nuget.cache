@@ -75,5 +75,30 @@
     "C:\\Users\\YANG\\.nuget\\packages\\xlparser\\1.5.2\\xlparser.1.5.2.nupkg.sha512",
     "C:\\Users\\YANG\\.nuget\\packages\\zstdsharp.port\\0.8.6\\zstdsharp.port.0.8.6.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "message": "包 \"System.IO.Packaging\" 6.0.0 具有已知的 高 严重性漏洞，https://github.com/advisories/GHSA-f32c-w444-8ppv",
+      "projectPath": "D:\\03_Projects\\Personal\\MyWebSite\\WebApplication1\\WebApplication1\\WebApplication1.csproj",
+      "warningLevel": 1,
+      "filePath": "D:\\03_Projects\\Personal\\MyWebSite\\WebApplication1\\WebApplication1\\WebApplication1.csproj",
+      "libraryId": "System.IO.Packaging",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    },
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "message": "包 \"System.IO.Packaging\" 6.0.0 具有已知的 高 严重性漏洞，https://github.com/advisories/GHSA-qj66-m88j-hmgj",
+      "projectPath": "D:\\03_Projects\\Personal\\MyWebSite\\WebApplication1\\WebApplication1\\WebApplication1.csproj",
+      "warningLevel": 1,
+      "filePath": "D:\\03_Projects\\Personal\\MyWebSite\\WebApplication1\\WebApplication1\\WebApplication1.csproj",
+      "libraryId": "System.IO.Packaging",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    }
+  ]
 }
