@@ -18,9 +18,10 @@
 | **状态管理** | Pinia | ^3.x |
 | **路由** | Vue Router | ^4.x |
 | **语言** | TypeScript | ^5.x |
+| **前端脚手架** | vue-vben-admin | 5.7.0 |
 | **后端框架** | ASP.NET Core | 10.0 |
 | **数据库** | MySQL | 10.0.1 |
-| **ORM** | Entity Framework Core | 10.0.7 |
+| **ORM** | Entity Framework Core | 10.0.1 |
 | **认证** | JWT Bearer | 10.0.7 |
 
 ### 1.3 项目地址
@@ -52,16 +53,18 @@
 | **Student** | 学生 |
 | **Implementation** | 实施工程师 |
 | **General** | 通用 |
+| **Sales** | 销售 |
+| **Freelancer** | 自由职业者 |
 
 ### 2.3 功能点系统（Feature）
 
 每个功能点有唯一 Code，按 Category 分组：
 - **Work**: WORK_LOG, WORK_PROJECT, WORK_DEVICE, WORK_TASK, WORK_IMPORT, WORK_TEMPLATE, WORK_OKR, WORK_GANTT, WORK_RISK
-- **Growth**: TASK_UNIFIED, GROWTH_DAILY_PLAN, GROWTH_HABIT, GROWTH_KNOWLEDGE, GROWTH_SKILL, GROWTH_FITNESS
-- **AI**: AI_ASSISTANT, AI_PLANNER, AI_REPORT, AI_INSIGHTS
+- **Growth**: TASK_UNIFIED, GROWTH_DAILY_PLAN, GROWTH_HABIT, GROWTH_KNOWLEDGE, GROWTH_SKILL, GROWTH_FITNESS, GROWTH_READING, GROWTH_MOOD
+- **AI**: AI_ASSISTANT, AI_PLANNER, AI_REPORT, AI_INSIGHTS, AI_KNOWLEDGE_CHAT, AI_AUTOMATION
 - **Assets**: ASSET_DASHBOARD, ASSET_INCOME, ASSET_EXPENSE, ASSET_BUDGET, ASSET_INVEST
-- **Analytics**: ANALYTICS_GROWTH, ANALYTICS_WORK, ANALYTICS_FINANCE
-- **Persona**: DEV_*, DESIGN_*, TEACHER_*, IMPL_*, STUDENT_*
+- **Analytics**: ANALYTICS_GROWTH, ANALYTICS_WORK, ANALYTICS_FINANCE, ANALYTICS_TIME, ANALYTICS_HABITS, ANALYTICS_CUSTOM, ANALYTICS_AI
+- **Persona**: DEV_*, DESIGN_*, TEACHER_*, IMPL_*, STUDENT_*, SALES_*, FREELANCER_*
 
 ### 2.4 权限公式
 
@@ -101,6 +104,11 @@
 
 ```
 ├── 工作台 (/dashboard/workspace) [Base, Dashboard]
+│   └── 分析中心 (/dashboard/analytics) [Owner]
+│       ├── 访问分析
+│       ├── 销售分析
+│       ├── 数据报表
+│       └── 趋势分析
 │
 ├── 个人成长 (/growth) [Base, Growth]
 │   ├── 成长看板 (/growth/dashboard) [Base]
@@ -108,36 +116,64 @@
 │   ├── 习惯打卡 (/growth/habits) [Base, GROWTH_HABIT]
 │   ├── 知识库 (/growth/knowledge-base) [Pro, GROWTH_KNOWLEDGE]
 │   ├── 技能管理 (/growth/skills) [Pro, GROWTH_SKILL]
-│   └── 专注计时 (/growth/focus-timer) [Pro]
+│   ├── 阅读清单 (/growth/reading-list) [Pro]
+│   ├── 心情日记 (/growth/mood-tracker) [Pro]
+│   ├── 健身记录 (/growth/fitness) [Pro, GROWTH_FITNESS]
+│   ├── 专注计时 (/growth/focus-timer) [Pro]
+│   ├── 月度复盘 (/growth/monthly-review) [Pro]
+│   ├── 年度规划 (/growth/year-plans) [Pro]
+│   ├── 课程学习 (/growth/courses) [Pro]
+│   ├── 学习路径 (/growth/learning-path) [Pro]
+│   ├── 目标管理 (/growth/goals) [Pro]
+│   └── 睡眠追踪 (/growth/sleep) [Pro]
 │
 ├── 工作中心 (/work) [Base, Work]
 │   ├── 工作看板 (/work/dashboard) [Base]
-│   ├── 工作日志 (/work/work-log) [Base, WORK_LOG]
+│   ├── 工作日志 (/work/log) [Base, WORK_LOG]
 │   ├── 实施日志 (/work/impl-log) [Pro, Implementation]
-│   ├── 工作任务 (/work/tasks) [Base, WORK_TASK]
+│   ├── 统一任务 (/work/tasks) [Base, WORK_TASK]
 │   ├── 工作项目 (/work/project) [Pro, WORK_PROJECT]
+│   ├── 周计划 (/work/weekly-plan) [Pro]
+│   ├── OKR管理 (/work/okr) [Pro]
+│   ├── 甘特图 (/work/gantt) [Pro]
+│   ├── 风险管理 (/work/risk-control) [Pro]
 │   ├── 设备管理 (/work/device) [Pro, WORK_DEVICE]
+│   ├── 软件资产 (/work/software-assets) [Pro]
 │   ├── 数据导入 (/work/import) [Pro, WORK_IMPORT]
-│   └── 统计分析 (/work/statistics) [Pro]
+│   ├── 模板管理 (/work/templates) [Pro]
+│   ├── 统计分析 (/work/statistics) [Pro]
+│   └── 文件中心 (/work/files) [Pro]
 │
 ├── AI 助手 (/ai) [Pro, AI]
 │   ├── AI 助手 (/ai/assistant) [Pro, AI_ASSISTANT]
 │   ├── AI 规划器 (/ai/planner) [Pro, AI_PLANNER]
-│   └── AI 报告 (/ai/reports) [Owner, AI_REPORT]
+│   ├── AI 报告 (/ai/reports) [Owner, AI_REPORT]
+│   ├── 知识库问答 (/ai/knowledge-chat) [Pro]
+│   ├── AI 洞察 (/ai/insights) [Owner, AI_INSIGHTS]
+│   └── 自动化 (/ai/automation) [Pro]
 │
 ├── 财务资产 (/assets) [Pro, Assets]
-│   ├── 资产看板 (/assets/dashboard) [Pro]
-│   ├── 收支记录 (/assets/income) [Pro]
-│   └── 预算管理 (/assets/budget) [Pro]
+│   ├── 资产看板 (/assets/dashboard) [Pro, ASSET_DASHBOARD]
+│   ├── 收入记录 (/assets/income) [Pro, ASSET_INCOME]
+│   ├── 支出记录 (/assets/expenses) [Pro, ASSET_EXPENSE]
+│   ├── 预算管理 (/assets/budget) [Pro, ASSET_BUDGET]
+│   ├── 投资管理 (/assets/investments) [Pro, ASSET_INVEST]
+│   └── 资源中心 (/assets/resources) [Pro]
 │
 ├── 数据分析 (/analytics) [Owner, Analytics]
-│   ├── 成长分析 (/analytics/growth) [Owner]
-│   └── 工作分析 (/analytics/work) [Owner]
+│   ├── 成长分析 (/analytics/growth) [Owner, ANALYTICS_GROWTH]
+│   ├── 工作分析 (/analytics/work) [Owner, ANALYTICS_WORK]
+│   ├── 财务分析 (/analytics/finance) [Owner, ANALYTICS_FINANCE]
+│   ├── 时间分析 (/analytics/time) [Owner, ANALYTICS_TIME]
+│   ├── 习惯分析 (/analytics/habits) [Owner, ANALYTICS_HABITS]
+│   ├── 自定义报表 (/analytics/custom-reports) [Owner, ANALYTICS_CUSTOM]
+│   └── AI洞察 (/analytics/ai-insights) [Owner, ANALYTICS_AI]
 │
 ├── 平台管理 (/system) [Pro, System]
 │   ├── 用户管理 (/system/user) [Pro]
 │   ├── 角色菜单 (/system/role-menu) [Owner]
-│   └── 身份类型 (/system/persona) [Owner]
+│   ├── 身份类型 (/system/persona) [Owner]
+│   └── 菜单标签 (/system/menu-tag) [Owner]
 │
 ├── 开发者中心 (/dev) [Persona=Developer]
 │   ├── 代码仓库 (/dev/code-repository)
@@ -156,10 +192,22 @@
 │   ├── 项目看板 (/implementation/kanban)
 │   └── 客户管理 (/implementation/customers)
 │
-└── 学生中心 (/student) [Persona=Student]
-    ├── 学习计划 (/student/learning)
-    ├── 错题本 (/student/mistakes)
-    └── 考研备考 (/student/postgraduate)
+├── 学生中心 (/student) [Persona=Student]
+│   ├── 学习计划 (/student/learning)
+│   ├── 错题本 (/student/mistakes)
+│   └── 考研备考 (/student/postgraduate)
+│
+├── 实验中心 (/labs) [Pro]
+│   ├── AI实验室 (/labs/ai-lab)
+│   ├── 数据实验室 (/labs/data-lab)
+│   ├── 模板市场 (/labs/templates)
+│   └── UI组件 (/labs/ui-components)
+│
+└── 个人中心 (/profile) [Base]
+    ├── 基本设置
+    ├── 安全设置
+    ├── 密码修改
+    └── 通知设置
 ```
 
 ---
@@ -280,16 +328,23 @@
 | Description | VARCHAR(500) | | 描述 |
 | FieldDefinitions | JSON | NOT NULL | 字段定义 |
 
-### 4.4 其他核心表
+### 4.4 成长模块表
+
+- **Habits** / **HabitCheckIns** - 习惯打卡
+- **GrowthProjects** - 成长项目
+- **KnowledgeArticles** - 知识库
+- **PostgraduateTasks** / **ExamMistakes** / **ExamMaterials** - 考研相关
+
+### 4.5 其他核心表
 
 - **Tasks** - 统一任务系统（个人+工作，通过 Type/Source 区分）
 - **WorkProjects** - 工作项目
 - **WorkDevices** - 工作设备
 - **WorkTaskTypes** - 任务类型
-- **Habits** / **HabitCheckIns** - 习惯打卡
-- **GrowthProjects** - 成长项目
-- **KnowledgeArticles** - 知识库
+- **WorkDailyPlans** - 工作日程计划
+- **WorkImports** - 数据导入
 - **AiPlans** / **AiReports** / **AiChatSessions** - AI模块
+- **Income** / **Expense** / **Budget** / **Investment** - 财务资产
 - **RoleMenus** - 角色菜单
 - **MenuActions** / **RolePermissions** - 按钮级权限
 
@@ -357,6 +412,7 @@
 | `/api/work/projects` | 工作项目 |
 | `/api/work/devices` | 设备管理 |
 | `/api/work/task-types` | 任务类型 |
+| `/api/work/daily-plans` | 工作日程 |
 | `/api/work/statistics` | 统计分析 |
 | `/api/work/imports` | 数据导入 |
 | `/api/work/templates` | 模板管理 |
@@ -384,13 +440,29 @@
 
 ### 5.10 AI模块 `/api/ai`
 
-### 5.9 AI模块 `/api/ai`
-
 | 方法 | 端点 | 描述 |
 |---|---|---|
 | POST | `/chat` | AI对话 |
-| POST | `/generate-plan` | 生成计划 |
-| POST | `/generate-report` | 生成报告 |
+| GET | `/plans` | AI计划列表 |
+| POST | `/plans` | 创建AI计划 |
+| GET | `/reports` | AI报告列表 |
+| POST | `/reports` | 创建AI报告 |
+
+### 5.11 个人日程 `/api/daily-plans`
+
+| 方法 | 端点 | 描述 |
+|---|---|---|
+| GET | `/` | 日程列表 |
+| POST | `/` | 创建日程 |
+| PUT | `/{id}` | 更新日程 |
+| DELETE | `/{id}` | 删除日程 |
+
+### 5.12 Persona管理 `/api/persona-types`
+
+| 方法 | 端点 | 描述 |
+|---|---|---|
+| GET | `/` | 获取所有身份类型 |
+| GET | `/{code}` | 获取特定身份 |
 
 ---
 
@@ -411,30 +483,38 @@
 
 | 模块 | 路径 | 页面数 |
 |---|---|---|
-| dashboard | /dashboard | 2 |
-| growth | /growth | 11 |
+| dashboard | /dashboard | 6 |
+| growth | /growth | 15 |
 | work | /work | 16 |
 | assets | /assets | 6 |
+| ai | /ai | 6 |
+| analytics | /analytics | 7 |
+| system | /system | 4 |
 | dev | /dev | 3 |
 | design | /design | 2 |
 | teacher | /teacher | 2 |
 | implementation | /implementation | 2 |
 | student | /student | 3 |
-| analytics | /analytics | 7 |
-| ai | /ai | 6 |
-| system | /system | 4 |
-| vben | /external-links, /about, /profile | 3 |
-| demos | /demos | 1 |
+| labs | /labs | 4 |
+| _core | /auth, /profile, /fallback | 14 |
+| other | /external-links, /about, /demos | 3 |
 
-**总计: 68 个页面**
+**总计: 85 个页面**
 
-### 7.2 API 文件 (27个)
+### 7.2 API 文件 (29个)
 
-- `api/core/` - auth.ts, user.ts, menu.ts
-- `api/system/` - persona.ts, menu-tag.ts, user.ts
-- `api/work/` - workLog.ts, project.ts, device.ts, taskType.ts, dailyPlan.ts, import.ts, statistics.ts, template.ts, logTemplate.ts
-- `api/growth/` - habit.ts, daily-plan.ts, knowledge-base.ts, postgraduate.ts, project.ts
-- `api/ai/` - index.ts
+```
+api/
+├── core/        (auth.ts, user.ts, menu.ts, index.ts)
+├── system/     (user.ts, persona.ts, menu-tag.ts)
+├── work/       (workLog.ts, project.ts, device.ts, taskType.ts, dailyPlan.ts,
+│                import.ts, statistics.ts, template.ts, logTemplate.ts, types.ts, index.ts)
+├── growth/     (habit.ts, daily-plan.ts, knowledge-base.ts, postgraduate.ts,
+│                project.ts, task.ts, index.ts, types.ts)
+├── ai/         (index.ts)
+├── analytics.ts
+└── request.ts
+```
 
 ### 7.3 组件
 
@@ -499,6 +579,7 @@ dotnet ef database update
 5. **动态日志模板**：不同Persona有不同的日志字段（JSON扩展）
 6. **菜单分类**：MenuCategory 字段组织菜单
 7. **按钮级权限**：MenuActions + RolePermissions
+8. **统一任务系统**：Tasks 表统一管理个人任务和工作任务
 
 ---
 
@@ -553,6 +634,8 @@ public async Task<HashSet<string>> GetUserFeaturesAsync(Guid userId)
 2. **AI模块桩代码**：需配置 OPENAI_API_KEY 环境变量启用真实AI
 3. ~~前端角色选项~~（已修复）
 
+---
+
 ## 12. 环境变量
 
 生产环境需设置以下环境变量：
@@ -562,6 +645,8 @@ public async Task<HashSet<string>> GetUserFeaturesAsync(Guid userId)
 | `DB_CONNECTION` | MySQL 连接字符串 | 是 |
 | `JWT_SECRET_KEY` | JWT 密钥（最少32字符） | 是 |
 | `OPENAI_API_KEY` | OpenAI API Key | 否（不设置则返回模拟响应） |
+
+---
 
 ## 13. 数据库迁移
 
@@ -581,3 +666,18 @@ dotnet test
 ```
 
 当前测试覆盖：TaskItemService, KnowledgeArticleService, DailyPlanService, WorkProjectService, RoleMenuService
+
+---
+
+## 15. 更新日志
+
+### v2.0 (2025-05)
+
+- 新增 **8种职业身份**：Developer, Designer, Teacher, Student, Implementation, General, Sales, Freelancer
+- 新增 **实验中心 (/labs)** 模块：AI实验室、数据实验室、模板市场、UI组件
+- 成长模块扩展至 **15个页面**
+- AI模块扩展至 **6个页面**
+- 数据分析模块扩展至 **7个页面**
+- 财务资产模块扩展至 **6个页面**
+- 新增工作模块：周计划、OKR、甘特图、风险管理、软件资产、文件中心
+- 统一任务系统（Tasks）替代原有的 DailyPlans 表
