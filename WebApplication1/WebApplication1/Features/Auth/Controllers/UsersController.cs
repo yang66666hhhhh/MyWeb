@@ -11,6 +11,7 @@ namespace WebApplication1.Features.Auth.Controllers;
 [Authorize]
 [Route("api/users")]
 [Authorize(Roles = "pro,owner")]
+[Tags("Users")]
 public class UsersController(IUserService userService) : ControllerBase
 {
     private bool IsOwner() =>

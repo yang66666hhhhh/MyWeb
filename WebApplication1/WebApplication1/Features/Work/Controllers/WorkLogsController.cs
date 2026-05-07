@@ -9,6 +9,7 @@ namespace WebApplication1.Features.Work.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/work/logs")]
+[Tags("Work - Logs")]
 public class WorkLogsController(IWorkLogService logService) : BaseApiController
 {
     [HttpGet]

@@ -11,6 +11,7 @@ namespace WebApplication1.Features.Auth.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/admin/user-tags")]
+[Tags("Admin - User Tags")]
 public class UserTagController(AppDbContext db) : ControllerBase
 {
     [HttpGet("{userId:guid}")]

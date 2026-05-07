@@ -13,6 +13,7 @@ namespace WebApplication1.Features.User.Controllers;
 [ApiController]
 [Route("api/user/persona")]
 [Authorize]
+[Tags("User Personas")]
 public class UserPersonaController : ControllerBase
 {
     private readonly AppDbContext _context;

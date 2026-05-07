@@ -12,6 +12,7 @@ namespace WebApplication1.Features.Auth.Controllers;
 [ApiController]
 [Route("api/role-menus")]
 [Authorize]
+[Tags("Admin - Role Menus")]
 public class RoleMenuController(RoleMenuService roleMenuService, AppDbContext context) : ControllerBase
 {
     [HttpGet("mine")]

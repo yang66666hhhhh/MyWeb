@@ -10,6 +10,7 @@ namespace WebApplication1.Features.Ai.Controllers;
 [ApiController]
 [Route("api/ai")]
 [Authorize]
+[Tags("AI")]
 public class AiController : ControllerBase
 {
     private readonly IAiService _aiService;

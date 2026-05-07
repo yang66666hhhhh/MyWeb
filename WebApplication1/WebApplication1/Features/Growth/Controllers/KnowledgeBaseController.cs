@@ -9,6 +9,7 @@ namespace WebApplication1.Features.Growth.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/growth/knowledge-base")]
+[Tags("Growth - Knowledge Base")]
 public class KnowledgeBaseController(IKnowledgeArticleService articleService) : BaseApiController
 {
     [HttpGet]

@@ -63,18 +63,18 @@ public interface IWorkImportService
 {
     Task<PageResult<WorkImportBatchDto>> GetBatchPageAsync(WorkImportBatchQueryDto query, CancellationToken cancellationToken = default);
     Task<WorkImportPreviewResultDto> PreviewWorkLogAsync(Stream stream, string fileName, CancellationToken cancellationToken = default);
-    Task<WorkImportConfirmResultDto> ExecuteWorkLogImportAsync(WorkImportConfirmDto input, CancellationToken cancellationToken = default);
+    Task<WorkImportConfirmResultDto> ExecuteWorkLogImportAsync(WorkImportConfirmDto input, Guid userId, CancellationToken cancellationToken = default);
     byte[] GenerateWorkLogTemplate();
 
     Task<WorkImportPreviewResultDto> PreviewProjectAsync(Stream stream, string fileName, CancellationToken cancellationToken = default);
-    Task<WorkImportConfirmResultDto> ExecuteProjectImportAsync(WorkImportConfirmDto input, CancellationToken cancellationToken = default);
+    Task<WorkImportConfirmResultDto> ExecuteProjectImportAsync(WorkImportConfirmDto input, Guid userId, CancellationToken cancellationToken = default);
     byte[] GenerateProjectTemplate();
 
     Task<WorkImportPreviewResultDto> PreviewDeviceAsync(Stream stream, string fileName, CancellationToken cancellationToken = default);
-    Task<WorkImportConfirmResultDto> ExecuteDeviceImportAsync(WorkImportConfirmDto input, CancellationToken cancellationToken = default);
+    Task<WorkImportConfirmResultDto> ExecuteDeviceImportAsync(WorkImportConfirmDto input, Guid userId, CancellationToken cancellationToken = default);
     byte[] GenerateDeviceTemplate();
 
     Task<WorkImportPreviewResultDto> PreviewTaskTypeAsync(Stream stream, string fileName, CancellationToken cancellationToken = default);
-    Task<WorkImportConfirmResultDto> ExecuteTaskTypeImportAsync(WorkImportConfirmDto input, CancellationToken cancellationToken = default);
+    Task<WorkImportConfirmResultDto> ExecuteTaskTypeImportAsync(WorkImportConfirmDto input, Guid userId, CancellationToken cancellationToken = default);
     byte[] GenerateTaskTypeTemplate();
 }

@@ -10,6 +10,7 @@ namespace WebApplication1.Features.Auth.Controllers;
 [ApiController]
 [Route("api/admin/features")]
 [Authorize(Roles = "owner")]
+[Tags("Admin - Features")]
 public class FeatureController(AppDbContext context) : ControllerBase
 {
     [HttpGet]

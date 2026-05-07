@@ -9,6 +9,7 @@ namespace WebApplication1.Features.Growth.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/growth/projects")]
+[Tags("Growth - Projects")]
 public class GrowthProjectsController(IGrowthProjectService projectService) : BaseApiController
 {
     [HttpGet]

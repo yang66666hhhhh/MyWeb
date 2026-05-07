@@ -9,6 +9,7 @@ namespace WebApplication1.Features.Work.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/work/task-types")]
+[Tags("Work - Task Types")]
 public class WorkTaskTypesController(IWorkTaskTypeService taskTypeService) : ControllerBase
 {
     [HttpGet]

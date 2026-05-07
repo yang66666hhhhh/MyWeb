@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -59,8 +60,15 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "Personal Growth Management API",
         Version = "v1",
-        Description = "DailyPlan, Habit, WorkLog, KnowledgeBase, Postgraduate and Project APIs."
+        Description = "全栈个人成长与工作管理系统 API - 支持每日计划、习惯打卡、工作日志、知识库、考研备选、AI助手等功能"
     });
+
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -69,7 +77,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Input JWT token, for example: Bearer {token}"
+        Description = "输入 JWT 令牌，格式: Bearer {token}"
     });
 
     options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
@@ -145,6 +153,8 @@ builder.Services.AddScoped<IWorkLogService, WorkLogService>();
 builder.Services.AddScoped<IWorkStatisticsService, WorkStatisticsService>();
 builder.Services.AddScoped<IWorkDailyPlanService, WorkDailyPlanService>();
 builder.Services.AddScoped<IWorkImportService, WorkImportService>();
+builder.Services.AddScoped<IImplLogService, ImplLogService>();
+builder.Services.AddScoped<IWorkCategoryService, WorkCategoryService>();
 builder.Services.AddScoped<IHabitService, HabitService>();
 builder.Services.AddScoped<IGrowthProjectService, GrowthProjectService>();
 builder.Services.AddScoped<IKnowledgeArticleService, KnowledgeArticleService>();

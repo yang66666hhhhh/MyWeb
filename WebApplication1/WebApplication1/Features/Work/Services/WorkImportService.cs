@@ -140,7 +140,7 @@ public class WorkImportService : IWorkImportService
         return result;
     }
 
-    public async Task<WorkImportConfirmResultDto> ExecuteWorkLogImportAsync(WorkImportConfirmDto input, CancellationToken cancellationToken = default)
+    public async Task<WorkImportConfirmResultDto> ExecuteWorkLogImportAsync(WorkImportConfirmDto input, Guid userId, CancellationToken cancellationToken = default)
     {
         var result = new WorkImportConfirmResultDto();
         var stopwatch = Stopwatch.StartNew();
@@ -148,6 +148,7 @@ public class WorkImportService : IWorkImportService
         var batch = new WorkImportBatch
         {
             Id = Guid.NewGuid(),
+            UserId = userId,
             FileName = "工作日志导入",
             Status = WorkImportStatus.Processing,
             ImportStrategy = input.ImportStrategy,
@@ -181,6 +182,7 @@ public class WorkImportService : IWorkImportService
                 workLogs.Add(new WorkLog
                 {
                     Id = Guid.NewGuid(),
+                    UserId = userId,
                     WorkDate = workDate,
                     WeekDay = "",
                     ProjectId = project?.Id ?? Guid.Empty,
@@ -307,13 +309,14 @@ public class WorkImportService : IWorkImportService
         return result;
     }
 
-    public async Task<WorkImportConfirmResultDto> ExecuteProjectImportAsync(WorkImportConfirmDto input, CancellationToken cancellationToken = default)
+    public async Task<WorkImportConfirmResultDto> ExecuteProjectImportAsync(WorkImportConfirmDto input, Guid userId, CancellationToken cancellationToken = default)
     {
         var result = new WorkImportConfirmResultDto();
 
         var batch = new WorkImportBatch
         {
             Id = Guid.NewGuid(),
+            UserId = userId,
             FileName = "项目导入",
             Status = WorkImportStatus.Processing,
             ImportStrategy = input.ImportStrategy,
@@ -321,7 +324,7 @@ public class WorkImportService : IWorkImportService
         };
 
         _context.WorkImportBatches.Add(batch);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(cancellationToken);
 
         try
         {
@@ -483,13 +486,14 @@ public class WorkImportService : IWorkImportService
         return result;
     }
 
-    public async Task<WorkImportConfirmResultDto> ExecuteDeviceImportAsync(WorkImportConfirmDto input, CancellationToken cancellationToken = default)
+    public async Task<WorkImportConfirmResultDto> ExecuteDeviceImportAsync(WorkImportConfirmDto input, Guid userId, CancellationToken cancellationToken = default)
     {
         var result = new WorkImportConfirmResultDto();
 
         var batch = new WorkImportBatch
         {
             Id = Guid.NewGuid(),
+            UserId = userId,
             FileName = "设备导入",
             Status = WorkImportStatus.Processing,
             ImportStrategy = input.ImportStrategy,
@@ -497,7 +501,7 @@ public class WorkImportService : IWorkImportService
         };
 
         _context.WorkImportBatches.Add(batch);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(cancellationToken);
 
         try
         {
@@ -650,13 +654,14 @@ public class WorkImportService : IWorkImportService
         return result;
     }
 
-    public async Task<WorkImportConfirmResultDto> ExecuteTaskTypeImportAsync(WorkImportConfirmDto input, CancellationToken cancellationToken = default)
+    public async Task<WorkImportConfirmResultDto> ExecuteTaskTypeImportAsync(WorkImportConfirmDto input, Guid userId, CancellationToken cancellationToken = default)
     {
         var result = new WorkImportConfirmResultDto();
 
         var batch = new WorkImportBatch
         {
             Id = Guid.NewGuid(),
+            UserId = userId,
             FileName = "任务类型导入",
             Status = WorkImportStatus.Processing,
             ImportStrategy = input.ImportStrategy,
@@ -664,7 +669,7 @@ public class WorkImportService : IWorkImportService
         };
 
         _context.WorkImportBatches.Add(batch);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(cancellationToken);
 
         try
         {

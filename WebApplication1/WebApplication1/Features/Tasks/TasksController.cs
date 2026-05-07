@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Shared.Common;
-using WebApplication1.Features.Tasks;
 
 namespace WebApplication1.Features.Tasks;
 
 [ApiController]
 [Authorize]
 [Route("api/tasks")]
+[Tags("Tasks")]
 public class TasksController(ITaskItemService taskService) : BaseApiController
 {
     [HttpGet]

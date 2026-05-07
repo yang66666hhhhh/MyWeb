@@ -7,6 +7,7 @@ namespace WebApplication1.Features.DailyPlans;
 [ApiController]
 [Authorize]
 [Route("api/daily-plans")]
+[Tags("Daily Plans")]
 public class DailyPlansController(IDailyPlanService dailyPlanService) : ControllerBase
 {
     [HttpGet]

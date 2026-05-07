@@ -11,6 +11,7 @@ namespace WebApplication1.Features.Auth.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/admin/menus")]
+[Tags("Admin - Menus")]
 public class MenuAdminController(AppDbContext db) : ControllerBase
 {
     [HttpGet]

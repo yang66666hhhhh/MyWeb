@@ -10,6 +10,7 @@ namespace WebApplication1.Features.Auth.Controllers;
 [ApiController]
 [Route("api/subscriptions")]
 [Authorize]
+[Tags("Subscriptions")]
 public class SubscriptionController(AppDbContext context) : BaseApiController
 {
     [HttpGet("my")]

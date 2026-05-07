@@ -10,6 +10,7 @@ namespace WebApplication1.Features.Auth.Controllers;
 [ApiController]
 [Route("api/admin/persona-features")]
 [Authorize(Roles = "owner")]
+[Tags("Admin - Features")]
 public class PersonaFeatureController(AppDbContext context) : ControllerBase
 {
     [HttpGet("{personaCode}")]

@@ -9,6 +9,7 @@ namespace WebApplication1.Features.Work.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/work/daily-plans")]
+[Tags("Work - Daily Plans")]
 public class WorkDailyPlansController(IWorkDailyPlanService dailyPlanService) : BaseApiController
 {
     [HttpGet]

@@ -10,6 +10,7 @@ namespace WebApplication1.Features.Work.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/work/templates")]
+[Tags("Work - Templates")]
 public class TemplatesController(ITemplateService templateService) : BaseApiController
 {
     [HttpGet]

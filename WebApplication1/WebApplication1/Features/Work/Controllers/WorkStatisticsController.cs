@@ -9,6 +9,7 @@ namespace WebApplication1.Features.Work.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/work/statistics")]
+[Tags("Work - Statistics")]
 public class WorkStatisticsController(IWorkStatisticsService statisticsService) : ControllerBase
 {
     [HttpGet("overview")]

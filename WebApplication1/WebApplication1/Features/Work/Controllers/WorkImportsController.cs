@@ -11,7 +11,8 @@ namespace WebApplication1.Features.Work.Controllers;
 [Authorize]
 [Route("api/work/import")]
 [RequestSizeLimit(10 * 1024 * 1024)]
-public class WorkImportsController(IWorkImportService importService) : ControllerBase
+[Tags("Work - Import")]
+public class WorkImportsController(IWorkImportService importService) : BaseApiController
 {
     [HttpGet]
     public async Task<ActionResult<ApiResult<PageResult<WorkImportBatchDto>>>> GetPage(
@@ -40,7 +41,11 @@ public class WorkImportsController(IWorkImportService importService) : Controlle
         [FromBody] WorkImportConfirmDto input,
         CancellationToken cancellationToken)
     {
-        var result = await importService.ExecuteWorkLogImportAsync(input, cancellationToken);
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+
+        var result = await importService.ExecuteWorkLogImportAsync(input, userId.Value, cancellationToken);
         return Ok(ApiResult<WorkImportConfirmResultDto>.Success(result, "导入完成"));
     }
 
@@ -70,7 +75,11 @@ public class WorkImportsController(IWorkImportService importService) : Controlle
         [FromBody] WorkImportConfirmDto input,
         CancellationToken cancellationToken)
     {
-        var result = await importService.ExecuteProjectImportAsync(input, cancellationToken);
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+
+        var result = await importService.ExecuteProjectImportAsync(input, userId.Value, cancellationToken);
         return Ok(ApiResult<WorkImportConfirmResultDto>.Success(result, "导入完成"));
     }
 
@@ -100,7 +109,11 @@ public class WorkImportsController(IWorkImportService importService) : Controlle
         [FromBody] WorkImportConfirmDto input,
         CancellationToken cancellationToken)
     {
-        var result = await importService.ExecuteDeviceImportAsync(input, cancellationToken);
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+
+        var result = await importService.ExecuteDeviceImportAsync(input, userId.Value, cancellationToken);
         return Ok(ApiResult<WorkImportConfirmResultDto>.Success(result, "导入完成"));
     }
 
@@ -130,7 +143,11 @@ public class WorkImportsController(IWorkImportService importService) : Controlle
         [FromBody] WorkImportConfirmDto input,
         CancellationToken cancellationToken)
     {
-        var result = await importService.ExecuteTaskTypeImportAsync(input, cancellationToken);
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+
+        var result = await importService.ExecuteTaskTypeImportAsync(input, userId.Value, cancellationToken);
         return Ok(ApiResult<WorkImportConfirmResultDto>.Success(result, "导入完成"));
     }
 

@@ -10,6 +10,7 @@ namespace WebApplication1.Features.User;
 [ApiController]
 [Authorize]
 [Route("api/user/profile")]
+[Tags("User")]
 public class UserProfileController(AppDbContext context) : ControllerBase
 {
     private Guid? GetUserId()

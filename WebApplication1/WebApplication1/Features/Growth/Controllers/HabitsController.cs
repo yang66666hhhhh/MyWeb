@@ -9,6 +9,7 @@ namespace WebApplication1.Features.Growth.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/growth/habits")]
+[Tags("Growth - Habits")]
 public class HabitsController(IHabitService habitService) : BaseApiController
 {
     [HttpGet]

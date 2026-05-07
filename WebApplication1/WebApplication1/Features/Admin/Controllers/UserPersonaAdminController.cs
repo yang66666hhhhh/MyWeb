@@ -13,6 +13,7 @@ namespace WebApplication1.Features.Admin.Controllers;
 [ApiController]
 [Route("api/admin/users")]
 [Authorize(Roles = "owner")]
+[Tags("Admin - Users")]
 public class UserPersonaAdminController : ControllerBase
 {
     private readonly AppDbContext _context;

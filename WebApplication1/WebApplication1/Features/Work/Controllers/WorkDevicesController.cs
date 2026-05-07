@@ -9,6 +9,7 @@ namespace WebApplication1.Features.Work.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/work/devices")]
+[Tags("Work - Devices")]
 public class WorkDevicesController(IWorkDeviceService deviceService) : ControllerBase
 {
     [HttpGet]

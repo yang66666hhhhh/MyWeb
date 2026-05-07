@@ -8,6 +8,7 @@ namespace WebApplication1.Features.User;
 [ApiController]
 [Authorize]
 [Route("api/user")]
+[Tags("User")]
 public class UserController(IAuthService authService) : ControllerBase
 {
     [HttpGet("info")]

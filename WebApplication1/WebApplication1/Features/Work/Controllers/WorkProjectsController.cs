@@ -9,6 +9,7 @@ namespace WebApplication1.Features.Work.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/work/projects")]
+[Tags("Work - Projects")]
 public class WorkProjectsController(IWorkProjectService projectService) : ControllerBase
 {
     [HttpGet]

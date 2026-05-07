@@ -8,6 +8,7 @@ namespace WebApplication1.Features.Analytics;
 [ApiController]
 [Authorize]
 [Route("api/analytics")]
+[Tags("Analytics")]
 public class AnalyticsController(IAnalyticsService analyticsService) : BaseApiController
 {
     [HttpGet("dashboard")]

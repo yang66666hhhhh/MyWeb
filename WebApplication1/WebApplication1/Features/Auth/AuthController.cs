@@ -7,6 +7,7 @@ namespace WebApplication1.Features.Auth;
 
 [ApiController]
 [Route("api/auth")]
+[Tags("Authentication")]
 public class AuthController(IAuthService authService) : ControllerBase
 {
     [AllowAnonymous]

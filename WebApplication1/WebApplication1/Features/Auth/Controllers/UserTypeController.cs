@@ -10,6 +10,7 @@ namespace WebApplication1.Features.Auth.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/admin/user-types")]
+[Tags("Admin - User Types")]
 public class UserTypeController(AppDbContext db) : ControllerBase
 {
     [HttpGet]
