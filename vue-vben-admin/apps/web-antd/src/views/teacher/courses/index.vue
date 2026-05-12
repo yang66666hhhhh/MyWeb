@@ -4,6 +4,7 @@ import { ref } from 'vue';
 import { Page } from '@vben/common-ui';
 
 import {
+  Alert,
   Button,
   Card,
   Col,
@@ -70,6 +71,13 @@ const statusColors: Record<string, string> = {
 
 <template>
   <Page description="管理课程内容、教学计划和学生信息" title="课程管理">
+    <Alert
+      class="mb-4"
+      message="功能开发中"
+      description="后端API正在开发中，当前为模拟数据"
+      show-icon
+      type="warning"
+    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
         <Card>

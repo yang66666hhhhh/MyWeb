@@ -3,7 +3,7 @@ import { computed, onUnmounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Card, Col, Progress, Row, Space, Statistic } from 'ant-design-vue';
+import { Alert, Button, Card, Col, Progress, Row, Space, Statistic } from 'ant-design-vue';
 
 const mode = ref<'break' | 'focus'>('focus');
 const timeLeft = ref(25 * 60);
@@ -66,6 +66,13 @@ onUnmounted(() => {
 
 <template>
   <Page description="使用番茄工作法提升专注力" title="专注计时">
+    <Alert
+      class="mb-4"
+      message="功能开发中"
+      description="后端API正在开发中，当前为模拟数据"
+      show-icon
+      type="warning"
+    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="8" :md="12" :xs="24">
         <Card><Statistic title="今日完成" :value="completedSessions" suffix="个番茄" /></Card>

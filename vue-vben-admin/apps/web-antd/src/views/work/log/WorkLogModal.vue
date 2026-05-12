@@ -93,8 +93,8 @@ async function submit() {
     }
     emit('update:open', false);
     emit('success');
-  } catch (e) {
-    console.error(e);
+  } catch {
+    message.error('保存失败，请重试');
   } finally {
     loading.value = false;
   }

@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Card, Col, Row, Statistic, Table, Tag } from 'ant-design-vue';
+import { Alert, Button, Card, Col, Row, Statistic, Table, Tag } from 'ant-design-vue';
 
 const loading = ref(false);
 
@@ -31,15 +31,22 @@ const typeColors: Record<string, string> = {
 
 <template>
   <Page description="管理投资组合" title="投资管理">
+    <Alert
+      class="mb-4"
+      message="功能开发中"
+      description="后端API正在开发中，当前为模拟数据"
+      show-icon
+      type="warning"
+    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="投资总额" :value="80000" prefix="¥" /></Card>
+        <Card><Statistic title="投资总额" prefix="¥" :value="80000" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="当前价值" :value="81550" prefix="¥" /></Card>
+        <Card><Statistic title="当前价值" prefix="¥" :value="81550" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="总收益" :value="1550" prefix="¥" valueStyle="color: #3f8600" /></Card>
+        <Card><Statistic title="总收益" prefix="¥" :value="1550" valueStyle="color: #3f8600" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card><Statistic title="收益率" :value="1.94" suffix="%" valueStyle="color: #3f8600" /></Card>

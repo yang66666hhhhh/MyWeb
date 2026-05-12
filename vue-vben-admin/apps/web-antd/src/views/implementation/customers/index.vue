@@ -4,6 +4,7 @@ import { ref } from 'vue';
 import { Page } from '@vben/common-ui';
 
 import {
+  Alert,
   Button,
   Card,
   Col,
@@ -74,6 +75,13 @@ const industryColors: Record<string, string> = {
 
 <template>
   <Page description="管理客户信息、联系人和合作项目" title="客户管理">
+    <Alert
+      class="mb-4"
+      message="功能开发中"
+      description="后端API正在开发中，当前为模拟数据"
+      show-icon
+      type="warning"
+    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
         <Card>

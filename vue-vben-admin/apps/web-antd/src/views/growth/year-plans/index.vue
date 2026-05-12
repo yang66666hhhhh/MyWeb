@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Card, Col, List, Row, Space, Statistic, Tag } from 'ant-design-vue';
+import { Alert, Button, Card, Col, List, Row, Space, Statistic, Tag } from 'ant-design-vue';
 
 const loading = ref(false);
 
@@ -24,6 +24,13 @@ const categoryColors: Record<string, string> = {
 
 <template>
   <Page description="设定和追踪年度目标" title="年度计划">
+    <Alert
+      class="mb-4"
+      message="功能开发中"
+      description="后端API正在开发中，当前为模拟数据"
+      show-icon
+      type="warning"
+    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
         <Card><Statistic title="年度目标" :value="goals.length" /></Card>
@@ -44,15 +51,19 @@ const categoryColors: Record<string, string> = {
       <List :data-source="goals" :loading="loading">
         <template #renderItem="{ item }">
           <List.Item>
-            <List.Item.Meta :title="item.title" :description="`截止: ${item.deadline}`" />
-            <Space>
-              <Tag :color="categoryColors[item.category]">{{ item.category }}</Tag>
-              <div class="w-32">
-                <div class="mb-1 text-right text-sm">{{ item.progress }}%</div>
-                <div class="h-2 rounded-full bg-gray-200">
-                  <div class="h-full rounded-full bg-blue-500" :style="{ width: `${item.progress}%` }" />
+            <List.Item.Meta :title="item.title">
+              <template #description>
+                <div class="w-32">
+                  <div class="mb-1 text-right text-sm">{{ item.progress }}%</div>
+                  <div class="h-2 rounded-full bg-gray-200">
+                    <div class="h-full rounded-full bg-blue-500" :style="{ width: `${item.progress}%` }" />
+                  </div>
                 </div>
-              </div>
+              </template>
+            </List.Item.Meta>
+            <Space direction="vertical" size="small">
+              <Tag :color="categoryColors[item.category]">{{ item.category }}</Tag>
+              <span class="text-gray-400 text-sm">截止: {{ item.deadline }}</span>
             </Space>
           </List.Item>
         </template>

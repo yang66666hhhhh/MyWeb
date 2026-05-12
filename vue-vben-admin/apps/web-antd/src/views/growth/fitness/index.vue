@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Card, Col, List, Row, Space, Statistic, Tag } from 'ant-design-vue';
+import { Alert, Button, Card, Col, List, Row, Space, Statistic, Tag } from 'ant-design-vue';
 
 const loading = ref(false);
 
@@ -24,6 +24,13 @@ const typeColors: Record<string, string> = {
 
 <template>
   <Page description="记录和管理您的健身活动" title="健身管理">
+    <Alert
+      class="mb-4"
+      message="功能开发中"
+      description="后端API正在开发中，当前为模拟数据"
+      show-icon
+      type="warning"
+    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
         <Card><Statistic title="本月运动" :value="workouts.length" suffix="次" /></Card>

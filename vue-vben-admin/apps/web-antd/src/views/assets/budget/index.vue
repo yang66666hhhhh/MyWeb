@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Card, Col, Progress, Row, Statistic, Table, Tag } from 'ant-design-vue';
+import { Alert, Button, Card, Col, Row, Statistic, Table, Tag } from 'ant-design-vue';
 
 const loading = ref(false);
 
@@ -19,7 +19,7 @@ const columns = [
   { title: '分类', dataIndex: 'category', key: 'category' },
   { title: '预算', dataIndex: 'budget', key: 'budget' },
   { title: '已花费', dataIndex: 'spent', key: 'spent' },
-  { title: '进度', dataIndex: 'progress', key: 'progress' },
+  { title: '进度', key: 'progress' },
   { title: '状态', dataIndex: 'status', key: 'status' },
 ];
 
@@ -32,15 +32,22 @@ const statusColors: Record<string, string> = {
 
 <template>
   <Page description="设定和追踪预算" title="预算管理">
+    <Alert
+      class="mb-4"
+      message="功能开发中"
+      description="后端API正在开发中，当前为模拟数据"
+      show-icon
+      type="warning"
+    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="总预算" :value="7000" prefix="¥" /></Card>
+        <Card><Statistic title="总预算" prefix="¥" :value="7000" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="已花费" :value="5850" prefix="¥" /></Card>
+        <Card><Statistic title="已花费" prefix="¥" :value="5850" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="剩余" :value="1150" prefix="¥" /></Card>
+        <Card><Statistic title="剩余" prefix="¥" :value="1150" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card><Statistic title="使用率" :value="84" suffix="%" /></Card>

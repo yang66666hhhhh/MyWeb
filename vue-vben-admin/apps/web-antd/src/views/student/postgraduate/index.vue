@@ -4,6 +4,7 @@ import { ref } from 'vue';
 import { Page } from '@vben/common-ui';
 
 import {
+  Alert,
   Button,
   Card,
   Col,
@@ -90,6 +91,13 @@ const subjectColors: Record<string, string> = {
 
 <template>
   <Page description="备考研究生入学考试，跟踪各科目复习进度" title="考研备考">
+    <Alert
+      class="mb-4"
+      message="功能开发中"
+      description="后端API正在开发中，当前为模拟数据"
+      show-icon
+      type="warning"
+    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
         <Card>

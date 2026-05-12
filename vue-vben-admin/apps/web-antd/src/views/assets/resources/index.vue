@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Card, Col, List, Row, Space, Statistic, Tag } from 'ant-design-vue';
+import { Alert, Button, Card, Col, List, Row, Space, Statistic, Tag } from 'ant-design-vue';
 
 const loading = ref(false);
 
@@ -24,15 +24,22 @@ const typeColors: Record<string, string> = {
 
 <template>
   <Page description="管理订阅和资源" title="资源管理">
+    <Alert
+      class="mb-4"
+      message="功能开发中"
+      description="后端API正在开发中，当前为模拟数据"
+      show-icon
+      type="warning"
+    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
         <Card><Statistic title="资源总数" :value="resources.length" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="月费用" :value="400" prefix="¥" /></Card>
+        <Card><Statistic title="月费用" prefix="¥" :value="400" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="年费用" :value="4800" prefix="¥" /></Card>
+        <Card><Statistic title="年费用" prefix="¥" :value="4800" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card><Statistic title="即将到期" :value="1" /></Card>

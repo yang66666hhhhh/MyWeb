@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Card, List, Tag } from 'ant-design-vue';
+import { Alert, Button, Card, List, Tag } from 'ant-design-vue';
 
 const loading = ref(false);
 
@@ -23,6 +23,13 @@ const typeColors: Record<string, string> = {
 
 <template>
   <Page description="创建和查看自定义报表" title="自定义报表">
+    <Alert
+      class="mb-4"
+      message="功能开发中"
+      description="后端API正在开发中，当前为模拟数据"
+      show-icon
+      type="warning"
+    />
     <Card title="报表列表">
       <template #extra><Button type="primary">创建报表</Button></template>
       <List :data-source="reports" :loading="loading">

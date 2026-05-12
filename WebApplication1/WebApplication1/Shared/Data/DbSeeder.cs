@@ -944,6 +944,11 @@ public static class DbSeeder
         var analytics = L("数据分析", "/analytics", "lucide:pie-chart", null, 40, 3, true, null, "Analytics");
         C(analytics, "成长分析", "/analytics/growth", "lucide:trending-up", "/views/analytics/growth/index.vue", 0, 3, true, null);
         C(analytics, "工作分析", "/analytics/work", "lucide:briefcase", "/views/analytics/work/index.vue", 1, 3, true, null);
+        C(analytics, "财务分析", "/analytics/finance", "lucide:wallet", "/views/analytics/finance/index.vue", 2, 3, true, null);
+        C(analytics, "时间分析", "/analytics/time", "lucide:clock", "/views/analytics/time/index.vue", 3, 3, true, null);
+        C(analytics, "习惯分析", "/analytics/habits", "lucide:badge-check", "/views/analytics/habits/index.vue", 4, 3, true, null);
+        C(analytics, "自定义报表", "/analytics/custom-reports", "lucide:file-bar-chart", "/views/analytics/custom-reports/index.vue", 5, 3, true, null);
+        C(analytics, "AI洞察", "/analytics/ai-insights", "lucide:bot", "/views/analytics/ai-insights/index.vue", 6, 3, true, null);
 
         // ===== 平台管理 - Pro =====
         var platform = L("平台管理", "/system", "lucide:settings", null, 90, 2, true, null, "System");

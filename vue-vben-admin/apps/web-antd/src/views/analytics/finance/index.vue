@@ -3,20 +3,27 @@ import { ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Card, Col, Row, Statistic } from 'ant-design-vue';
+import { Alert, Card, Col, Row, Statistic } from 'ant-design-vue';
 </script>
 
 <template>
   <Page description="分析财务状况和趋势" title="财务分析">
+    <Alert
+      class="mb-4"
+      message="功能开发中"
+      description="后端API正在开发中，当前为模拟数据"
+      show-icon
+      type="warning"
+    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="本月结余" :value="6500" prefix="¥" /></Card>
+        <Card><Statistic title="本月结余" prefix="¥" :value="6500" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card><Statistic title="储蓄率" :value="35" suffix="%" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="投资收益" :value="1550" prefix="¥" /></Card>
+        <Card><Statistic title="投资收益" prefix="¥" :value="1550" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card><Statistic title="预算执行" :value="84" suffix="%" /></Card>

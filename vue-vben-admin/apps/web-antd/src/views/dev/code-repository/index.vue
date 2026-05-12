@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Card, Col, Row, Space, Statistic, Table, Tag } from 'ant-design-vue';
+import { Alert, Button, Card, Col, Row, Space, Statistic, Table, Tag } from 'ant-design-vue';
 
 const loading = ref(false);
 
@@ -56,6 +56,13 @@ const languageColors: Record<string, string> = {
 
 <template>
   <Page description="管理您的代码仓库，查看项目状态和统计信息" title="代码仓库">
+    <Alert
+      class="mb-4"
+      message="功能开发中"
+      description="后端API正在开发中，当前为模拟数据"
+      show-icon
+      type="warning"
+    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
         <Card>

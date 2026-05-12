@@ -21,16 +21,6 @@ const routes: RouteRecordRaw[] = [
           title: '工作台',
         },
       },
-      {
-        name: 'Analytics',
-        path: '/dashboard/analytics',
-        component: () => import('#/views/dashboard/analytics/index.vue'),
-        meta: {
-          affixTab: true,
-          icon: 'lucide:area-chart',
-          title: '数据分析',
-        },
-      },
     ],
   },
 ];

@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Card, Col, Row, Statistic, Table, Tag } from 'ant-design-vue';
+import { Alert, Button, Card, Col, Row, Statistic, Table, Tag } from 'ant-design-vue';
 
 const loading = ref(false);
 
@@ -32,18 +32,25 @@ const categoryColors: Record<string, string> = {
 
 <template>
   <Page description="记录和管理支出" title="支出管理">
+    <Alert
+      class="mb-4"
+      message="功能开发中"
+      description="后端API正在开发中，当前为模拟数据"
+      show-icon
+      type="warning"
+    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="本月支出" :value="3400" prefix="¥" /></Card>
+        <Card><Statistic title="本月支出" prefix="¥" :value="3400" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="住房" :value="3000" prefix="¥" /></Card>
+        <Card><Statistic title="住房" prefix="¥" :value="3000" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="餐饮" :value="150" prefix="¥" /></Card>
+        <Card><Statistic title="餐饮" prefix="¥" :value="150" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="其他" :value="250" prefix="¥" /></Card>
+        <Card><Statistic title="其他" prefix="¥" :value="250" /></Card>
       </Col>
     </Row>
 

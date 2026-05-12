@@ -26,8 +26,8 @@ export function usePagedQuery<T, Q extends { page: number; pageSize: number }>(
       const result = await fetcher(query);
       items.value = result.items;
       total.value = result.total;
-    } catch (error) {
-      console.error('Failed to load data:', error);
+    } catch {
+      // Error handled by caller
     } finally {
       loading.value = false;
     }

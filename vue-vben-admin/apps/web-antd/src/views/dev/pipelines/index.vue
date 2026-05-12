@@ -4,6 +4,7 @@ import { ref } from 'vue';
 import { Page } from '@vben/common-ui';
 
 import {
+  Alert,
   Button,
   Card,
   Col,
@@ -73,6 +74,13 @@ const statusIcons: Record<string, string> = {
 
 <template>
   <Page description="查看和管理 CI/CD 流水线" title="流水线">
+    <Alert
+      class="mb-4"
+      message="功能开发中"
+      description="后端API正在开发中，当前为模拟数据"
+      show-icon
+      type="warning"
+    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
         <Card>
