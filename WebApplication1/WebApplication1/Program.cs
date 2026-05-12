@@ -155,6 +155,8 @@ builder.Services.AddScoped<IWorkDailyPlanService, WorkDailyPlanService>();
 builder.Services.AddScoped<IWorkImportService, WorkImportService>();
 builder.Services.AddScoped<IImplLogService, ImplLogService>();
 builder.Services.AddScoped<IWorkCategoryService, WorkCategoryService>();
+builder.Services.AddScoped<IWeeklyPlanService, WeeklyPlanService>();
+builder.Services.AddScoped<ISoftwareAssetService, SoftwareAssetService>();
 builder.Services.AddScoped<IHabitService, HabitService>();
 builder.Services.AddScoped<IGrowthProjectService, GrowthProjectService>();
 builder.Services.AddScoped<IKnowledgeArticleService, KnowledgeArticleService>();

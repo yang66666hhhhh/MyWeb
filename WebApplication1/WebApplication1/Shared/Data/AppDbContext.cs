@@ -39,6 +39,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<WorkImportRow> WorkImportRows => Set<WorkImportRow>();
     public DbSet<WorkDailyPlan> WorkDailyPlans => Set<WorkDailyPlan>();
     public DbSet<ImplLog> ImplLogs => Set<ImplLog>();
+    public DbSet<WeeklyPlan> WeeklyPlans => Set<WeeklyPlan>();
+    public DbSet<WeeklyPlanTask> WeeklyPlanTasks => Set<WeeklyPlanTask>();
+    public DbSet<SoftwareAsset> SoftwareAssets => Set<SoftwareAsset>();
 
     public DbSet<Habit> Habits => Set<Habit>();
     public DbSet<HabitCheckIn> HabitCheckIns => Set<HabitCheckIn>();
