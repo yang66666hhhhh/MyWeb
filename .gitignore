@@ -1,18 +1,24 @@
-# 后端
+# Backend
 .vs/
-bin/
-obj/
+**/bin/
+**/obj/
 packages/
+TestResults/
+*.binlog
 *.user
 *.suo
 appsettings.Development.json
 
-# 前端
+# Frontend
 node_modules/
 dist/
-pnpm-lock.yaml   # 如果想保留 lock 文件可以删除这行
-.env.local
+.turbo/
+.vite/
+.env
+.env.*
+!.env.example
 
-# 通用
+# Common
 .DS_Store
 Thumbs.db
+*.log

@@ -71,3 +71,16 @@ export function resetPasswordApi(id: string, data: { newPassword: string }) {
 export function changePasswordApi(id: string, data: { oldPassword: string; newPassword: string }) {
   return requestClient.post(`/users/${id}/change-password`, data);
 }
+
+export interface AssignPersonaRequest {
+  personaTypeId: string;
+  isPrimary: boolean;
+}
+
+export function assignPersonaApi(userId: string, data: AssignPersonaRequest) {
+  return requestClient.post(`/admin/users/${userId}/personas`, data);
+}
+
+export function removePersonaApi(userId: string, personaTypeId: string) {
+  return requestClient.delete(`/admin/users/${userId}/personas/${personaTypeId}`);
+}

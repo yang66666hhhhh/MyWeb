@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
+using WebApplication1.Features.Admin.Entities;
 using WebApplication1.Features.Auth.Entities;
 using WebApplication1.Features.Auth.Services;
 using WebApplication1.Shared.Data;
@@ -11,9 +12,6 @@ public class RoleMenuServiceTests : IDisposable
 {
     private readonly AppDbContext _context;
     private readonly RoleMenuService _service;
-    private readonly List<string> _developerPersonaCodes;
-    private readonly List<string> _designerPersonaCodes;
-    private readonly List<string> _teacherPersonaCodes;
 
     public RoleMenuServiceTests()
     {
@@ -24,10 +22,6 @@ public class RoleMenuServiceTests : IDisposable
         _context = new AppDbContext(options);
         var loggerMock = new Mock<ILogger<RoleMenuService>>();
         _service = new RoleMenuService(_context, loggerMock.Object);
-
-        _developerPersonaCodes = new List<string> { "Developer" };
-        _designerPersonaCodes = new List<string> { "Designer" };
-        _teacherPersonaCodes = new List<string> { "Teacher" };
 
         SeedTestData();
     }
@@ -139,7 +133,7 @@ public class RoleMenuServiceTests : IDisposable
         _context.RoleMenus.Add(teacherCenter);
 
         // PersonaTypes
-        var personaTypes = new List<Features.Admin.Entities.PersonaType>
+        var personaTypes = new List<PersonaType>
         {
             new() { Id = Guid.NewGuid(), Code = "Developer", Name = "开发者", IsActive = true },
             new() { Id = Guid.NewGuid(), Code = "Designer", Name = "设计师", IsActive = true },
@@ -148,6 +142,37 @@ public class RoleMenuServiceTests : IDisposable
         _context.PersonaTypes.AddRange(personaTypes);
 
         _context.SaveChanges();
+    }
+
+    private Guid CreateUser(params string[] personaCodes)
+    {
+        var user = new AppUser
+        {
+            Id = Guid.NewGuid(),
+            Username = $"user-{Guid.NewGuid():N}",
+            RealName = "Test User",
+            PasswordHash = "test"
+        };
+        _context.Users.Add(user);
+
+        var personaTypes = _context.PersonaTypes
+            .Where(x => personaCodes.Contains(x.Code))
+            .ToList();
+
+        foreach (var personaType in personaTypes)
+        {
+            _context.UserPersonas.Add(new UserPersona
+            {
+                UserId = user.Id,
+                PersonaTypeId = personaType.Id,
+                User = user,
+                PersonaType = personaType,
+                IsPrimary = personaType == personaTypes.First()
+            });
+        }
+
+        _context.SaveChanges();
+        return user.Id;
     }
 
     public void Dispose()
@@ -184,8 +209,8 @@ public class RoleMenuServiceTests : IDisposable
     [Fact]
     public async Task GetMenusForUserAsync_ShouldReturnBaseMenus_WhenMemberRole()
     {
-        var userId = Guid.NewGuid();
-        var result = await _service.GetMenusForUserAsync(userId, "member", new List<string>(), new HashSet<string>());
+        var userId = CreateUser();
+        var result = await _service.GetMenusForUserAsync(userId, "member", new HashSet<string>());
 
         Assert.NotNull(result);
         Assert.True(FindMenuInTree(result, "个人成长"));
@@ -194,8 +219,8 @@ public class RoleMenuServiceTests : IDisposable
     [Fact]
     public async Task GetMenusForUserAsync_ShouldReturnProMenus_ForProRole()
     {
-        var userId = Guid.NewGuid();
-        var result = await _service.GetMenusForUserAsync(userId, "pro", new List<string>(), new HashSet<string>());
+        var userId = CreateUser();
+        var result = await _service.GetMenusForUserAsync(userId, "pro", new HashSet<string>());
 
         Assert.NotNull(result);
         Assert.True(FindMenuInTree(result, "个人成长"), "Should contain 个人成长");
@@ -205,8 +230,8 @@ public class RoleMenuServiceTests : IDisposable
     [Fact]
     public async Task GetMenusForUserAsync_ShouldReturnOwnerMenus_ForOwnerRole()
     {
-        var userId = Guid.NewGuid();
-        var result = await _service.GetMenusForUserAsync(userId, "owner", new List<string>(), new HashSet<string>());
+        var userId = CreateUser();
+        var result = await _service.GetMenusForUserAsync(userId, "owner", new HashSet<string>());
 
         Assert.NotNull(result);
         Assert.True(FindMenuInTree(result, "个人成长"), "Should contain 个人成长");
@@ -217,8 +242,8 @@ public class RoleMenuServiceTests : IDisposable
     [Fact]
     public async Task GetMenusForUserAsync_ShouldReturnDeveloperMenus_ForMemberPlusDeveloper()
     {
-        var userId = Guid.NewGuid();
-        var result = await _service.GetMenusForUserAsync(userId, "member", _developerPersonaCodes, new HashSet<string>());
+        var userId = CreateUser("Developer");
+        var result = await _service.GetMenusForUserAsync(userId, "member", new HashSet<string>());
 
         Assert.NotNull(result);
         Assert.True(FindMenuInTree(result, "个人成长"), "Should contain 个人成长");
@@ -229,8 +254,8 @@ public class RoleMenuServiceTests : IDisposable
     [Fact]
     public async Task GetMenusForUserAsync_ShouldReturnDesignerMenus_ForProPlusDesigner()
     {
-        var userId = Guid.NewGuid();
-        var result = await _service.GetMenusForUserAsync(userId, "pro", _designerPersonaCodes, new HashSet<string>());
+        var userId = CreateUser("Designer");
+        var result = await _service.GetMenusForUserAsync(userId, "pro", new HashSet<string>());
 
         Assert.NotNull(result);
         Assert.True(FindMenuInTree(result, "个人成长"), "Should contain 个人成长");
@@ -240,8 +265,8 @@ public class RoleMenuServiceTests : IDisposable
     [Fact]
     public async Task GetMenusForUserAsync_ShouldReturnTeacherMenus_ForOwnerPlusTeacher()
     {
-        var userId = Guid.NewGuid();
-        var result = await _service.GetMenusForUserAsync(userId, "owner", _teacherPersonaCodes, new HashSet<string>());
+        var userId = CreateUser("Teacher");
+        var result = await _service.GetMenusForUserAsync(userId, "owner", new HashSet<string>());
 
         Assert.NotNull(result);
         Assert.True(FindMenuInTree(result, "个人成长"), "Should contain 个人成长");
@@ -251,18 +276,18 @@ public class RoleMenuServiceTests : IDisposable
     [Fact]
     public async Task GetMenusForUserAsync_ShouldNotReturnDesignerMenus_ForMemberRole()
     {
-        var userId = Guid.NewGuid();
-        var result = await _service.GetMenusForUserAsync(userId, "member", _designerPersonaCodes, new HashSet<string>());
+        var userId = CreateUser();
+        var result = await _service.GetMenusForUserAsync(userId, "member", new HashSet<string>());
 
         Assert.NotNull(result);
-        Assert.False(FindMenuInTree(result, "设计师中心"), "Should NOT contain 设计师中心 for member role");
+        Assert.False(FindMenuInTree(result, "设计师中心"), "Should NOT contain 设计师中心 without designer persona");
     }
 
     [Fact]
     public async Task GetMenusForUserAsync_ShouldIncludeParentMenus()
     {
-        var userId = Guid.NewGuid();
-        var result = await _service.GetMenusForUserAsync(userId, "member", _developerPersonaCodes, new HashSet<string>());
+        var userId = CreateUser("Developer");
+        var result = await _service.GetMenusForUserAsync(userId, "member", new HashSet<string>());
 
         Assert.NotNull(result);
         Assert.True(FindMenuInTree(result, "个人成长"), "Should contain 个人成长");
@@ -272,11 +297,11 @@ public class RoleMenuServiceTests : IDisposable
     [Fact]
     public async Task GetMenusForUserAsync_ShouldRespectRoleHierarchy()
     {
-        var userId = Guid.NewGuid();
+        var userId = CreateUser();
 
-        var memberResult = await _service.GetMenusForUserAsync(userId, "member", new List<string>(), new HashSet<string>());
-        var proResult = await _service.GetMenusForUserAsync(userId, "pro", new List<string>(), new HashSet<string>());
-        var ownerResult = await _service.GetMenusForUserAsync(userId, "owner", new List<string>(), new HashSet<string>());
+        var memberResult = await _service.GetMenusForUserAsync(userId, "member", new HashSet<string>());
+        var proResult = await _service.GetMenusForUserAsync(userId, "pro", new HashSet<string>());
+        var ownerResult = await _service.GetMenusForUserAsync(userId, "owner", new HashSet<string>());
 
         Assert.True(memberResult.Count <= proResult.Count);
         Assert.True(proResult.Count <= ownerResult.Count);

@@ -283,13 +283,10 @@ public static class DbSeeder
         }
 
         // RoleMenus
-        if (!await context.RoleMenus.AnyAsync())
-        {
-            logger?.LogInformation("[DbSeeder] Seeding RoleMenus...");
-            SeedRoleMenus(context, now);
-            await context.SaveChangesAsync();
-            logger?.LogInformation("[DbSeeder] RoleMenus seeded.");
-        }
+        logger?.LogInformation("[DbSeeder] Seeding RoleMenus...");
+        SeedRoleMenus(context, now);
+        await context.SaveChangesAsync();
+        logger?.LogInformation("[DbSeeder] RoleMenus seeded.");
 
         // WorkTaskTypes - 任务类型
         if (!await context.WorkTaskTypes.AnyAsync())

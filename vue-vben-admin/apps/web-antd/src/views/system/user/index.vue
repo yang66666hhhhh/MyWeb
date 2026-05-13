@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { Page } from '@vben/common-ui';
 
 import {
@@ -24,10 +24,12 @@ import {
   getUserApi,
   getUserPageApi,
   updateUserApi,
+  assignPersonaApi,
   type CreateUserDto,
   type UpdateUserDto,
   type UserDto,
 } from '#/api/system/user';
+import { personaApi, type PersonaType } from '#/api/system/persona';
 import { usePagedQuery } from '#/composables/usePagedQuery';
 
 const formOpen = ref(false);
@@ -42,7 +44,10 @@ const formState = ref({
   roles: 'member',
   username: '',
   password: '',
+  personaIds: [] as string[],
 });
+
+const personaOptions = ref<{ label: string; value: string }[]>([]);
 
 const statusOptions = [
   { label: '正常', value: 0 },
@@ -61,7 +66,7 @@ const columns = [
   { dataIndex: 'username', key: 'username', title: '用户名', width: 120 },
   { dataIndex: 'realName', key: 'realName', title: '姓名', width: 120 },
   { dataIndex: 'roles', key: 'roles', title: '角色', width: 100 },
-  { dataIndex: 'personaName', key: 'persona', title: '身份', width: 120 },
+  { dataIndex: 'personaName', key: 'persona', title: '身份', width: 180 },
   { dataIndex: 'email', key: 'email', title: '邮箱', width: 180 },
   { dataIndex: 'phone', key: 'phone', title: '电话', width: 140 },
   { dataIndex: 'status', key: 'status', width: 90 },
@@ -78,7 +83,20 @@ const { changePage, items, load, loading, query, resetQuery, search, total } = u
 
 onMounted(async () => {
   await load();
+  await loadPersonaOptions();
 });
+
+async function loadPersonaOptions() {
+  try {
+    const personas = await personaApi.getAll({ isActive: true });
+    personaOptions.value = personas.map((p: PersonaType) => ({
+      label: `${p.icon} ${p.name}`,
+      value: p.id,
+    }));
+  } catch {
+    message.error('加载身份选项失败');
+  }
+}
 
 function openCreate() {
   editingId.value = null;
@@ -89,6 +107,7 @@ function openCreate() {
     roles: 'member',
     username: '',
     password: '',
+    personaIds: [],
   };
   formOpen.value = true;
 }
@@ -105,6 +124,7 @@ async function openEdit(record: UserDto) {
         roles: detail.roles || 'member',
         username: detail.username,
         password: '',
+        personaIds: detail.personas?.map(p => p.id) || [],
       };
     }
     formOpen.value = true;
@@ -125,6 +145,19 @@ async function showDetail(record: UserDto) {
   }
 }
 
+async function assignPersonas(userId: string, personaIds: string[]) {
+  for (const personaId of personaIds) {
+    try {
+      await assignPersonaApi(userId, {
+        personaTypeId: personaId,
+        isPrimary: personaIds[0] === personaId,
+      });
+    } catch {
+      // Continue with other assignments
+    }
+  }
+}
+
 async function handleSubmit() {
   try {
     if (editingId.value) {
@@ -135,9 +168,11 @@ async function handleSubmit() {
         roles: formState.value.roles,
       };
       await updateUserApi(editingId.value, data);
+      if (formState.value.personaIds.length > 0) {
+        await assignPersonas(editingId.value, formState.value.personaIds);
+      }
       message.success('更新成功');
-    }
-    else {
+    } else {
       const data: CreateUserDto = {
         username: formState.value.username,
         password: formState.value.password,
@@ -146,7 +181,10 @@ async function handleSubmit() {
         phone: formState.value.phone || undefined,
         roles: formState.value.roles,
       };
-      await createUserApi(data);
+      const result = await createUserApi(data);
+      if (formState.value.personaIds.length > 0) {
+        await assignPersonas(result.id, formState.value.personaIds);
+      }
       message.success('创建成功');
     }
     formOpen.value = false;
@@ -273,6 +311,15 @@ function getRoleLabel(role: string) {
               {{ opt.label }}
             </Select.Option>
           </Select>
+        </Form.Item>
+        <Form.Item label="身份">
+          <Select
+            v-model:value="formState.personaIds"
+            :options="personaOptions"
+            mode="multiple"
+            placeholder="选择身份（可多选）"
+            style="width: 100%"
+          />
         </Form.Item>
         <Form.Item label="邮箱">
           <Input v-model:value="formState.email" placeholder="邮箱" />
