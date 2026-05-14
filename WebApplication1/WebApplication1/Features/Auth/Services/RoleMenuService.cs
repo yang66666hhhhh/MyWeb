@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Features.Auth.Entities;
 using WebApplication1.Shared.Data;
 
@@ -16,29 +17,15 @@ public class RoleMenuService
     }
 
     public async Task<List<RoleMenu>> GetMenusForUserAsync(
-        Guid userId, string roleCode,
-        HashSet<string> availableFeatureCodes, CancellationToken ct = default)
+        UserAccessContext access, CancellationToken ct = default)
     {
-        var userRoleLevel = roleCode.ToLower() switch
-        {
-            "owner" => 3,
-            "pro" => 2,
-            _ => 1
-        };
-
-        var userPersonaCodes = await _context.UserPersonas
-            .AsNoTracking()
-            .Where(x => x.UserId == userId)
-            .Select(x => x.PersonaType!.Code)
-            .ToListAsync(ct);
-
         var allMenus = await _context.RoleMenus
             .AsNoTracking()
             .Where(x => x.IsEnabled)
             .ToListAsync(ct);
 
         var matched = allMenus
-            .Where(m => UserCanViewMenu(m, userRoleLevel, userPersonaCodes, availableFeatureCodes))
+            .Where(m => UserCanViewMenu(m, access.RoleLevel, access.PersonaCodes, access.FeatureCodes))
             .ToList();
 
         var matchedIds = matched.Select(x => x.Id).ToHashSet();
@@ -60,7 +47,35 @@ public class RoleMenuService
         return MergeByPath(tree);
     }
 
-    private static bool UserCanViewMenu(RoleMenu menu, int userRoleLevel, List<string> userPersonaCodes, HashSet<string> availableFeatureCodes)
+    public async Task<List<RoleMenu>> GetMenusForUserAsync(
+        Guid userId, string roleCode,
+        HashSet<string> availableFeatureCodes, CancellationToken ct = default)
+    {
+        var userRoleLevel = roleCode.ToLower() switch
+        {
+            "owner" => 3,
+            "pro" => 2,
+            _ => 1
+        };
+
+        var userPersonaCodes = await _context.UserPersonas
+            .AsNoTracking()
+            .Where(x => x.UserId == userId)
+            .Select(x => x.PersonaType!.Code)
+            .ToListAsync(ct);
+
+        var access = new UserAccessContext(
+            userId,
+            roleCode,
+            userRoleLevel,
+            userPersonaCodes.ToHashSet(StringComparer.OrdinalIgnoreCase),
+            "Legacy",
+            availableFeatureCodes.ToHashSet(StringComparer.OrdinalIgnoreCase));
+
+        return await GetMenusForUserAsync(access, ct);
+    }
+
+    private static bool UserCanViewMenu(RoleMenu menu, int userRoleLevel, IReadOnlySet<string> userPersonaCodes, IReadOnlySet<string> availableFeatureCodes)
     {
         if (!menu.IsVisible || !menu.IsEnabled)
             return false;

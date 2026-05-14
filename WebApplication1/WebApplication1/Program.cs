@@ -168,6 +168,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<IAiService, AiService>();
 builder.Services.AddScoped<IPersonaService, PersonaService>();
 builder.Services.AddScoped<RoleMenuService>();
+builder.Services.AddScoped<IUserAccessContextService, UserAccessContextService>();
 builder.Services.AddScoped<IFeatureService, FeatureService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 

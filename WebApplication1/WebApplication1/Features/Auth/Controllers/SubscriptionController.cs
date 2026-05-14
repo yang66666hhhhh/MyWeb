@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Features.Auth.Entities.Subscription;
 using WebApplication1.Shared.Common;
 using WebApplication1.Shared.Data;
@@ -11,7 +12,7 @@ namespace WebApplication1.Features.Auth.Controllers;
 [Route("api/subscriptions")]
 [Authorize]
 [Tags("Subscriptions")]
-public class SubscriptionController(AppDbContext context) : BaseApiController
+public class SubscriptionController(AppDbContext context, IUserAccessContextService accessContextService) : BaseApiController
 {
     [HttpGet("my")]
     public async Task<ActionResult<ApiResult<UserSubscription?>>> GetMySubscription(CancellationToken ct)
@@ -37,8 +38,11 @@ public class SubscriptionController(AppDbContext context) : BaseApiController
         if (!userId.HasValue)
             return Unauthorized();
 
-        var features = await GetUserFeatureCodesAsync(userId.Value, ct);
-        return Ok(ApiResult<List<string>>.Success(features.ToList()));
+        var access = await accessContextService.GetAsync(userId.Value, ct);
+        if (access is null)
+            return Unauthorized();
+
+        return Ok(ApiResult<List<string>>.Success(access.FeatureCodes.OrderBy(x => x).ToList()));
     }
 
     [HttpPost("subscribe")]
@@ -96,33 +100,6 @@ public class SubscriptionController(AppDbContext context) : BaseApiController
         return Ok(ApiResult<List<Feature>>.Success(features));
     }
 
-    private async Task<HashSet<string>> GetUserFeatureCodesAsync(Guid userId, CancellationToken ct)
-    {
-        var subscription = await context.UserSubscriptions
-            .AsNoTracking()
-            .Where(x => x.UserId == userId && x.IsActive)
-            .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync(ct);
-
-        var planCode = subscription?.Plan?.Code ?? "Free";
-
-        var planFeatures = await context.PlanFeatures
-            .AsNoTracking()
-            .Where(x => x.Plan!.Code == planCode)
-            .Select(x => x.Feature!.Code)
-            .ToListAsync(ct);
-
-        var personaFeatures = await context.PersonaFeatures
-            .AsNoTracking()
-            .Where(x => context.UserPersonas
-                .Where(up => up.UserId == userId)
-                .Select(up => up.PersonaType!.Code)
-                .Contains(x.PersonaCode))
-            .Select(x => x.Feature!.Code)
-            .ToListAsync(ct);
-
-        return planFeatures.Union(personaFeatures).ToHashSet();
-    }
 }
 
 public class SubscribeRequest

@@ -1,8 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.EntityFrameworkCore;
-using WebApplication1.Shared.Data;
 
 namespace WebApplication1.Features.Auth.Authorization;
 
@@ -29,31 +27,16 @@ public class RequireFeatureAttribute : Attribute, IAsyncAuthorizationFilter
             return;
         }
 
-        var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+        var accessContextService = context.HttpContext.RequestServices.GetRequiredService<IUserAccessContextService>();
+        var access = await accessContextService.GetAsync(userId, context.HttpContext.RequestAborted);
 
-        // 获取用户活跃订阅的计划
-        var subscription = await db.UserSubscriptions
-            .AsNoTracking()
-            .Where(x => x.UserId == userId && x.IsActive)
-            .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync();
+        if (access is null)
+        {
+            context.Result = new UnauthorizedResult();
+            return;
+        }
 
-        var planCode = subscription?.Plan?.Code ?? "Free";
-
-        // 检查计划是否包含该功能
-        var hasFeatureInPlan = await db.PlanFeatures
-            .AsNoTracking()
-            .AnyAsync(x => x.Plan!.Code == planCode && x.Feature!.Code == FeatureCode);
-
-        if (hasFeatureInPlan) return; // 计划包含，通过
-
-        // 检查 Persona 是否包含该功能（使用子查询避免 EF Core 类型映射问题）
-        var hasFeatureInPersona = await db.PersonaFeatures
-            .AsNoTracking()
-            .AnyAsync(x => x.Feature!.Code == FeatureCode &&
-                db.UserPersonas.Any(up => up.UserId == userId && up.PersonaType!.Code == x.PersonaCode));
-
-        if (!hasFeatureInPersona)
+        if (!access.FeatureCodes.Contains(FeatureCode))
         {
             context.Result = new ForbidResult();
         }

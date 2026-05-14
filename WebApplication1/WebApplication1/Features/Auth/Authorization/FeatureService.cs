@@ -1,7 +1,3 @@
-using System.Security.Claims;
-using Microsoft.EntityFrameworkCore;
-using WebApplication1.Shared.Data;
-
 namespace WebApplication1.Features.Auth.Authorization;
 
 public interface IFeatureService
@@ -12,11 +8,11 @@ public interface IFeatureService
 
 public class FeatureService : IFeatureService
 {
-    private readonly AppDbContext _db;
+    private readonly IUserAccessContextService _accessContextService;
 
-    public FeatureService(AppDbContext db)
+    public FeatureService(IUserAccessContextService accessContextService)
     {
-        _db = db;
+        _accessContextService = accessContextService;
     }
 
     public async Task<bool> HasFeatureAsync(Guid userId, string featureCode)
@@ -27,32 +23,8 @@ public class FeatureService : IFeatureService
 
     public async Task<HashSet<string>> GetUserFeaturesAsync(Guid userId)
     {
-        // 获取用户订阅计划
-        var subscription = await _db.UserSubscriptions
-            .AsNoTracking()
-            .Where(x => x.UserId == userId && x.IsActive)
-            .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync();
-
-        var planCode = subscription?.Plan?.Code ?? "Free";
-
-        // 计划功能
-        var planFeatures = await _db.PlanFeatures
-            .AsNoTracking()
-            .Where(x => x.Plan!.Code == planCode)
-            .Select(x => x.Feature!.Code)
-            .ToListAsync();
-
-        // Persona 功能
-        var personaFeatures = await _db.PersonaFeatures
-            .AsNoTracking()
-            .Where(x => _db.UserPersonas
-                .Where(up => up.UserId == userId)
-                .Select(up => up.PersonaType!.Code)
-                .Contains(x.PersonaCode))
-            .Select(x => x.Feature!.Code)
-            .ToListAsync();
-
-        return planFeatures.Union(personaFeatures).ToHashSet();
+        var access = await _accessContextService.GetAsync(userId);
+        return access?.FeatureCodes.ToHashSet(StringComparer.OrdinalIgnoreCase)
+            ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     }
 }
