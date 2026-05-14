@@ -22,7 +22,7 @@ import {
   Tag,
 } from 'ant-design-vue';
 
-import { softwareAssetApi, type SoftwareAsset, type SoftwareAssetQuery, type CreateSoftwareAssetInput } from '#/api/work/softwareAsset';
+import { softwareAssetApi, type CreateSoftwareAssetInput, type SoftwareAsset } from '#/api/work/softwareAsset';
 
 const loading = ref(false);
 const formOpen = ref(false);
@@ -78,7 +78,7 @@ const statusMap: Record<number, { color: string; label: string }> = {
   3: { color: 'default', label: '已退役' },
 };
 
-const columns = [
+const columns: any[] = [
   { title: '软件名称', dataIndex: 'name', key: 'name', minWidth: 150 },
   { title: '版本', dataIndex: 'version', key: 'version', width: 100 },
   { title: '类型', dataIndex: 'type', key: 'type', width: 100 },
@@ -168,20 +168,21 @@ function openCreate() {
   formOpen.value = true;
 }
 
-function openEdit(record: SoftwareAsset) {
-  editingId.value = record.id;
+function openEdit(record: Record<string, any>) {
+  const asset = record as SoftwareAsset;
+  editingId.value = asset.id;
   Object.assign(formState, {
-    name: record.name,
-    version: record.version || '',
-    type: record.type,
-    licenseType: record.licenseType,
-    status: record.status,
-    vendor: record.vendor || '',
-    purchaseDate: record.purchaseDate || null,
-    expireDate: record.expireDate || null,
-    cost: record.cost,
-    description: record.description || '',
-    assignedTo: record.assignedTo || '',
+    name: asset.name,
+    version: asset.version || '',
+    type: asset.type,
+    licenseType: asset.licenseType,
+    status: asset.status,
+    vendor: asset.vendor || '',
+    purchaseDate: asset.purchaseDate || null,
+    expireDate: asset.expireDate || null,
+    cost: asset.cost,
+    description: asset.description || '',
+    assignedTo: asset.assignedTo || '',
   });
   formOpen.value = true;
 }
@@ -367,12 +368,12 @@ onMounted(() => {
         <Row :gutter="16">
           <Col :span="12">
             <Form.Item label="购买日期">
-              <DatePicker v-model:value="formState.purchaseDate" style="width: 100%" format="YYYY-MM-DD" />
+              <DatePicker :value="formState.purchaseDate || undefined" style="width: 100%" format="YYYY-MM-DD" @change="(_, value) => formState.purchaseDate = Array.isArray(value) ? value[0] : value || null" />
             </Form.Item>
           </Col>
           <Col :span="12">
             <Form.Item label="过期日期">
-              <DatePicker v-model:value="formState.expireDate" style="width: 100%" format="YYYY-MM-DD" />
+              <DatePicker :value="formState.expireDate || undefined" style="width: 100%" format="YYYY-MM-DD" @change="(_, value) => formState.expireDate = Array.isArray(value) ? value[0] : value || null" />
             </Form.Item>
           </Col>
         </Row>

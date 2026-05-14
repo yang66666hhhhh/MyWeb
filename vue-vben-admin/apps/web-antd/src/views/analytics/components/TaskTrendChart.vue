@@ -1,8 +1,11 @@
 <script lang="ts" setup>
 import type { EchartsUIType } from '@vben/plugins/echarts';
-import { computed, ref } from 'vue';
-import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
+
 import type { TaskTrend } from '#/api/analytics';
+
+import { computed, ref } from 'vue';
+
+import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 
 interface Props {
   data: TaskTrend[];
@@ -13,7 +16,7 @@ const props = defineProps<Props>();
 const chartRef = ref<EchartsUIType>();
 const { renderEcharts } = useEcharts(chartRef);
 
-const option = computed(() => ({
+const option = computed<Record<string, any>>(() => ({
   grid: {
     bottom: '3%',
     containLabel: true,
@@ -29,7 +32,7 @@ const option = computed(() => ({
       itemStyle: { color: '#5ab1ef' },
       name: '创建',
       smooth: true,
-      type: 'line',
+      type: 'line' as const,
     },
     {
       areaStyle: {},
@@ -37,19 +40,19 @@ const option = computed(() => ({
       itemStyle: { color: '#019680' },
       name: '完成',
       smooth: true,
-      type: 'line',
+      type: 'line' as const,
     },
   ],
-  tooltip: { trigger: 'axis' },
+  tooltip: { trigger: 'axis' as const },
   xAxis: {
     axisTick: { show: false },
     data: props.data.map((item) => item.date),
-    type: 'category',
+    type: 'category' as const,
   },
   yAxis: [
     {
       axisTick: { show: false },
-      type: 'value',
+      type: 'value' as const,
     },
   ],
 }));

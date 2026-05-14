@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { DailyPlan } from '#/api/growth';
+
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -7,16 +9,14 @@ import {
   Card,
   Col,
   List,
+  message,
   Progress,
   Row,
   Space,
   Statistic,
   Tag,
   Timeline,
-  message,
 } from 'ant-design-vue';
-
-import type { DailyPlan } from '#/api/growth';
 
 import { getDailyPlanPageApi } from '#/api/growth';
 

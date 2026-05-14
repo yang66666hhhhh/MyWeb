@@ -40,10 +40,13 @@ watch(
 
 function updateValue(fieldName: string, value: Partial<DynamicValue>) {
   const idx = localValues.value.findIndex((v) => v.fieldName === fieldName);
-  if (idx >= 0) {
-    localValues.value[idx] = { ...localValues.value[idx], ...value };
-  } else {
+  if (idx === -1) {
     localValues.value.push({ fieldName, ...value });
+  } else {
+    const current = localValues.value[idx];
+    if (current) {
+      localValues.value[idx] = { ...current, ...value };
+    }
   }
   emit('update:modelValue', [...localValues.value]);
 }
@@ -65,7 +68,7 @@ function handleTextInput(fieldName: string, e: Event) {
   updateValue(fieldName, { stringValue: val });
 }
 
-function handleNumberChange(fieldName: string, val: number | null) {
+function handleNumberChange(fieldName: string, val: null | number) {
   updateValue(fieldName, { numberValue: val ?? undefined });
 }
 
@@ -90,7 +93,7 @@ function handleSelectChange(fieldName: string, val: string) {
       <Input
         v-if="field.fieldType === 0"
         :value="getValue(field.fieldName)?.stringValue ?? ''"
-        :placeholder="'请输入' + field.fieldLabel"
+        :placeholder="`请输入${ field.fieldLabel}`"
         @input="handleTextInput(field.fieldName, $event)"
       />
 
@@ -99,8 +102,8 @@ function handleSelectChange(fieldName: string, val: string) {
         v-else-if="field.fieldType === 1"
         class="w-full"
         :value="getValue(field.fieldName)?.numberValue"
-        :placeholder="'请输入' + field.fieldLabel"
-        @change="handleNumberChange(field.fieldName, $event)"
+        :placeholder="`请输入${ field.fieldLabel}`"
+        @change="handleNumberChange(field.fieldName, typeof $event === 'number' ? $event : null)"
       />
 
       <!-- Date -->
@@ -117,7 +120,7 @@ function handleSelectChange(fieldName: string, val: string) {
         class="w-full"
         :value="getValue(field.fieldName)?.stringValue"
         :options="getOptions(field)"
-        :placeholder="'请选择' + field.fieldLabel"
+        :placeholder="`请选择${ field.fieldLabel}`"
         @change="handleSelectChange(field.fieldName, $event as unknown as string)"
       />
 
@@ -128,8 +131,8 @@ function handleSelectChange(fieldName: string, val: string) {
         mode="multiple"
         :value="(getValue(field.fieldName)?.stringValue ?? '').split(',').filter(Boolean)"
         :options="getOptions(field)"
-        :placeholder="'请选择' + field.fieldLabel"
-        @change="(val: string[]) => updateValue(field.fieldName, { stringValue: val.join(',') })"
+        :placeholder="`请选择${ field.fieldLabel}`"
+        @change="(val) => updateValue(field.fieldName, { stringValue: Array.isArray(val) ? val.join(',') : '' })"
       />
 
       <!-- Textarea -->
@@ -137,7 +140,7 @@ function handleSelectChange(fieldName: string, val: string) {
         v-else-if="field.fieldType === 5"
         :value="getValue(field.fieldName)?.stringValue ?? ''"
         :rows="3"
-        :placeholder="'请输入' + field.fieldLabel"
+        :placeholder="`请输入${ field.fieldLabel}`"
         @input="handleTextInput(field.fieldName, $event)"
       />
 

@@ -89,7 +89,7 @@ export async function updateMistakeApi(id: string, data: SaveExamMistakeInput) {
 }
 
 export async function updateMistakeReviewStatusApi(id: string, status: string) {
-  return requestClient.put<ExamMistake>(`/postgraduate/mistakes/${id}`, { status: status === 'reviewed' ? 1 : status === 'mastered' ? 2 : 0 });
+  return requestClient.put<ExamMistake>(`/postgraduate/mistakes/${id}`, { status: status === 'reviewed' ? 1 : (status === 'mastered' ? 2 : 0) });
 }
 
 export async function deleteMistakeApi(id: string) {
@@ -123,18 +123,18 @@ export interface ExamDashboard {
   materialCount: number;
   reviewTaskCount: number;
   subjects: Array<{
+    color: string;
     id: string;
     name: string;
     progress: number;
-    weeklyHours: number;
     targetHours: number;
-    color: string;
+    weeklyHours: number;
   }>;
   recentRecords: Array<{
-    id: string;
-    subject: string;
     durationMinutes: number;
+    id: string;
     recordDate: string;
+    subject: string;
     summary: string;
   }>;
 }

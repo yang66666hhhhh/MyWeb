@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref } from 'vue';
 import { Page } from '@vben/common-ui';
 
 import {
@@ -62,7 +62,7 @@ const roleOptions = [
   { label: 'Member', value: 'member' },
 ];
 
-const columns = [
+const columns: any[] = [
   { dataIndex: 'username', key: 'username', title: '用户名', width: 120 },
   { dataIndex: 'realName', key: 'realName', title: '姓名', width: 120 },
   { dataIndex: 'roles', key: 'roles', title: '角色', width: 100 },
@@ -73,7 +73,7 @@ const columns = [
   { key: 'action', title: '操作', width: 180, fixed: 'right' },
 ];
 
-const { changePage, items, load, loading, query, resetQuery, search, total } = usePagedQuery<
+const { changePage, items, load, loading, query, search, total } = usePagedQuery<
   UserDto,
   { keyword?: string; page: number; pageSize: number; status?: number }
 >({
@@ -112,10 +112,11 @@ function openCreate() {
   formOpen.value = true;
 }
 
-async function openEdit(record: UserDto) {
-  editingId.value = record.id;
+async function openEdit(record: Record<string, any>) {
+  const user = record as UserDto;
+  editingId.value = user.id;
   try {
-    const detail = await getUserApi(record.id);
+    const detail = await getUserApi(user.id);
     if (detail) {
       formState.value = {
         email: detail.email || '',
@@ -133,9 +134,10 @@ async function openEdit(record: UserDto) {
   }
 }
 
-async function showDetail(record: UserDto) {
+async function showDetail(record: Record<string, any>) {
+  const user = record as UserDto;
   try {
-    const detail = await getUserApi(record.id);
+    const detail = await getUserApi(user.id);
     if (detail) {
       selectedItem.value = detail;
       detailOpen.value = true;
@@ -340,7 +342,7 @@ function getRoleLabel(role: string) {
         </Descriptions.Item>
         <Descriptions.Item label="角色">
           <Tag :color="selectedItem.roles === 'owner' ? 'purple' : selectedItem.roles === 'pro' ? 'blue' : 'green'">
-            {{ getRoleLabel(selectedItem.roles) }}
+            {{ getRoleLabel(selectedItem.roles || 'member') }}
           </Tag>
         </Descriptions.Item>
         <Descriptions.Item label="身份">
@@ -363,7 +365,7 @@ function getRoleLabel(role: string) {
           </Tag>
         </Descriptions.Item>
         <Descriptions.Item label="最后登录IP">
-          {{ selectedItem.lastLoginIp || '-' }}
+          {{ selectedItem.lastLoginAt || '-' }}
         </Descriptions.Item>
         <Descriptions.Item label="创建时间" :span="2">
           {{ selectedItem.createdAt }}

@@ -77,11 +77,11 @@ export interface GenerateReportRequest {
 export interface ChatRequest {
   message: string;
   sessionId?: string;
-  history?: { role: string; content: string }[];
+  history?: { content: string; role: string; }[];
 }
 
 export const aiApi = {
-  getPlans: (params?: { page?: number; pageSize?: number; type?: string; keyword?: string }) =>
+  getPlans: (params?: { keyword?: string; page?: number; pageSize?: number; type?: string; }) =>
     requestClient.get<PageResult<AiPlan>>('/ai/plans', { params }),
 
   getPlanById: (id: string) =>
@@ -93,7 +93,7 @@ export const aiApi = {
   deletePlan: (id: string) =>
     requestClient.delete(`/ai/plans/${id}`),
 
-  getReports: (params?: { page?: number; pageSize?: number; type?: string; keyword?: string }) =>
+  getReports: (params?: { keyword?: string; page?: number; pageSize?: number; type?: string; }) =>
     requestClient.get<PageResult<AiReport>>('/ai/reports', { params }),
 
   getReportById: (id: string) =>

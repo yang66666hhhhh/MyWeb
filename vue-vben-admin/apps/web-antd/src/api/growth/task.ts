@@ -1,4 +1,5 @@
 import type { PageQuery, PageResult } from '#/types/api';
+
 import { requestClient } from '#/api/request';
 
 export interface TaskItem {
@@ -85,6 +86,6 @@ export const taskApi = {
   complete: (id: string) =>
     requestClient.post(`/tasks/${id}/complete`),
 
-  convertToLog: (data: { taskId: string; workDate: string; originalContent?: string; totalHours?: number }) =>
+  convertToLog: (data: { originalContent?: string; taskId: string; totalHours?: number; workDate: string; }) =>
     requestClient.post('/tasks/convert-to-log', data),
 };

@@ -32,7 +32,7 @@ import HabitForm from './components/HabitForm.vue';
 
 const formOpen = ref(false);
 const detailOpen = ref(false);
-const editingId = ref<null | string>(undefined);
+const editingId = ref<null | string>(null);
 const selectedItem = ref<null | Habit>(null);
 
 const { changePage, items, load, loading, query, search, total } = usePagedQuery<
@@ -59,7 +59,8 @@ const columns = [
   { key: 'action', title: '操作', width: 260 },
 ];
 
-function isTodayCompleted(habit: Habit): boolean {
+function isTodayCompleted(record: Habit | Record<string, any>): boolean {
+  const habit = record as Habit;
   if (!habit.lastCheckInDate) return false;
   const today = new Date().toISOString().split('T')[0];
   return habit.lastCheckInDate.split('T')[0] === today;
@@ -84,7 +85,7 @@ const habitTypeOptions = [
 ];
 
 function openCreate() {
-  editingId.value = undefined;
+  editingId.value = null;
   formOpen.value = true;
 }
 
@@ -136,7 +137,7 @@ async function remove(id: string) {
 
 function handleFormOpenChange(value: boolean) {
   if (!value) {
-    editingId.value = undefined;
+    editingId.value = null;
   }
 }
 

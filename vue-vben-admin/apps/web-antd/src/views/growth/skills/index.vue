@@ -70,7 +70,7 @@ const levelColors: Record<string, string> = {
               <div class="w-32">
                 <div class="mb-1 text-right text-sm">{{ item.progress }}%</div>
                 <div class="h-2 rounded-full bg-gray-200">
-                  <div class="h-full rounded-full bg-blue-500" :style="{ width: `${item.progress}%` }" />
+                  <div class="h-full rounded-full bg-blue-500" :style="{ width: `${item.progress}%` }"></div>
                 </div>
               </div>
               <span class="text-gray-400">{{ item.lastPracticed }}</span>

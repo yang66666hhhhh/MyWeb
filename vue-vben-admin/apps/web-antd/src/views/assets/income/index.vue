@@ -8,7 +8,7 @@ import { Alert, Button, Card, Col, Row, Statistic, Table, Tag } from 'ant-design
 const loading = ref(false);
 
 const income = ref([
-  { id: '1', date: '2024-01-15', source: '工资', amount: 15000, category: '固定收入', note: '月工资' },
+  { id: '1', date: '2024-01-15', source: '工资', amount: 15_000, category: '固定收入', note: '月工资' },
   { id: '2', date: '2024-01-10', source: '兼职', amount: 3000, category: '兼职收入', note: '周末兼职' },
   { id: '3', date: '2024-01-05', source: '投资收益', amount: 500, category: '投资', note: '基金分红' },
 ]);

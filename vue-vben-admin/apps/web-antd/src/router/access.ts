@@ -3,12 +3,14 @@ import type {
   GenerateMenuAndRoutesOptions,
 } from '@vben/types';
 
+import type { RoleMenuItem } from '#/api/core/menu';
+
 import { generateAccessible } from '@vben/access';
 import { preferences } from '@vben/preferences';
 
 import { message } from 'ant-design-vue';
 
-import { getMyMenusApi, type RoleMenuItem } from '#/api/core/menu';
+import { getMyMenusApi } from '#/api/core/menu';
 import { BasicLayout, IFrameView } from '#/layouts';
 import { $t } from '#/locales';
 
@@ -30,7 +32,7 @@ function convertToRouteRecords(menus: RoleMenuItem[]): any[] {
           badge: menu.badge,
           tag: menu.tag,
         },
-        name: `${menu.path.replace(/\//g, '-').replace(/^-/, '')}`,
+        name: `${menu.path.replaceAll('/', '-').replace(/^-/, '')}`,
         path: menu.path,
         ...(menu.redirect ? { redirect: menu.redirect } : {}),
         ...(childRoutes.length > 0 ? { children: childRoutes } : {}),

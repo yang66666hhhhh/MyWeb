@@ -1,6 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router';
 
-import { $t } from '#/locales';
 
 const routes: RouteRecordRaw[] = [
   {

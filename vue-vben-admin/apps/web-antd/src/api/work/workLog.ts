@@ -1,8 +1,11 @@
-import type { PageQuery, PageResult } from '#/types/api';
-import { requestClient } from '#/api/request';
 import type { WorkLog } from './types';
 
+import type { PageQuery, PageResult } from '#/types/api';
+
+import { requestClient } from '#/api/request';
+
 export type { WorkLog };
+export type { WorkLogStatus } from '#/enums/workEnum';
 
 export interface WorkLogQuery extends PageQuery {
   workDate?: string;

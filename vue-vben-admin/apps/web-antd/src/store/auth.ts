@@ -12,6 +12,7 @@ import { defineStore } from 'pinia';
 
 import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
 import { $t } from '#/locales';
+
 import { usePersonaStore } from './persona';
 
 export const useAuthStore = defineStore('auth', () => {

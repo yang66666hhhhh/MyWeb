@@ -1,3 +1,21 @@
+<script setup lang="ts">
+import { DownOutlined } from '@ant-design/icons-vue';
+import { message } from 'ant-design-vue';
+
+import { usePersonaStore } from '#/store/persona';
+
+const personaStore = usePersonaStore();
+
+const handleSwitch = async ({ key }: { key: string }) => {
+  const success = await personaStore.switchPersona(key);
+  if (success) {
+    message.success('身份切换成功');
+  } else {
+    message.error('切换失败');
+  }
+};
+</script>
+
 <template>
   <a-dropdown>
     <div class="persona-switch">
@@ -19,23 +37,6 @@
     </template>
   </a-dropdown>
 </template>
-
-<script setup lang="ts">
-import { message } from 'ant-design-vue';
-import { DownOutlined } from '@ant-design/icons-vue';
-import { usePersonaStore } from '#/store/persona';
-
-const personaStore = usePersonaStore();
-
-const handleSwitch = async ({ key }: { key: string }) => {
-  const success = await personaStore.switchPersona(key);
-  if (success) {
-    message.success('身份切换成功');
-  } else {
-    message.error('切换失败');
-  }
-};
-</script>
 
 <style scoped>
 .persona-switch {

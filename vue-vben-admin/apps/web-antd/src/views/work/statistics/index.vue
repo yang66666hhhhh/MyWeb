@@ -1,11 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
-
-import { Page } from '@vben/common-ui';
-
-import { Card, Col, DatePicker, Form, Row, Select, Space, Statistic, Table, Tag, message } from 'ant-design-vue';
 import type { Dayjs } from 'dayjs';
-import dayjs from 'dayjs';
 
 import type {
   WorkStatisticsDailyHours,
@@ -14,9 +8,17 @@ import type {
   WorkStatisticsProjectHours,
   WorkStatisticsTaskTypeDistribution,
 } from '#/api/work/statistics';
+
+import { onMounted, ref } from 'vue';
+
+import { Page } from '@vben/common-ui';
+
+import { Card, Col, DatePicker, Form, message, Row, Select, Space, Statistic, Table, Tag } from 'ant-design-vue';
+import dayjs from 'dayjs';
+
 import {
-  getWorkStatisticsDeviceRankingApi,
   getWorkStatisticsDailyHoursApi,
+  getWorkStatisticsDeviceRankingApi,
   getWorkStatisticsOverviewApi,
   getWorkStatisticsProjectHoursApi,
   getWorkStatisticsTaskTypeDistributionApi,
@@ -72,11 +74,11 @@ async function load() {
   }
 }
 
-function onDateRangeChange(values: [string, string] | [Dayjs, Dayjs] | null) {
+function onDateRangeChange(values: [Dayjs, Dayjs] | [string, string] | null) {
   const start = values?.[0];
   const end = values?.[1];
-  queryParams.value.startDate = start && typeof start !== 'string' ? start.format('YYYY-MM-DD') : undefined;
-  queryParams.value.endDate = end && typeof end !== 'string' ? end.format('YYYY-MM-DD') : undefined;
+  queryParams.value.startDate = start && typeof start !== 'string' ? start.format('YYYY-MM-DD') : '';
+  queryParams.value.endDate = end && typeof end !== 'string' ? end.format('YYYY-MM-DD') : '';
 }
 
 onMounted(() => {

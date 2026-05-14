@@ -100,7 +100,7 @@ const formState = reactive({
   isActive: true,
 });
 
-const columns = [
+const columns: any[] = [
   { title: '图标', key: 'icon', width: 80 },
   { title: '编码', dataIndex: 'code', width: 120 },
   { title: '名称', dataIndex: 'name' },
@@ -141,16 +141,17 @@ const openCreateModal = () => {
   modalVisible.value = true;
 };
 
-const openEditModal = (persona: PersonaType) => {
-  editingPersona.value = persona;
+const openEditModal = (persona: Record<string, any>) => {
+  const item = persona as PersonaType;
+  editingPersona.value = item;
   Object.assign(formState, {
-    code: persona.code,
-    name: persona.name,
-    icon: persona.icon,
-    description: persona.description || '',
-    defaultHomeRoute: persona.defaultHomeRoute || '',
-    sort: persona.sort,
-    isActive: persona.isActive,
+    code: item.code,
+    name: item.name,
+    icon: item.icon,
+    description: item.description || '',
+    defaultHomeRoute: item.defaultHomeRoute || '',
+    sort: item.sort,
+    isActive: item.isActive,
   });
   modalVisible.value = true;
 };

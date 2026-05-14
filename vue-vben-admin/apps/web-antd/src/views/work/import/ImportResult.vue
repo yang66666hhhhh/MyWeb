@@ -3,11 +3,11 @@ import { Button, Card, Col, Result, Row, Statistic } from 'ant-design-vue';
 
 defineProps<{
   result: {
-    success: boolean;
-    successRows: number;
+    duplicateRows: number;
     failedRows: number;
     skippedRows: number;
-    duplicateRows: number;
+    success: boolean;
+    successRows: number;
   };
 }>();
 

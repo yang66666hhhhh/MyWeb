@@ -8,9 +8,9 @@ import { Alert, Button, Card, Col, Row, Statistic, Table, Tag } from 'ant-design
 const loading = ref(false);
 
 const investments = ref([
-  { id: '1', name: '沪深300ETF', type: '基金', amount: 20000, currentValue: 21500, return: 7.5, status: '持有中' },
-  { id: '2', name: '余额宝', type: '货币基金', amount: 10000, currentValue: 10050, return: 0.5, status: '持有中' },
-  { id: '3', name: '定期存款', type: '存款', amount: 50000, currentValue: 50000, return: 2.5, status: '持有中' },
+  { id: '1', name: '沪深300ETF', type: '基金', amount: 20_000, currentValue: 21_500, return: 7.5, status: '持有中' },
+  { id: '2', name: '余额宝', type: '货币基金', amount: 10_000, currentValue: 10_050, return: 0.5, status: '持有中' },
+  { id: '3', name: '定期存款', type: '存款', amount: 50_000, currentValue: 50_000, return: 2.5, status: '持有中' },
 ]);
 
 const columns = [
@@ -46,10 +46,10 @@ const typeColors: Record<string, string> = {
         <Card><Statistic title="当前价值" prefix="¥" :value="81550" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="总收益" prefix="¥" :value="1550" valueStyle="color: #3f8600" /></Card>
+          <Card><Statistic title="总收益" prefix="¥" :value="1550" :value-style="{ color: '#3f8600' }" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="收益率" :value="1.94" suffix="%" valueStyle="color: #3f8600" /></Card>
+          <Card><Statistic title="收益率" :value="1.94" suffix="%" :value-style="{ color: '#3f8600' }" /></Card>
       </Col>
     </Row>
 

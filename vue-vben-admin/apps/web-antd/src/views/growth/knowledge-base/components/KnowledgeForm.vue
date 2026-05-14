@@ -1,9 +1,9 @@
 <script lang="ts" setup>
+import type { KnowledgeArticle, SaveKnowledgeArticleInput } from '#/api/growth';
+
 import { reactive, ref, watch } from 'vue';
 
 import { Form, Input, message, Modal, Select, Switch } from 'ant-design-vue';
-
-import type { KnowledgeArticle, SaveKnowledgeArticleInput } from '#/api/growth';
 
 import {
   createKnowledgeArticleApi,

@@ -1,5 +1,3 @@
-import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-
 export interface ApiResult<T = any> {
   code: number;
   data: T;
@@ -32,14 +30,11 @@ export interface RequestOptions {
   /** 请求路径 */
   url: string;
   /** 请求方法 */
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  method?: 'DELETE' | 'GET' | 'PATCH' | 'POST' | 'PUT';
   /** 请求参数 */
   params?: any;
   /** 请求体 */
   data?: any;
   /** 配置选项 */
-  options?: AxiosRequestConfig;
+  options?: Record<string, any>;
 }
-
-export { AxiosInstance, AxiosRequestConfig, AxiosResponse };
-export type { AxiosInstance as HttpInstance };

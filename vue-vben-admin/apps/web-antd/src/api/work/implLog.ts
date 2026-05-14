@@ -1,4 +1,6 @@
 import { requestClient } from '#/api/request';
+export type { WorkLogTemplate } from './logTemplate';
+export { getMyWorkLogTemplateApi } from './logTemplate';
 
 export interface ImplLog {
   id: string;

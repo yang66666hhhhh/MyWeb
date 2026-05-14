@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { KnowledgeArticle } from '#/api/growth';
+
 import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -16,8 +18,6 @@ import {
   Table,
   Tag,
 } from 'ant-design-vue';
-
-import type { KnowledgeArticle } from '#/api/growth';
 
 import { deleteKnowledgeArticleApi, getKnowledgeArticlePageApi } from '#/api/growth';
 import { usePagedQuery } from '#/composables/usePagedQuery';

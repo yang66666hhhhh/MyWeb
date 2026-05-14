@@ -40,7 +40,7 @@ const statusColors: Record<string, string> = {
           <template v-if="column.key === 'progress'">
             <div class="flex items-center gap-2">
               <div class="w-32 h-2 bg-gray-200 rounded-full">
-                <div class="h-full bg-blue-500 rounded-full" :style="{ width: `${record.progress}%` }" />
+                <div class="h-full bg-blue-500 rounded-full" :style="{ width: `${record.progress}%` }"></div>
               </div>
               <span>{{ record.progress }}%</span>
             </div>

@@ -1,11 +1,13 @@
-import type { PageQuery, PageResult } from '#/types/api';
-import { requestClient } from '#/api/request';
 import type { WorkTaskType } from './types';
+
+import type { PageQuery, PageResult } from '#/types/api';
+
+import { requestClient } from '#/api/request';
 
 export type { WorkTaskType };
 
 export interface WorkTaskTypeQuery extends PageQuery {
-  enabled?: boolean;
+  enabled?: boolean | number;
 }
 
 export interface CreateWorkTaskTypeInput {

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
@@ -56,7 +56,7 @@ const formState = ref({
   extraData: {} as Record<string, any>,
 });
 
-const columns = [
+const columns: any[] = [
   { title: '日期', dataIndex: 'workDate', key: 'workDate', width: 120 },
   { title: '项目', dataIndex: 'title', key: 'title', minWidth: 200 },
   { title: '工时', dataIndex: 'totalHours', key: 'totalHours', width: 80 },
@@ -65,10 +65,6 @@ const columns = [
   { title: '任务类型', dataIndex: ['extraData', 'taskTypes'], key: 'taskTypes', width: 150 },
   { key: 'action', title: '操作', width: 150, fixed: 'right' },
 ];
-
-const summaryText = computed(() => {
-  return `共 ${totalCount.value} 条记录，总工时 ${totalHours.value} 小时`;
-});
 
 async function loadTemplate() {
   try {
@@ -107,14 +103,15 @@ function openCreate() {
   formOpen.value = true;
 }
 
-function openEdit(record: ImplLog) {
-  editingId.value = record.id;
+function openEdit(record: Record<string, any>) {
+  const log = record as ImplLog;
+  editingId.value = log.id;
   formState.value = {
-    workDate: record.workDate,
-    title: record.title,
-    projectName: record.projectName || '',
-    totalHours: record.totalHours,
-    extraData: record.extraData ? JSON.parse(record.extraData as any) : {},
+    workDate: log.workDate,
+    title: log.title,
+    projectName: log.projectName || '',
+    totalHours: log.totalHours,
+    extraData: typeof log.extraData === 'string' ? JSON.parse(log.extraData) : (log.extraData || {}),
   };
   formOpen.value = true;
 }

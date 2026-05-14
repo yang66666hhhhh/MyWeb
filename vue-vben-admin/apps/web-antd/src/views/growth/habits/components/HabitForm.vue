@@ -1,9 +1,9 @@
 <script lang="ts" setup>
+import type { Habit, HabitStatus } from '#/api/growth';
+
 import { computed, reactive, ref, watch } from 'vue';
 
 import { Form, Input, message, Modal, Select } from 'ant-design-vue';
-
-import type { Habit, HabitStatus } from '#/api/growth';
 
 import { createHabitApi, getHabitApi, updateHabitApi } from '#/api/growth';
 

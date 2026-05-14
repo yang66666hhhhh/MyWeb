@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { DashboardOverview, TaskDistribution, TaskPriorityDistribution } from '#/api/analytics';
+
 import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -6,10 +8,9 @@ import { Page } from '@vben/common-ui';
 import { Card, Col, Row, Statistic } from 'ant-design-vue';
 
 import { analyticsApi } from '#/api/analytics';
-import type { DashboardOverview, TaskDistribution, TaskPriorityDistribution } from '#/api/analytics';
 
-import TaskPieChart from './components/TaskPieChart.vue';
-import PriorityBarChart from './components/PriorityBarChart.vue';
+import PriorityBarChart from '../components/PriorityBarChart.vue';
+import TaskPieChart from '../components/TaskPieChart.vue';
 
 const loading = ref(false);
 const overview = ref<DashboardOverview | null>(null);

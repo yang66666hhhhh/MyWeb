@@ -1,38 +1,29 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
 import {
   Button,
   Card,
-  Col,
   DatePicker,
   Descriptions,
   Drawer,
   Form,
   Input,
-  Modal,
   Popconfirm,
-  Row,
   Select,
   Space,
-  Statistic,
   Table,
   Tag,
   message,
 } from 'ant-design-vue';
 import type { Dayjs } from 'dayjs';
-import dayjs from 'dayjs';
-import { storeToRefs } from 'pinia';
 
 import type { WorkLog, WorkLogStatus } from '#/api/work/workLog';
 import {
-  createWorkLogApi,
   deleteWorkLogApi,
-  getWorkLogApi,
   getWorkLogPageApi,
-  updateWorkLogApi,
 } from '#/api/work/workLog';
 import { usePagedQuery } from '#/composables/usePagedQuery';
 import {
@@ -69,7 +60,7 @@ const sourceTypeOptions = [
   { label: '计划转换', value: 2 },
 ];
 
-const columns = [
+const columns: any[] = [
   { dataIndex: 'workDate', key: 'workDate', title: '日期', width: 120 },
   { dataIndex: 'weekDay', key: 'weekDay', title: '星期', width: 80 },
   { dataIndex: 'title', key: 'title', title: '标题', minWidth: 180 },
@@ -112,13 +103,14 @@ function openCreate() {
   formOpen.value = true;
 }
 
-function openEdit(record: WorkLog) {
-  editingId.value = record.id;
+function openEdit(record: Record<string, any>) {
+  const log = record as WorkLog;
+  editingId.value = log.id;
   formOpen.value = true;
 }
 
-function showDetail(record: WorkLog) {
-  selectedItem.value = record;
+function showDetail(record: Record<string, any>) {
+  selectedItem.value = record as WorkLog;
   detailOpen.value = true;
 }
 
@@ -254,7 +246,7 @@ onMounted(() => {
 
     <WorkLogModal
       v-model:open="formOpen"
-      :id="editingId"
+      :id="editingId ?? undefined"
       @success="load"
       @update:open="handleFormOpenChange"
     />

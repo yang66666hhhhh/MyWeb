@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import type { EchartsUIType } from '@vben/plugins/echarts';
 
+import type { TaskDistribution } from '#/api/analytics';
+
 import { computed, ref } from 'vue';
 
 import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
-
-import type { TaskDistribution } from '#/api/analytics';
 
 interface Props {
   data: TaskDistribution[];
@@ -24,9 +24,9 @@ const chartData = computed(() => {
   }));
 });
 
-const option = computed(() => ({
+const option = computed<Record<string, any>>(() => ({
   tooltip: {
-    trigger: 'item',
+    trigger: 'item' as const,
   },
   legend: {
     bottom: '0%',
@@ -52,7 +52,7 @@ const option = computed(() => ({
       },
       name: '任务类型',
       radius: ['40%', '70%'],
-      type: 'pie',
+      type: 'pie' as const,
     },
   ],
 }));

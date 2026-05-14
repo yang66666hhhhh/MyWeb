@@ -69,7 +69,7 @@ const typeOptions = [
   { label: '其他', value: 4 },
 ];
 
-const columns = [
+const columns: any[] = [
   { dataIndex: 'projectName', key: 'projectName', title: '项目名称', minWidth: 180 },
   { dataIndex: 'projectCode', key: 'projectCode', title: '项目编号', width: 120 },
   { dataIndex: 'projectType', key: 'projectType', title: '项目类型', width: 100 },
@@ -101,10 +101,11 @@ function openCreate() {
   formOpen.value = true;
 }
 
-async function openEdit(record: WorkProject) {
-  editingId.value = record.id;
+async function openEdit(record: Record<string, any>) {
+  const project = record as WorkProject;
+  editingId.value = project.id;
   try {
-    const detail = await getWorkProjectApi(record.id);
+    const detail = await getWorkProjectApi(project.id);
     if (detail) {
       formState.value = {
         description: detail.description || '',
@@ -122,8 +123,8 @@ async function openEdit(record: WorkProject) {
   }
 }
 
-function showDetail(record: WorkProject) {
-  selectedItem.value = record;
+function showDetail(record: Record<string, any>) {
+  selectedItem.value = record as WorkProject;
   detailOpen.value = true;
 }
 

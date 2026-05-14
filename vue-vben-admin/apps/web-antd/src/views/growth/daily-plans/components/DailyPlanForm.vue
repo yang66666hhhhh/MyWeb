@@ -76,6 +76,13 @@ const priorityStringToNumber: Record<string, number> = {
   Urgent: 4,
 };
 
+const statusStringToNumber: Record<string, number> = {
+  Pending: 0,
+  InProgress: 1,
+  Completed: 2,
+  Cancelled: 3,
+};
+
 function fillForm(plan?: any) {
   Object.assign(formState, {
     description: plan?.description ?? '',
@@ -87,7 +94,7 @@ function fillForm(plan?: any) {
     remark: plan?.remark ?? '',
     startTime: plan?.startTime ?? '',
     status: typeof plan?.status === 'string'
-      ? ({ Pending: 0, InProgress: 1, Completed: 2, Cancelled: 3 }[plan.status] ?? 0)
+      ? (statusStringToNumber[plan.status] ?? 0)
       : (plan?.status ?? 0),
     title: plan?.title ?? '',
     taskType: plan?.type ?? 'Personal',
@@ -95,15 +102,15 @@ function fillForm(plan?: any) {
   });
 }
 
-function onPlanDateChange(val: null | string | dayjs.Dayjs) {
+function onPlanDateChange(val: dayjs.Dayjs | null | string) {
   formState.planDate = val && typeof val !== 'string' ? val.format('YYYY-MM-DD') : '';
 }
 
-function onStartTimeChange(val: null | string | dayjs.Dayjs) {
+function onStartTimeChange(val: dayjs.Dayjs | null | string) {
   formState.startTime = val && typeof val !== 'string' ? val.format('HH:mm') : '';
 }
 
-function onEndTimeChange(val: null | string | dayjs.Dayjs) {
+function onEndTimeChange(val: dayjs.Dayjs | null | string) {
   formState.endTime = val && typeof val !== 'string' ? val.format('HH:mm') : '';
 }
 

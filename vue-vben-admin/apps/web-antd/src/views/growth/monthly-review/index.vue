@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Alert, Button, Card, Col, List, Row, Space, Statistic, Tag } from 'ant-design-vue';
+import { Alert, Button, Card, Col, List, Row, Space, Statistic } from 'ant-design-vue';
 
 const loading = ref(false);
 

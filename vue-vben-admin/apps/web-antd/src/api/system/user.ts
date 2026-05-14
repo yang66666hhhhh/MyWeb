@@ -18,6 +18,7 @@ export interface UserDto {
   roles?: string;
   status: number;
   personas: PersonaTypeInfo[];
+  lastLoginIp?: string;
   lastLoginAt?: string;
   createdAt: string;
 }
@@ -40,9 +41,9 @@ export interface UpdateUserDto {
 }
 
 export function getUserPageApi(params: {
+  keyword?: string;
   page?: number;
   pageSize?: number;
-  keyword?: string;
   status?: number;
 }) {
   return requestClient.get<{ items: UserDto[]; total: number }>('/users', { params });
@@ -68,7 +69,7 @@ export function resetPasswordApi(id: string, data: { newPassword: string }) {
   return requestClient.post(`/users/${id}/reset-password`, data);
 }
 
-export function changePasswordApi(id: string, data: { oldPassword: string; newPassword: string }) {
+export function changePasswordApi(id: string, data: { newPassword: string; oldPassword: string; }) {
   return requestClient.post(`/users/${id}/change-password`, data);
 }
 

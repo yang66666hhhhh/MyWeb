@@ -1,4 +1,5 @@
 import type { PageQuery, PageResult } from '#/types/api';
+
 import { requestClient } from '#/api/request';
 
 export interface IndustryTemplate {
@@ -48,7 +49,7 @@ export interface CreateTemplateFieldInput {
   fieldLabel: string;
   fieldType: FieldType;
   options?: string;
-  isRequired?: boolean;
+  isRequired?: boolean | number;
   sort: number;
   defaultValue?: string;
 }

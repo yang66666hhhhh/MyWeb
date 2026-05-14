@@ -1,5 +1,3 @@
-import { requestClient } from '#/api/request';
-
 import type {
   BaseEntity,
   DailyPlanPriority,
@@ -7,6 +5,8 @@ import type {
   PageQuery,
   PageResult,
 } from './types';
+
+import { requestClient } from '#/api/request';
 
 const DAILY_PLAN_SCHEDULE_STORAGE_KEY = 'growth.daily-plan.schedule';
 
@@ -111,7 +111,7 @@ function clearSchedule(id: string) {
   }
 }
 
-function enrichDailyPlan<T extends DailyPlan | undefined | null>(plan: T): T {
+function enrichDailyPlan<T extends DailyPlan | null | undefined>(plan: T): T {
   if (!plan) {
     return plan;
   }

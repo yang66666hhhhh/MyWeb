@@ -8,7 +8,6 @@ import {
   Button,
   Card,
   Col,
-  Image,
   Row,
   Space,
   Statistic,

@@ -9,7 +9,7 @@ const mode = ref<'break' | 'focus'>('focus');
 const timeLeft = ref(25 * 60);
 const isRunning = ref(false);
 const completedSessions = ref(3);
-let timer: ReturnType<typeof setInterval> | null = null;
+let timer: null | ReturnType<typeof setInterval> = null;
 
 const focusDuration = 25 * 60;
 const breakDuration = 5 * 60;

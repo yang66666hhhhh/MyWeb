@@ -1,9 +1,8 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
-
-import { Badge, Col, Descriptions, Progress, Row, Statistic, Tag } from 'ant-design-vue';
 
 import type { Habit } from '#/api/growth';
+
+import { Badge, Col, Descriptions, Progress, Row, Statistic, Tag } from 'ant-design-vue';
 
 defineProps<{ item?: Habit | null }>();
 

@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Card, Col, Row, Space, Statistic, Table, Tag } from 'ant-design-vue';
+import { Button, Card, Col, Row, Statistic, Table, Tag } from 'ant-design-vue';
 
 const loading = ref(false);
 
@@ -50,14 +50,14 @@ const statusColors: Record<string, string> = {
             <div>
               <div class="font-bold mb-2">{{ record.objective }}</div>
               <div v-for="(kr, index) in record.keyResults" :key="index" class="text-gray-500 text-sm">
-                {{ index + 1 }}. {{ kr }}
+                {{ Number(index) + 1 }}. {{ kr }}
               </div>
             </div>
           </template>
           <template v-else-if="column.key === 'progress'">
             <div class="flex items-center gap-2">
               <div class="w-20 h-2 bg-gray-200 rounded-full">
-                <div class="h-full bg-blue-500 rounded-full" :style="{ width: `${record.progress}%` }" />
+                <div class="h-full bg-blue-500 rounded-full" :style="{ width: `${record.progress}%` }"></div>
               </div>
               <span>{{ record.progress }}%</span>
             </div>

@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { WorkImportPreviewItem } from '#/api/work/import';
+
 import { Table, Tag, Tooltip } from 'ant-design-vue';
 
 import {
@@ -8,19 +10,7 @@ import {
 } from '#/enums/workEnum';
 
 defineProps<{
-  data: Array<{
-    rowNumber: number;
-    workDate: string;
-    projectName: string;
-    deviceNames: string;
-    taskTypeNames: string;
-    originalContent: string;
-    totalHours?: number;
-    remark?: string;
-    validationStatus: number;
-    errorMessage?: string;
-    duplicateStatus?: number;
-  }>;
+  data: WorkImportPreviewItem[];
 }>();
 
 const columns = [

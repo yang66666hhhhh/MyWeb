@@ -4,11 +4,11 @@ export enum WorkLogSourceType {
   PlanConversion = 2,
 }
 
-export enum WorkLogSourceTypeLabel {
-  '手动' = WorkLogSourceType.Manual,
-  'Excel导入' = WorkLogSourceType.ExcelImport,
-  '计划转换' = WorkLogSourceType.PlanConversion,
-}
+export const WorkLogSourceTypeLabel: Record<WorkLogSourceType, string> = {
+  [WorkLogSourceType.Manual]: '手动',
+  [WorkLogSourceType.ExcelImport]: 'Excel导入',
+  [WorkLogSourceType.PlanConversion]: '计划转换',
+};
 
 export enum WorkLogStatus {
   Normal = 0,
@@ -16,17 +16,17 @@ export enum WorkLogStatus {
   PendingSupplement = 2,
 }
 
-export enum WorkLogStatusLabel {
-  '正常' = WorkLogStatus.Normal,
-  '缺失数据' = WorkLogStatus.MissingData,
-  '待补充' = WorkLogStatus.PendingSupplement,
-}
+export const WorkLogStatusLabel: Record<WorkLogStatus, string> = {
+  [WorkLogStatus.Normal]: '正常',
+  [WorkLogStatus.MissingData]: '缺失数据',
+  [WorkLogStatus.PendingSupplement]: '待补充',
+};
 
-export enum WorkLogStatusColor {
-  Normal = 'success',
-  MissingData = 'warning',
-  PendingSupplement = 'error',
-}
+export const WorkLogStatusColor: Record<WorkLogStatus, string> = {
+  [WorkLogStatus.Normal]: 'success',
+  [WorkLogStatus.MissingData]: 'warning',
+  [WorkLogStatus.PendingSupplement]: 'error',
+};
 
 export enum WorkProjectStatus {
   Active = 0,
@@ -35,19 +35,19 @@ export enum WorkProjectStatus {
   Archived = 3,
 }
 
-export enum WorkProjectStatusLabel {
-  '进行中' = WorkProjectStatus.Active,
-  '已完成' = WorkProjectStatus.Completed,
-  '已暂停' = WorkProjectStatus.Suspended,
-  '已归档' = WorkProjectStatus.Archived,
-}
+export const WorkProjectStatusLabel: Record<WorkProjectStatus, string> = {
+  [WorkProjectStatus.Active]: '进行中',
+  [WorkProjectStatus.Completed]: '已完成',
+  [WorkProjectStatus.Suspended]: '已暂停',
+  [WorkProjectStatus.Archived]: '已归档',
+};
 
-export enum WorkProjectStatusColor {
-  Active = 'processing',
-  Completed = 'success',
-  Suspended = 'warning',
-  Archived = 'default',
-}
+export const WorkProjectStatusColor: Record<WorkProjectStatus, string> = {
+  [WorkProjectStatus.Active]: 'processing',
+  [WorkProjectStatus.Completed]: 'success',
+  [WorkProjectStatus.Suspended]: 'warning',
+  [WorkProjectStatus.Archived]: 'default',
+};
 
 export enum WorkProjectType {
   Internal = 0,
@@ -57,13 +57,13 @@ export enum WorkProjectType {
   Other = 4,
 }
 
-export enum WorkProjectTypeLabel {
-  '内部项目' = WorkProjectType.Internal,
-  '外部项目' = WorkProjectType.External,
-  '研发项目' = WorkProjectType.RAndD,
-  '支持项目' = WorkProjectType.Support,
-  '其他' = WorkProjectType.Other,
-}
+export const WorkProjectTypeLabel: Record<WorkProjectType, string> = {
+  [WorkProjectType.Internal]: '内部项目',
+  [WorkProjectType.External]: '外部项目',
+  [WorkProjectType.RAndD]: '研发项目',
+  [WorkProjectType.Support]: '支持项目',
+  [WorkProjectType.Other]: '其他',
+};
 
 export enum WorkDeviceStatus {
   Active = 0,
@@ -71,17 +71,17 @@ export enum WorkDeviceStatus {
   Maintenance = 2,
 }
 
-export enum WorkDeviceStatusLabel {
-  '正常' = WorkDeviceStatus.Active,
-  '停用' = WorkDeviceStatus.Inactive,
-  '维护中' = WorkDeviceStatus.Maintenance,
-}
+export const WorkDeviceStatusLabel: Record<WorkDeviceStatus, string> = {
+  [WorkDeviceStatus.Active]: '正常',
+  [WorkDeviceStatus.Inactive]: '停用',
+  [WorkDeviceStatus.Maintenance]: '维护中',
+};
 
-export enum WorkDeviceStatusColor {
-  Active = 'success',
-  Inactive = 'default',
-  Maintenance = 'warning',
-}
+export const WorkDeviceStatusColor: Record<WorkDeviceStatus, string> = {
+  [WorkDeviceStatus.Active]: 'success',
+  [WorkDeviceStatus.Inactive]: 'default',
+  [WorkDeviceStatus.Maintenance]: 'warning',
+};
 
 export enum WorkDeviceType {
   ProductionLine = 0,
@@ -90,12 +90,12 @@ export enum WorkDeviceType {
   Other = 3,
 }
 
-export enum WorkDeviceTypeLabel {
-  '生产线' = WorkDeviceType.ProductionLine,
-  '设备' = WorkDeviceType.Equipment,
-  '测试设备' = WorkDeviceType.TestingDevice,
-  '其他' = WorkDeviceType.Other,
-}
+export const WorkDeviceTypeLabel: Record<WorkDeviceType, string> = {
+  [WorkDeviceType.ProductionLine]: '生产线',
+  [WorkDeviceType.Equipment]: '设备',
+  [WorkDeviceType.TestingDevice]: '测试设备',
+  [WorkDeviceType.Other]: '其他',
+};
 
 export enum WorkImportStrategy {
   SkipDuplicate = 0,
@@ -103,11 +103,11 @@ export enum WorkImportStrategy {
   Merge = 2,
 }
 
-export enum WorkImportStrategyLabel {
-  '跳过重复' = WorkImportStrategy.SkipDuplicate,
-  '覆盖重复' = WorkImportStrategy.OverwriteDuplicate,
-  '合并导入' = WorkImportStrategy.Merge,
-}
+export const WorkImportStrategyLabel: Record<WorkImportStrategy, string> = {
+  [WorkImportStrategy.SkipDuplicate]: '跳过重复',
+  [WorkImportStrategy.OverwriteDuplicate]: '覆盖重复',
+  [WorkImportStrategy.Merge]: '合并导入',
+};
 
 export enum WorkImportStatus {
   Pending = 0,
@@ -116,12 +116,12 @@ export enum WorkImportStatus {
   Failed = 3,
 }
 
-export enum WorkImportStatusLabel {
-  '等待处理' = WorkImportStatus.Pending,
-  '处理中' = WorkImportStatus.Processing,
-  '已完成' = WorkImportStatus.Completed,
-  '失败' = WorkImportStatus.Failed,
-}
+export const WorkImportStatusLabel: Record<WorkImportStatus, string> = {
+  [WorkImportStatus.Pending]: '等待处理',
+  [WorkImportStatus.Processing]: '处理中',
+  [WorkImportStatus.Completed]: '已完成',
+  [WorkImportStatus.Failed]: '失败',
+};
 
 export enum WorkImportValidationStatus {
   Valid = 0,
@@ -129,24 +129,24 @@ export enum WorkImportValidationStatus {
   Error = 2,
 }
 
-export enum WorkImportValidationStatusLabel {
-  '有效' = WorkImportValidationStatus.Valid,
-  '警告' = WorkImportValidationStatus.Warning,
-  '错误' = WorkImportValidationStatus.Error,
-}
+export const WorkImportValidationStatusLabel: Record<WorkImportValidationStatus, string> = {
+  [WorkImportValidationStatus.Valid]: '有效',
+  [WorkImportValidationStatus.Warning]: '警告',
+  [WorkImportValidationStatus.Error]: '错误',
+};
 
-export enum WorkImportValidationStatusColor {
-  Valid = 'success',
-  Warning = 'warning',
-  Error = 'error',
-}
+export const WorkImportValidationStatusColor: Record<WorkImportValidationStatus, string> = {
+  [WorkImportValidationStatus.Valid]: 'success',
+  [WorkImportValidationStatus.Warning]: 'warning',
+  [WorkImportValidationStatus.Error]: 'error',
+};
 
-export enum WorkImportStatusColor {
-  Pending = 'default',
-  Processing = 'processing',
-  Completed = 'success',
-  Failed = 'error',
-}
+export const WorkImportStatusColor: Record<WorkImportStatus, string> = {
+  [WorkImportStatus.Pending]: 'default',
+  [WorkImportStatus.Processing]: 'processing',
+  [WorkImportStatus.Completed]: 'success',
+  [WorkImportStatus.Failed]: 'error',
+};
 
 export enum WorkDailyPlanStatus {
   Pending = 0,
@@ -155,19 +155,19 @@ export enum WorkDailyPlanStatus {
   Cancelled = 3,
 }
 
-export enum WorkDailyPlanStatusLabel {
-  '待执行' = WorkDailyPlanStatus.Pending,
-  '进行中' = WorkDailyPlanStatus.InProgress,
-  '已完成' = WorkDailyPlanStatus.Completed,
-  '已取消' = WorkDailyPlanStatus.Cancelled,
-}
+export const WorkDailyPlanStatusLabel: Record<WorkDailyPlanStatus, string> = {
+  [WorkDailyPlanStatus.Pending]: '待执行',
+  [WorkDailyPlanStatus.InProgress]: '进行中',
+  [WorkDailyPlanStatus.Completed]: '已完成',
+  [WorkDailyPlanStatus.Cancelled]: '已取消',
+};
 
-export enum WorkDailyPlanStatusColor {
-  Pending = 'default',
-  InProgress = 'processing',
-  Completed = 'success',
-  Cancelled = 'default',
-}
+export const WorkDailyPlanStatusColor: Record<WorkDailyPlanStatus, string> = {
+  [WorkDailyPlanStatus.Pending]: 'default',
+  [WorkDailyPlanStatus.InProgress]: 'processing',
+  [WorkDailyPlanStatus.Completed]: 'success',
+  [WorkDailyPlanStatus.Cancelled]: 'default',
+};
 
 export enum WorkDailyPlanPriority {
   Low = 1,
@@ -176,19 +176,19 @@ export enum WorkDailyPlanPriority {
   Urgent = 4,
 }
 
-export enum WorkDailyPlanPriorityLabel {
-  '低' = WorkDailyPlanPriority.Low,
-  '中' = WorkDailyPlanPriority.Medium,
-  '高' = WorkDailyPlanPriority.High,
-  '紧急' = WorkDailyPlanPriority.Urgent,
-}
+export const WorkDailyPlanPriorityLabel: Record<WorkDailyPlanPriority, string> = {
+  [WorkDailyPlanPriority.Low]: '低',
+  [WorkDailyPlanPriority.Medium]: '中',
+  [WorkDailyPlanPriority.High]: '高',
+  [WorkDailyPlanPriority.Urgent]: '紧急',
+};
 
-export enum WorkDailyPlanPriorityColor {
-  Low = 'default',
-  Medium = 'blue',
-  High = 'orange',
-  Urgent = 'red',
-}
+export const WorkDailyPlanPriorityColor: Record<WorkDailyPlanPriority, string> = {
+  [WorkDailyPlanPriority.Low]: 'default',
+  [WorkDailyPlanPriority.Medium]: 'blue',
+  [WorkDailyPlanPriority.High]: 'orange',
+  [WorkDailyPlanPriority.Urgent]: 'red',
+};
 
 export function getWeekDayName(weekDay: number): string {
   const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];

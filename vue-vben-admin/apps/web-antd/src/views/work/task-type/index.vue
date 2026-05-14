@@ -43,7 +43,7 @@ const formState = ref({
   typeName: '',
 });
 
-const columns = [
+const columns: any[] = [
   { dataIndex: 'typeName', key: 'typeName', title: '类型名称', minWidth: 140 },
   { dataIndex: 'typeCode', key: 'typeCode', title: '类型编码', width: 120 },
   { dataIndex: 'description', key: 'description', title: '描述', minWidth: 160 },
@@ -54,7 +54,7 @@ const columns = [
 
 const { changePage, items, load, loading, query, resetQuery, search, total } = usePagedQuery<
   WorkTaskType,
-  { enabled?: boolean; keyword?: string; page: number; pageSize: number }
+  { enabled?: number; keyword?: string; page: number; pageSize: number }
 >({
   defaultQuery: { page: 1, pageSize: 10 },
   fetcher: getWorkTaskTypePageApi,
@@ -72,10 +72,11 @@ function openCreate() {
   formOpen.value = true;
 }
 
-async function openEdit(record: WorkTaskType) {
-  editingId.value = record.id;
+async function openEdit(record: Record<string, any>) {
+  const taskType = record as WorkTaskType;
+  editingId.value = taskType.id;
   try {
-    const detail = await getWorkTaskTypeApi(record.id);
+    const detail = await getWorkTaskTypeApi(taskType.id);
     if (detail) {
       formState.value = {
         description: detail.description || '',
@@ -91,8 +92,8 @@ async function openEdit(record: WorkTaskType) {
   }
 }
 
-function showDetail(record: WorkTaskType) {
-  selectedItem.value = record;
+function showDetail(record: Record<string, any>) {
+  selectedItem.value = record as WorkTaskType;
   detailOpen.value = true;
 }
 
@@ -126,10 +127,11 @@ async function handleSubmit() {
   }
 }
 
-async function handleToggleEnabled(record: WorkTaskType) {
+async function handleToggleEnabled(record: Record<string, any>) {
+  const taskType = record as WorkTaskType;
   try {
-    await updateWorkTaskTypeApi(record.id, { enabled: !record.enabled });
-    message.success(`已${record.enabled ? '停用' : '启用'}`);
+    await updateWorkTaskTypeApi(taskType.id, { enabled: !taskType.enabled });
+    message.success(`已${taskType.enabled ? '停用' : '启用'}`);
     await load();
   } catch {
     message.error('状态更新失败');
@@ -157,8 +159,8 @@ onMounted(() => {
                 v-model:value="query.enabled"
                 :options="[
                   { label: '全部', value: undefined },
-                  { label: '已启用', value: true },
-                  { label: '已停用', value: false },
+                  { label: '已启用', value: 1 },
+                  { label: '已停用', value: 0 },
                 ]"
                 allow-clear
                 class="w-32"

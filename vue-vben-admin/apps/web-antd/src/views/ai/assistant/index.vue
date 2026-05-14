@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Card, Input, List, Space } from 'ant-design-vue';
+import { Button, Card, Input, List } from 'ant-design-vue';
 
 const loading = ref(false);
 const inputMessage = ref('');
@@ -43,10 +43,11 @@ function sendMessage() {
         <List :data-source="messages" :loading="loading">
           <template #renderItem="{ item }">
             <List.Item :class="item.role === 'user' ? 'text-right' : 'text-left'">
-              <div :class="[
-                'inline-block p-3 rounded-lg max-w-[70%]',
+              <div
+class="inline-block p-3 rounded-lg max-w-[70%]" :class="[
                 item.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-100'
-              ]">
+              ]"
+>
                 {{ item.content }}
               </div>
             </List.Item>

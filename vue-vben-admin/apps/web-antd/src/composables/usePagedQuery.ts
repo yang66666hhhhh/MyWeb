@@ -1,3 +1,5 @@
+import type { Reactive } from 'vue';
+
 import { reactive, ref } from 'vue';
 
 interface PagedResult<T> {
@@ -18,12 +20,12 @@ export function usePagedQuery<T, Q extends { page: number; pageSize: number }>(
   const loading = ref(false);
   const items = ref<T[]>([]) as any;
   const total = ref(0);
-  const query = reactive<Q>({ ...defaultQuery });
+  const query = reactive({ ...defaultQuery }) as Reactive<Q>;
 
   async function load() {
     loading.value = true;
     try {
-      const result = await fetcher(query);
+      const result = await fetcher({ ...query } as Q);
       items.value = result.items;
       total.value = result.total;
     } catch {

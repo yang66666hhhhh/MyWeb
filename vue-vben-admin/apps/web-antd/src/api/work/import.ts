@@ -1,4 +1,5 @@
 import type { PageQuery, PageResult } from '#/types/api';
+
 import { requestClient } from '#/api/request';
 
 export interface WorkImportBatch {
@@ -58,6 +59,7 @@ export interface WorkImportConfirmItem {
 }
 
 export interface WorkImportConfirmDto {
+  batchId?: string;
   items: WorkImportConfirmItem[];
   importStrategy: number;
 }
@@ -66,6 +68,7 @@ export interface WorkImportConfirmResult {
   successRows: number;
   failedRows: number;
   skippedRows: number;
+  duplicateRows?: number;
 }
 
 export const workImportApi = {

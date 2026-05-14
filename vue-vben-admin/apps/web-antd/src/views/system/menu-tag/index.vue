@@ -1,39 +1,28 @@
 ﻿<script lang="ts" setup>
+import type { CreateMenuItemDto, CreateTagDto, CreateUserTypeDto, MenuPathDto, MenuTreeAdminDto, TagDto, UserTagDto, UserTypeDto } from '#/api/system/menu-tag';
+
 import { onMounted, ref, watch } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
 import {
+  Tag as AntTag,
   Button,
   Card,
   Form,
   Input,
   InputNumber,
+  message,
   Modal,
   Popconfirm,
   Select,
   Space,
   Table,
-  Tag as AntTag,
   Tabs,
   Transfer,
-  message,
 } from 'ant-design-vue';
 
-import {
-  menuAdminApi,
-  tagApi,
-  type CreateMenuItemDto,
-  type CreateTagDto,
-  type CreateUserTypeDto,
-  type MenuPathDto,
-  type MenuTreeAdminDto,
-  type TagDto,
-  type UserTagDto,
-  type UserTypeDto,
-  userTagApi,
-  userTypeApi,
-} from '#/api/system/menu-tag';
+import { menuAdminApi, tagApi, userTagApi, userTypeApi } from '#/api/system/menu-tag';
 
 const activeTab = ref('user-types');
 
@@ -229,11 +218,11 @@ async function deleteUserType(id: string) {
 
 // User assign
 const userAssignModalOpen = ref(false);
-const editingAssignUserId = ref<string | null>(null);
+const editingAssignUserId = ref<null | string>(null);
 const assignUserTypeId = ref<string | undefined>(undefined);
 
 function openAssignModal(user: UserTagDto) {
-  editingAssignUserId.value = user.userId;
+  editingAssignUserId.value = user.userId ?? user.id;
   assignUserTypeId.value = user.userTypeId;
   userAssignModalOpen.value = true;
 }
@@ -250,19 +239,19 @@ async function saveUserAssign() {
 <template>
   <Page>
     <Card>
-      <Tabs v-model:activeKey="activeTab">
+      <Tabs v-model:active-key="activeTab">
         <Tabs.TabPane key="user-types" tab="用户类型">
           <div class="mb-4">
             <Button type="primary" @click="openUserTypeForm()">新增用户类型</Button>
           </div>
-          <Table :dataSource="userTypes" :rowKey="(r) => r.id" :pagination="false">
-            <Table.Column title="名称" dataIndex="name">
+          <Table :data-source="userTypes" :row-key="(r) => r.id" :pagination="false">
+            <Table.Column title="名称" data-index="name">
               <template #default="{ record }">
                 <AntTag :color="record.color">{{ record.name }}</AntTag>
               </template>
             </Table.Column>
-            <Table.Column title="代码" dataIndex="code" />
-            <Table.Column title="描述" dataIndex="description" />
+            <Table.Column title="代码" data-index="code" />
+            <Table.Column title="描述" data-index="description" />
             <Table.Column title="标签">
               <template #default="{ record }">
                 <AntTag v-for="t in record.tagNames" :key="t" :color="tags.find((x) => x.name === t)?.color || '#ccc'">
@@ -287,14 +276,14 @@ async function saveUserAssign() {
           <div class="mb-4">
             <Button type="primary" @click="openTagForm()">新增标签</Button>
           </div>
-          <Table :dataSource="tags" :rowKey="(r) => r.id" :pagination="false">
-            <Table.Column title="名称" dataIndex="name">
+          <Table :data-source="tags" :row-key="(r) => r.id" :pagination="false">
+            <Table.Column title="名称" data-index="name">
               <template #default="{ record }">
                 <AntTag :color="record.color">{{ record.name }}</AntTag>
               </template>
             </Table.Column>
-            <Table.Column title="描述" dataIndex="description" />
-            <Table.Column title="排序" dataIndex="sort" />
+            <Table.Column title="描述" data-index="description" />
+            <Table.Column title="排序" data-index="sort" />
             <Table.Column title="操作">
               <template #default="{ record }">
                 <Space>
@@ -312,9 +301,9 @@ async function saveUserAssign() {
           <div class="mb-4">
             <Button type="primary" @click="openMenuForm()">新增菜单</Button>
           </div>
-          <Table :dataSource="menuTree" :rowKey="(r) => r.id" :pagination="false" :key="menuTree.length">
-            <Table.Column title="名称" dataIndex="name" />
-            <Table.Column title="路径" dataIndex="path" />
+          <Table :data-source="menuTree" :row-key="(r) => r.id" :pagination="false" :key="menuTree.length">
+            <Table.Column title="名称" data-index="name" />
+            <Table.Column title="路径" data-index="path" />
             <Table.Column title="标签">
               <template #default="{ record }">
                 <AntTag v-for="t in record.tagNames" :key="t" :color="tags.find((x) => x.name === t)?.color || '#ccc'" class="mr-1">
@@ -322,7 +311,7 @@ async function saveUserAssign() {
                 </AntTag>
               </template>
             </Table.Column>
-            <Table.Column title="排序" dataIndex="sort" width="80" />
+            <Table.Column title="排序" data-index="sort" width="80" />
             <Table.Column title="操作" width="200">
               <template #default="{ record }">
                 <Space>
@@ -337,8 +326,8 @@ async function saveUserAssign() {
         </Tabs.TabPane>
 
         <Tabs.TabPane key="users" tab="用户分配">
-          <Table :dataSource="users" :rowKey="(r) => r.userId" :pagination="{ pageSize: 20 }">
-            <Table.Column title="用户名" dataIndex="username" />
+          <Table :data-source="users" :row-key="(r) => r.userId" :pagination="{ pageSize: 20 }">
+            <Table.Column title="用户名" data-index="username" />
             <Table.Column title="用户类型">
               <template #default="{ record }">
                 <AntTag v-if="record.userTypeName" :color="userTypes.find((x) => x.name === record.userTypeName)?.color || '#ccc'">
@@ -377,8 +366,8 @@ async function saveUserAssign() {
       </Form.Item>
       <Form.Item label="关联标签">
         <Transfer
-          v-model:targetKeys="userTypeFormState.tagIds"
-          :dataSource="tags.map((t) => ({ key: t.id, title: t.name }))"
+          v-model:target-keys="userTypeFormState.tagIds"
+          :data-source="tags.map((t) => ({ key: t.id, title: t.name }))"
           :titles="['可选标签', '已选标签']"
           :render="(item) => item.title || ''"
         />
@@ -427,8 +416,8 @@ async function saveUserAssign() {
       </Form.Item>
       <Form.Item label="关联标签">
         <Transfer
-          v-model:targetKeys="menuFormState.tagIds"
-          :dataSource="tags.map((t) => ({ key: t.id, title: t.name }))"
+          v-model:target-keys="menuFormState.tagIds"
+          :data-source="tags.map((t) => ({ key: t.id, title: t.name }))"
           :titles="['可选标签', '已选标签']"
           :render="(item) => item.title || ''"
         />
@@ -439,7 +428,7 @@ async function saveUserAssign() {
   <Modal v-model:open="userAssignModalOpen" title="分配用户类型" @ok="saveUserAssign">
     <Form layout="vertical">
       <Form.Item label="选择用户类型">
-        <Select v-model:value="assignUserTypeId" placeholder="请选择用户类型" style="width: 200px" allowClear>
+        <Select v-model:value="assignUserTypeId" placeholder="请选择用户类型" style="width: 200px" allow-clear>
           <Select.Option v-for="ut in userTypes" :key="ut.id" :value="ut.id">
             <AntTag :color="ut.color">{{ ut.name }}</AntTag>
           </Select.Option>

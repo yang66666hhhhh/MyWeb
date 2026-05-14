@@ -110,7 +110,7 @@ const formState = reactive({
   description: '',
 });
 
-const columns = [
+const columns: any[] = [
   { title: '标题', dataIndex: 'title', key: 'title' },
   { title: '类型', dataIndex: 'type', key: 'type' },
   { title: '状态', dataIndex: 'status', key: 'status' },
@@ -126,19 +126,15 @@ const generatePlan = async () => {
 
   generating.value = true;
   try {
-    const response = await aiApi.generatePlan({
+    const plan = await aiApi.generatePlan({
       type: formState.type,
       description: formState.description,
       targetDate: formState.targetDate?.format('YYYY-MM-DD'),
     });
 
-    if (response.code === 0 && response.data) {
-      generatedPlan.value = response.data.generatedContent || '计划已生成';
-      message.success('计划生成成功');
-      await fetchPlans();
-    } else {
-      message.error(response.message || '生成失败');
-    }
+    generatedPlan.value = plan.generatedContent || '计划已生成';
+    message.success('计划生成成功');
+    await fetchPlans();
   } catch (error: any) {
     message.error(error.message || '生成失败');
   } finally {
@@ -149,10 +145,8 @@ const generatePlan = async () => {
 const fetchPlans = async () => {
   loading.value = true;
   try {
-    const response = await aiApi.getPlans({ page: 1, pageSize: 100 });
-    if (response.code === 0 && response.data) {
-      plans.value = response.data.items || [];
-    }
+    const result = await aiApi.getPlans({ page: 1, pageSize: 100 });
+    plans.value = result.items || [];
   } catch {
     message.error('加载计划列表失败');
   } finally {
@@ -160,20 +154,16 @@ const fetchPlans = async () => {
   }
 };
 
-const viewPlan = (plan: AiPlan) => {
-  currentPlan.value = plan;
+const viewPlan = (plan: Record<string, any>) => {
+  currentPlan.value = plan as AiPlan;
   viewModalVisible.value = true;
 };
 
 const deletePlan = async (id: string) => {
   try {
-    const response = await aiApi.deletePlan(id);
-    if (response.code === 0) {
-      message.success('删除成功');
-      await fetchPlans();
-    } else {
-      message.error(response.message || '删除失败');
-    }
+    await aiApi.deletePlan(id);
+    message.success('删除成功');
+    await fetchPlans();
   } catch (error) {
     message.error('删除失败');
   }

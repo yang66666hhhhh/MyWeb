@@ -43,9 +43,11 @@ export interface WorkLog {
   weekDay: string;
   projectId: string;
   projectName?: string;
+  deviceNames?: string[];
   title: string;
   originalContent?: string;
   summary?: string;
+  taskTypeNames?: string[];
   totalHours: number;
   status: number;
   sourceType: number;

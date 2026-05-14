@@ -1,11 +1,12 @@
 <script lang="ts" setup>
+import type { WorkStatisticsOverview } from '#/api/work';
+
 import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Card, Col, Row, Statistic, message } from 'ant-design-vue';
+import { Card, Col, message, Row, Statistic } from 'ant-design-vue';
 
-import type { WorkStatisticsOverview } from '#/api/work';
 import { getOverviewApi } from '#/api/work';
 
 const loading = ref(false);

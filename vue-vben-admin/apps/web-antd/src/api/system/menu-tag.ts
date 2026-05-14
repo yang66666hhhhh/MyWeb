@@ -5,6 +5,7 @@ export interface TagDto {
   name: string;
   description?: string;
   color?: string;
+  sort?: number;
   createdAt: string;
 }
 
@@ -12,23 +13,31 @@ export interface CreateTagDto {
   name: string;
   description?: string;
   color?: string;
+  sort?: number;
 }
 
 export interface MenuTreeAdminDto {
   id: string;
+  parentId?: string;
   name: string;
   path: string;
   icon?: string;
+  sort?: number;
+  tagIds?: string[];
   children?: MenuTreeAdminDto[];
 }
 
 export interface MenuPathDto {
   path: string;
   name: string;
+  icon?: string;
+  exists?: boolean;
 }
 
 export interface UserTagDto {
   id: string;
+  userId?: string;
+  userTypeId?: string;
   username: string;
   realName: string;
   tags: string[];
@@ -41,6 +50,7 @@ export interface UserTypeDto {
   description?: string;
   color?: string;
   sort: number;
+  tagIds?: string[];
   isActive: boolean;
 }
 
@@ -50,6 +60,16 @@ export interface CreateUserTypeDto {
   description?: string;
   color?: string;
   sort: number;
+  tagIds?: string[];
+}
+
+export interface CreateMenuItemDto {
+  parentId?: string;
+  path: string;
+  name: string;
+  icon?: string;
+  sort?: number;
+  tagIds?: string[];
 }
 
 export const tagApi = {

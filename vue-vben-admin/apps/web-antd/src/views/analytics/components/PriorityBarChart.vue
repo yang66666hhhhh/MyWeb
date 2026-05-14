@@ -1,8 +1,11 @@
 <script lang="ts" setup>
 import type { EchartsUIType } from '@vben/plugins/echarts';
-import { computed, ref } from 'vue';
-import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
+
 import type { TaskPriorityDistribution } from '#/api/analytics';
+
+import { computed, ref } from 'vue';
+
+import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 
 interface Props {
   data: TaskPriorityDistribution[];
@@ -13,8 +16,8 @@ const props = defineProps<Props>();
 const chartRef = ref<EchartsUIType>();
 const { renderEcharts } = useEcharts(chartRef);
 
-const option = computed(() => {
-  const sortedData = [...props.data].sort((a, b) => {
+const option = computed<Record<string, any>>(() => {
+  const sortedData = [...props.data].toSorted((a, b) => {
     const order: Record<string, number> = { Low: 1, Medium: 2, High: 3, Urgent: 4 };
     return (order[a.priority] || 0) - (order[b.priority] || 0);
   });
@@ -35,18 +38,18 @@ const option = computed(() => {
         itemStyle: { borderRadius: [4, 4, 0, 0] },
         label: { show: true, position: 'top' },
         name: '任务数',
-        type: 'bar',
+        type: 'bar' as const,
       },
     ],
-    tooltip: { trigger: 'axis' },
+    tooltip: { trigger: 'axis' as const },
     xAxis: {
       axisTick: { show: false },
       data: sortedData.map((item) => item.priority),
-      type: 'category',
+      type: 'category' as const,
     },
     yAxis: {
       axisTick: { show: false },
-      type: 'value',
+      type: 'value' as const,
     },
   };
 });

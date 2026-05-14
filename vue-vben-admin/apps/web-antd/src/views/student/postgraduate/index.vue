@@ -10,9 +10,7 @@ import {
   Col,
   Progress,
   Row,
-  Space,
   Statistic,
-  Steps,
   Table,
   Tag,
   Timeline,
@@ -172,7 +170,7 @@ const subjectColors: Record<string, string> = {
                 <div
                   class="h-full rounded-full bg-blue-500"
                   :style="{ width: `${record.progress}%` }"
-                />
+                ></div>
               </div>
               <span>{{ record.progress }}%</span>
             </div>

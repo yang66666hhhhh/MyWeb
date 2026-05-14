@@ -62,7 +62,7 @@ const statusOptions = [
   { label: '维护中', value: 2 },
 ];
 
-const columns = [
+const columns: any[] = [
   { dataIndex: 'deviceName', key: 'deviceName', title: '设备名称', minWidth: 140 },
   { dataIndex: 'deviceCode', key: 'deviceCode', title: '设备编号', width: 120 },
   { dataIndex: 'deviceType', key: 'deviceType', title: '设备类型', width: 100 },
@@ -92,10 +92,11 @@ function openCreate() {
   formOpen.value = true;
 }
 
-async function openEdit(record: WorkDevice) {
-  editingId.value = record.id;
+async function openEdit(record: Record<string, any>) {
+  const device = record as WorkDevice;
+  editingId.value = device.id;
   try {
-    const detail = await getWorkDeviceApi(record.id);
+    const detail = await getWorkDeviceApi(device.id);
     if (detail) {
       formState.value = {
         description: detail.description || '',
@@ -112,8 +113,8 @@ async function openEdit(record: WorkDevice) {
   }
 }
 
-function showDetail(record: WorkDevice) {
-  selectedItem.value = record;
+function showDetail(record: Record<string, any>) {
+  selectedItem.value = record as WorkDevice;
   detailOpen.value = true;
 }
 

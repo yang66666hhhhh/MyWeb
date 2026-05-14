@@ -1,13 +1,11 @@
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 
 import {
   Button,
-  DatePicker,
   Input,
   InputNumber,
   Select,
-  Space,
 } from 'ant-design-vue';
 
 interface FieldDefinition {
@@ -18,11 +16,6 @@ interface FieldDefinition {
   required?: boolean;
   placeholder?: string;
   fields?: string[];
-}
-
-interface TaskListItem {
-  content: string;
-  percent: number;
 }
 
 const props = defineProps<{
@@ -152,7 +145,7 @@ function updateTaskListItem(key: string, index: number, field: string, value: an
             :value="item.content"
             placeholder="工作内容"
             style="flex: 1"
-            @update:value="updateTaskListItem(field.key, index, 'content', $event)"
+            @update:value="updateTaskListItem(field.key, Number(index), 'content', $event)"
           />
           <InputNumber
             :value="item.percent"
@@ -160,13 +153,13 @@ function updateTaskListItem(key: string, index: number, field: string, value: an
             :min="0"
             :max="100"
             style="width: 80px"
-            @update:value="updateTaskListItem(field.key, index, 'percent', $event)"
+            @update:value="updateTaskListItem(field.key, Number(index), 'percent', $event)"
           />
           <span class="mt-2">%</span>
           <Button
             type="text"
             danger
-            @click="removeTaskListItem(field.key, index)"
+            @click="removeTaskListItem(field.key, Number(index))"
           >
             删除
           </Button>

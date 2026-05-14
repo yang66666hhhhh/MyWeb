@@ -1,5 +1,7 @@
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
+
 import { defineStore } from 'pinia';
+
 import { currentPersonaApi } from '#/api/system/persona';
 
 interface PersonaType {
@@ -13,7 +15,7 @@ interface PersonaType {
 }
 
 export const usePersonaStore = defineStore('persona', () => {
-  const currentPersona = ref<PersonaType | null>(null);
+  const currentPersona = ref<null | PersonaType>(null);
   const availablePersonas = ref<PersonaType[]>([]);
   const loading = ref(false);
   const initialized = ref(false);
@@ -40,7 +42,7 @@ export const usePersonaStore = defineStore('persona', () => {
         availablePersonas.value = availableRes;
       }
       initialized.value = true;
-    } catch (e) {
+    } catch {
       // 静默处理 - 用户可能没有 persona
       initialized.value = true;
     } finally {

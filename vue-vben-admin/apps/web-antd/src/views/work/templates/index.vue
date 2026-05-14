@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { CreateTemplateFieldInput, CreateTemplateInput, IndustryTemplate } from '#/api/work/template';
+
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -20,20 +22,19 @@ import {
   Tag,
 } from 'ant-design-vue';
 
-import type { IndustryTemplate, CreateTemplateInput, CreateTemplateFieldInput } from '#/api/work/template';
 import {
   createTemplateApi,
   deleteTemplateApi,
-  getTemplatePageApi,
-  updateTemplateApi,
-  setDefaultTemplateApi,
   FieldTypeLabels,
+  getTemplatePageApi,
+  setDefaultTemplateApi,
+  updateTemplateApi,
 } from '#/api/work/template';
 
 const templates = ref<IndustryTemplate[]>([]);
 const loading = ref(false);
 const formOpen = ref(false);
-const editingId = ref<string | null>(null);
+const editingId = ref<null | string>(null);
 
 const formState = ref<CreateTemplateInput>({
   name: '',
@@ -52,6 +53,12 @@ const fieldFormState = ref<CreateTemplateFieldInput>({
   sort: 0,
   defaultValue: '',
 });
+const fieldRequiredValue = ref(0);
+
+const requiredOptions = [
+  { label: '必填', value: 1 },
+  { label: '选填', value: 0 },
+];
 
 const industryOptions = [
   { label: 'IT/开发', value: 'IT' },
@@ -118,7 +125,7 @@ function addField() {
     fieldLabel: fieldFormState.value.fieldLabel,
     fieldType: fieldFormState.value.fieldType,
     options: fieldFormState.value.options,
-    isRequired: fieldFormState.value.isRequired,
+    isRequired: fieldRequiredValue.value === 1,
     sort: formState.value.fields.length + 1,
     defaultValue: fieldFormState.value.defaultValue,
   });
@@ -131,6 +138,7 @@ function addField() {
     sort: 0,
     defaultValue: '',
   };
+  fieldRequiredValue.value = 0;
 }
 
 function removeField(index: number) {
@@ -270,7 +278,7 @@ onMounted(() => {
                 <Input v-model:value="fieldFormState.options" placeholder="选项(逗号分隔)" />
               </Col>
               <Col :span="4">
-                <Select v-model:value="fieldFormState.isRequired" :options="[{ label: '必填', value: true }, { label: '选填', value: false }]" />
+                <Select v-model:value="fieldRequiredValue" :options="requiredOptions" />
               </Col>
               <Col :span="4">
                 <Button type="primary" size="small" @click="addField">+</Button>

@@ -5,7 +5,11 @@ import { requestClient } from '#/api/request';
 export interface KnowledgeArticle extends BaseEntity {
   category: string;
   content?: null | string;
+  favorite?: boolean;
   isPublished: boolean;
+  markdownContent?: null | string;
+  sourceUrl?: null | string;
+  summary?: null | string;
   tags?: null | string;
   title: string;
   viewCount: number;
@@ -20,8 +24,12 @@ export interface KnowledgeArticleQuery extends PageQuery {
 export interface SaveKnowledgeArticleInput {
   category: string;
   content?: null | string;
+  favorite?: boolean;
   isPublished?: boolean;
-  tags?: null | string;
+  markdownContent?: string;
+  sourceUrl?: string;
+  summary?: string;
+  tags?: string[] | string;
   title: string;
 }
 

@@ -17,8 +17,8 @@ export interface Habit extends BaseEntity {
 
 export interface HabitDetail extends Habit {
   recentCheckIns: Array<{
-    id: string;
     checkInDate: string;
+    id: string;
     remark?: null | string;
   }>;
 }
@@ -26,7 +26,7 @@ export interface HabitDetail extends Habit {
 export interface HabitQuery extends PageQuery {
   habitType?: string;
   keyword?: string;
-  status?: HabitStatus;
+  status?: number;
 }
 
 export interface SaveHabitInput {

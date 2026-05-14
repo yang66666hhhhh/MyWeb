@@ -1,4 +1,5 @@
 import type { PageQuery, PageResult } from '#/types/api';
+
 import { requestClient } from '#/api/request';
 
 export interface SoftwareAsset {
@@ -47,8 +48,8 @@ export interface UpdateSoftwareAssetInput {
   licenseType?: number;
   status?: number;
   vendor?: string;
-  purchaseDate?: string;
-  expireDate?: string;
+  purchaseDate?: null | string;
+  expireDate?: null | string;
   cost?: number;
   description?: string;
   assignedTo?: string;

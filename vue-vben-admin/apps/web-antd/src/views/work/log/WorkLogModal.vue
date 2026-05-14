@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import type { DynamicValue } from '#/components/DynamicForm';
+
 import { computed, reactive, ref, watch } from 'vue';
-import { DatePicker, Form, Input, InputNumber, Modal, message } from 'ant-design-vue';
+
+import { DatePicker, Form, Input, InputNumber, message, Modal } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
 import { workLogApi } from '#/api/work/workLog';
-import type { WorkLog } from '#/api/work/workLog';
-import type { DynamicValue } from '#/components/DynamicForm';
 
 const props = defineProps<{
   id?: string;
@@ -86,11 +87,7 @@ async function submit() {
       remark: formState.remark,
       dynamicValues: dynamicValues.value,
     };
-    if (props.id) {
-      await workLogApi.update(props.id, data);
-    } else {
-      await workLogApi.create(data);
-    }
+    await (props.id ? workLogApi.update(props.id, data) : workLogApi.create(data));
     emit('update:open', false);
     emit('success');
   } catch {

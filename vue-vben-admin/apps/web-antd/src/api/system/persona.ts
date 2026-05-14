@@ -37,7 +37,7 @@ export const personaApi = {
   list(params?: { isActive?: boolean }) {
     return requestClient.get<PersonaType[]>('/admin/persona-types/all', { params });
   },
-  getPage(params: { page?: number; pageSize?: number; keyword?: string; isActive?: boolean }) {
+  getPage(params: { isActive?: boolean; keyword?: string; page?: number; pageSize?: number; }) {
     return requestClient.get<{ items: PersonaType[]; total: number }>('/admin/persona-types', { params });
   },
   getById(id: string) {

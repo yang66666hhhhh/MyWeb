@@ -1,11 +1,9 @@
-import type { RouteRecordStringComponent } from '@vben/types';
-
 import { requestClient } from '#/api/request';
 
 export interface RoleMenuItem {
   id: string;
-  bindingType: 'Persona' | 'Role' | 'Tag';
-  bindingValue: string;
+  bindingType?: 'Persona' | 'Role' | 'Tag';
+  bindingValue?: string;
   parentId?: string;
   name: string;
   path: string;
@@ -19,6 +17,11 @@ export interface RoleMenuItem {
   isExternal: boolean;
   badge?: string;
   tag?: string;
+  minRoleLevel: number;
+  personaTag?: string;
+  isBaseMenu: boolean;
+  menuCategory: string;
+  featureCode?: string;
   children?: RoleMenuItem[];
 }
 

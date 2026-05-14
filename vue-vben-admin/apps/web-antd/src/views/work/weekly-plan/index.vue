@@ -7,7 +7,6 @@ import {
   Button,
   Card,
   Col,
-  DatePicker,
   Form,
   Input,
   InputNumber,
@@ -22,8 +21,11 @@ import {
   Tag,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
+import weekOfYear from 'dayjs/plugin/weekOfYear';
 
-import { weeklyPlanApi, type WeeklyPlan, type WeeklyPlanTask, type WeeklyPlanQuery, type CreateWeeklyPlanInput, type CreateWeeklyPlanTaskInput } from '#/api/work/weeklyPlan';
+import { weeklyPlanApi, type CreateWeeklyPlanInput, type CreateWeeklyPlanTaskInput, type WeeklyPlan, type WeeklyPlanTask } from '#/api/work/weeklyPlan';
+
+dayjs.extend(weekOfYear);
 
 const loading = ref(false);
 const formOpen = ref(false);
@@ -80,16 +82,7 @@ const taskStatusMap: Record<number, { color: string; label: string }> = {
   3: { color: 'error', label: '已取消' },
 };
 
-const columns = [
-  { title: '周次', dataIndex: 'weekCode', key: 'weekCode', width: 120 },
-  { title: '时间范围', key: 'dateRange', width: 200 },
-  { title: '目标', dataIndex: 'goals', key: 'goals', minWidth: 200 },
-  { title: '任务', key: 'taskSummary', width: 120 },
-  { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
-  { key: 'action', title: '操作', width: 200, fixed: 'right' },
-];
-
-const taskColumns = [
+const taskColumns: any[] = [
   { title: '任务标题', dataIndex: 'title', key: 'title' },
   { title: '优先级', dataIndex: 'priority', key: 'priority', width: 80 },
   { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
@@ -132,12 +125,6 @@ async function fetchPage() {
   } finally {
     loading.value = false;
   }
-}
-
-function handleTableChange(pagination: { current?: number; pageSize?: number }) {
-  query.page = pagination.current ?? 1;
-  query.pageSize = pagination.pageSize ?? 20;
-  fetchPage();
 }
 
 function search() {
@@ -217,14 +204,15 @@ function openTaskForm(plan: WeeklyPlan) {
   taskFormOpen.value = true;
 }
 
-function openTaskEdit(plan: WeeklyPlan, task: WeeklyPlanTask) {
+function openTaskEdit(plan: WeeklyPlan, task: Record<string, any>) {
+  const weeklyTask = task as WeeklyPlanTask;
   currentPlanId.value = plan.id;
-  editingTaskId.value = task.id;
+  editingTaskId.value = weeklyTask.id;
   Object.assign(taskFormState, {
-    title: task.title,
-    description: task.description || '',
-    priority: task.priority,
-    estimatedHours: task.estimatedHours,
+    title: weeklyTask.title,
+    description: weeklyTask.description || '',
+    priority: weeklyTask.priority,
+    estimatedHours: weeklyTask.estimatedHours,
   });
   taskFormOpen.value = true;
 }

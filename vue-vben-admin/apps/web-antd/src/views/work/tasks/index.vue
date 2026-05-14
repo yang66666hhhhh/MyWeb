@@ -16,13 +16,13 @@ import {
   Row,
   Select,
   Space,
-  Statistic,
   Table,
   Tag,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
-import { taskApi, projectApi, type TaskItem, type TaskItemQuery, type CreateTaskItemInput, type UpdateTaskItemInput } from '#/api/growth/task';
+import { taskApi, type CreateTaskItemInput, type TaskItem, type TaskItemQuery, type UpdateTaskItemInput } from '#/api/growth/task';
+import { projectApi } from '#/api/work/project';
 import type { WorkProject } from '#/api/work/project';
 
 const loading = ref(false);
@@ -42,7 +42,7 @@ const query = reactive({
   keyword: '',
 });
 
-const formState = reactive<CreateTaskItemInput & { projectId?: string }>({
+const formState = reactive<CreateTaskItemInput & { projectId?: string; status?: number }>({
   planDate: dayjs().format('YYYY-MM-DD'),
   title: '',
   description: '',
@@ -70,7 +70,7 @@ const priorityMap: Record<number, { color: string; label: string }> = {
   4: { color: 'magenta', label: '紧急' },
 };
 
-const columns = [
+const columns: any[] = [
   { title: '任务标题', dataIndex: 'title', key: 'title', minWidth: 220 },
   { title: '项目', dataIndex: 'projectName', key: 'projectName', width: 150 },
   { title: '优先级', dataIndex: 'priority', key: 'priority', width: 80 },
@@ -99,7 +99,7 @@ const priorityOptions = [
 
 const summaryText = computed(() => {
   const totalCount = items.value.length;
-  const completedCount = items.value.filter((item) => item.status === 2).length;
+  const completedCount = items.value.filter((item) => Number(item.status) === 2).length;
   return `共 ${totalCount} 条任务，已完成 ${completedCount} 条`;
 });
 
@@ -165,20 +165,22 @@ function openCreate() {
   formOpen.value = true;
 }
 
-function openEdit(record: TaskItem) {
-  editingId.value = record.id;
+function openEdit(record: Record<string, any>) {
+  const task = record as TaskItem;
+  editingId.value = task.id;
   Object.assign(formState, {
-    planDate: record.planDate || dayjs().format('YYYY-MM-DD'),
-    title: record.title,
-    description: record.description || '',
-    taskType: record.type,
-    source: record.source,
-    projectId: record.projectId,
-    priority: record.priority ? Number(record.priority) : 2,
-    startTime: record.startTime || '',
-    endTime: record.endTime || '',
-    estimatedHours: record.estimatedHours,
-    remark: record.remark || '',
+    planDate: task.planDate || dayjs().format('YYYY-MM-DD'),
+    title: task.title,
+    description: task.description || '',
+    taskType: task.type,
+    source: task.source,
+    projectId: task.projectId,
+    priority: task.priority ? Number(task.priority) : 2,
+    status: task.status ? Number(task.status) : undefined,
+    startTime: task.startTime || '',
+    endTime: task.endTime || '',
+    estimatedHours: task.estimatedHours,
+    remark: task.remark || '',
   });
   formOpen.value = true;
 }
@@ -342,12 +344,12 @@ onMounted(() => {
         <Row :gutter="16">
           <Col :span="12">
             <Form.Item label="计划日期">
-              <DatePicker v-model:value="formState.planDate ? dayjs(formState.planDate) : null" format="YYYY-MM-DD" style="width: 100%" />
+              <DatePicker :value="formState.planDate ? dayjs(formState.planDate) : undefined" format="YYYY-MM-DD" style="width: 100%" @change="(_, value) => formState.planDate = Array.isArray(value) ? value[0] : value || ''" />
             </Form.Item>
           </Col>
           <Col :span="12">
             <Form.Item label="截止日期">
-              <DatePicker v-model:value="formState.endTime ? dayjs(formState.endTime) : null" format="YYYY-MM-DD" style="width: 100%" />
+              <DatePicker :value="formState.endTime ? dayjs(formState.endTime) : undefined" format="YYYY-MM-DD" style="width: 100%" @change="(_, value) => formState.endTime = Array.isArray(value) ? value[0] : value || ''" />
             </Form.Item>
           </Col>
         </Row>

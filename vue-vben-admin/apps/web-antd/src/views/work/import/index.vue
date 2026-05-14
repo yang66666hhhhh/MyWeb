@@ -1,29 +1,27 @@
 <script lang="ts" setup>
+import type { UploadFile } from 'ant-design-vue';
+
+import type { WorkImportBatch, WorkImportConfirmItem, WorkImportPreviewItem } from '#/api/work/import';
+
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
+import { DownloadOutlined, UploadOutlined } from '@ant-design/icons-vue';
 import {
   Alert,
   Button,
   Card,
   Col,
-  Descriptions,
-  Progress,
-  Result,
+  message,
   Row,
-  Space,
   Statistic,
   Steps,
   Table,
   Tag,
   Upload,
-  message,
 } from 'ant-design-vue';
-import { DownloadOutlined, UploadOutlined } from '@ant-design/icons-vue';
-import type { UploadFile } from 'ant-design-vue';
 
-import type { WorkImportBatch, WorkImportPreviewItem } from '#/api/work/import';
 import {
   confirmWorkImportApi,
   getWorkImportBatchPageApi,
@@ -36,10 +34,7 @@ import {
   WorkImportStatusColor,
   WorkImportStatusLabel,
   WorkImportStrategy,
-  WorkImportStrategyLabel,
   WorkImportValidationStatus,
-  WorkImportValidationStatusColor,
-  WorkImportValidationStatusLabel,
 } from '#/enums/workEnum';
 
 import ImportPreviewTable from './ImportPreviewTable.vue';
@@ -49,18 +44,16 @@ const currentStep = ref(0);
 const previewData = ref<WorkImportPreviewItem[]>([]);
 const previewLoading = ref(false);
 const confirmLoading = ref(false);
-const importResult = ref<{
-  success: boolean;
-  successRows: number;
+const importResult = ref<null | {
+  duplicateRows: number;
   failedRows: number;
   skippedRows: number;
-  duplicateRows: number;
-} | null>(null);
+  success: boolean;
+  successRows: number;
+}>(null);
 
 const fileList = ref<UploadFile[]>([]);
-const selectedBatch = ref<WorkImportBatch | null>(null);
-
-const { changePage, items, load, loading, query, resetQuery, search, total } = usePagedQuery<
+const { changePage, items, load, loading, query, total } = usePagedQuery<
   WorkImportBatch,
   { page: number; pageSize: number; status?: number }
 >({
@@ -77,11 +70,14 @@ const previewStats = computed(() => {
 });
 
 function handleTemplateDownload() {
-  const url = getWorkImportTemplateUrl();
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = '工作记录导入模板.xlsx';
-  link.click();
+  void getWorkImportTemplateUrl().then((blob) => {
+    const url = URL.createObjectURL(blob as Blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = '工作记录导入模板.xlsx';
+    link.click();
+    URL.revokeObjectURL(url);
+  });
 }
 
 async function handleFileChange(info: { file: UploadFile }) {
@@ -91,7 +87,7 @@ async function handleFileChange(info: { file: UploadFile }) {
   previewLoading.value = true;
   try {
     const result = await previewWorkImportApi(file.originFileObj as File);
-    previewData.value = result.Items;
+    previewData.value = result.items;
     currentStep.value = 2;
     message.success('文件解析成功，请预览数据');
   } catch {
@@ -105,7 +101,7 @@ async function handleConfirm() {
   confirmLoading.value = true;
   try {
     const result = await confirmWorkImportApi({
-      batchId: 'temp-batch',
+      items: previewData.value as WorkImportConfirmItem[],
       importStrategy: WorkImportStrategy.SkipDuplicate,
     });
     importResult.value = {
@@ -113,7 +109,7 @@ async function handleConfirm() {
       successRows: result.successRows,
       failedRows: result.failedRows,
       skippedRows: result.skippedRows,
-      duplicateRows: result.duplicateRows,
+      duplicateRows: result.duplicateRows ?? 0,
     };
     currentStep.value = 3;
     message.success('导入完成');

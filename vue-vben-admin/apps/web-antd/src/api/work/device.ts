@@ -1,6 +1,8 @@
-import type { PageQuery, PageResult } from '#/types/api';
-import { requestClient } from '#/api/request';
 import type { WorkDevice } from './types';
+
+import type { PageQuery, PageResult } from '#/types/api';
+
+import { requestClient } from '#/api/request';
 
 export type { WorkDevice };
 

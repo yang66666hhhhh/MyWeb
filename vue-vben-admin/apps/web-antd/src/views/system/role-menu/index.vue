@@ -72,7 +72,7 @@ const personaValueOptions = [
 const filterType = ref<string | undefined>(undefined);
 const filterValue = ref<string | undefined>(undefined);
 
-const columns = [
+const columns: any[] = [
   { title: '绑定类型', dataIndex: 'bindingType', key: 'bindingType', width: 100 },
   { title: '绑定值', dataIndex: 'bindingValue', key: 'bindingValue', width: 120 },
   { title: '名称', dataIndex: 'name', key: 'name', width: 160 },
@@ -123,9 +123,10 @@ function openCreate(parentId?: string) {
   modalVisible.value = true;
 }
 
-function openEdit(record: RoleMenuItem) {
-  editingId.value = record.id;
-  formState.value = { ...record };
+function openEdit(record: Record<string, any>) {
+  const menu = record as RoleMenuItem;
+  editingId.value = menu.id;
+  formState.value = { ...menu };
   modalVisible.value = true;
 }
 

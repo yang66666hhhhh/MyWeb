@@ -61,7 +61,7 @@ const statusColors: Record<string, string> = {
               <span>{{ item.completedSteps }}/{{ item.steps }} 步骤</span>
               <div class="w-32">
                 <div class="h-2 rounded-full bg-gray-200">
-                  <div class="h-full rounded-full bg-blue-500" :style="{ width: `${(item.completedSteps / item.steps) * 100}%` }" />
+                  <div class="h-full rounded-full bg-blue-500" :style="{ width: `${(item.completedSteps / item.steps) * 100}%` }"></div>
                 </div>
               </div>
             </div>

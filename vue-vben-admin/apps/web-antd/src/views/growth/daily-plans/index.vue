@@ -4,12 +4,10 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { Page } from '@vben/common-ui';
 
 import {
-  Alert,
   Button,
   Card,
   DatePicker,
   Form,
-  Input,
   message,
   Popconfirm,
   Select,
@@ -20,7 +18,7 @@ import {
 import dayjs from 'dayjs';
 
 import { taskApi } from '#/api/growth';
-import type { TaskItem, TaskItemQuery, CreateTaskItemInput, UpdateTaskItemInput } from '#/api/growth';
+import type { TaskItem, TaskItemQuery } from '#/api/growth';
 
 import DailyPlanForm from './components/DailyPlanForm.vue';
 
@@ -154,9 +152,10 @@ async function handleRemove(id: string) {
   }
 }
 
-async function handleChangeStatus(record: TaskItem, status: number) {
+async function handleChangeStatus(record: Record<string, any>, status: number) {
+  const task = record as TaskItem;
   try {
-    await taskApi.update(record.id, { status } as any);
+    await taskApi.update(task.id, { status } as any);
     message.success('状态已更新');
     fetchPage();
   } catch {
