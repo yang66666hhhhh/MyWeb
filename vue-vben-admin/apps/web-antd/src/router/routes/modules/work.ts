@@ -23,12 +23,6 @@ const routes: RouteRecordRaw[] = [
         path: '/work/work-log',
       },
       {
-        component: () => import('#/views/work/impl-log/index.vue'),
-        meta: { icon: 'lucide:wrench', title: '实施日志' },
-        name: 'WorkImplLog',
-        path: '/work/impl-log',
-      },
-      {
         component: () => import('#/views/work/tasks/index.vue'),
         meta: { icon: 'lucide:check-square', title: '工作任务' },
         name: 'WorkTasks',
@@ -41,46 +35,10 @@ const routes: RouteRecordRaw[] = [
         path: '/work/project',
       },
       {
-        component: () => import('#/views/work/task-type/index.vue'),
-        meta: { icon: 'lucide:tag', title: '任务类型' },
-        name: 'WorkTaskType',
-        path: '/work/task-type',
-      },
-      {
         component: () => import('#/views/work/device/index.vue'),
         meta: { icon: 'lucide:monitor', title: '设备管理' },
         name: 'WorkDevice',
         path: '/work/device',
-      },
-      {
-        component: () => import('#/views/work/weekly-plan/index.vue'),
-        meta: { icon: 'lucide:calendar', title: '周计划' },
-        name: 'WorkWeeklyPlan',
-        path: '/work/weekly-plan',
-      },
-      {
-        component: () => import('#/views/work/okr/index.vue'),
-        meta: { icon: 'lucide:target', title: 'OKR' },
-        name: 'WorkOkr',
-        path: '/work/okr',
-      },
-      {
-        component: () => import('#/views/work/gantt/index.vue'),
-        meta: { icon: 'lucide:bar-chart', title: '甘特图' },
-        name: 'WorkGantt',
-        path: '/work/gantt',
-      },
-      {
-        component: () => import('#/views/work/risk-control/index.vue'),
-        meta: { icon: 'lucide:shield', title: '风险管理' },
-        name: 'WorkRiskControl',
-        path: '/work/risk-control',
-      },
-      {
-        component: () => import('#/views/work/software-assets/index.vue'),
-        meta: { icon: 'lucide:package', title: '软件资产' },
-        name: 'WorkSoftwareAssets',
-        path: '/work/software-assets',
       },
       {
         component: () => import('#/views/work/statistics/index.vue'),
@@ -93,18 +51,6 @@ const routes: RouteRecordRaw[] = [
         meta: { icon: 'lucide:upload', title: '数据导入' },
         name: 'WorkImport',
         path: '/work/import',
-      },
-      {
-        component: () => import('#/views/work/templates/index.vue'),
-        meta: { icon: 'lucide:layout', title: '模板管理' },
-        name: 'WorkTemplates',
-        path: '/work/templates',
-      },
-      {
-        component: () => import('#/views/work/files/index.vue'),
-        meta: { icon: 'lucide:file', title: '文件管理' },
-        name: 'WorkFiles',
-        path: '/work/files',
       },
     ],
   },

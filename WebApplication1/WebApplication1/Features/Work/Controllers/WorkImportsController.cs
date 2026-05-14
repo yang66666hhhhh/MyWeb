@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Shared.Common;
 using WebApplication1.Features.Work.Dtos;
 using WebApplication1.Features.Work.Services.Interfaces;
@@ -9,6 +10,7 @@ namespace WebApplication1.Features.Work.Controllers;
 
 [ApiController]
 [Authorize]
+[RequireFeature("WORK_IMPORT")]
 [Route("api/work/import")]
 [RequestSizeLimit(10 * 1024 * 1024)]
 [Tags("Work - Import")]

@@ -23,6 +23,7 @@ import {
   deleteUserApi,
   getUserApi,
   getUserPageApi,
+  removePersonaApi,
   updateUserApi,
   assignPersonaApi,
   type CreateUserDto,
@@ -36,6 +37,7 @@ const formOpen = ref(false);
 const detailOpen = ref(false);
 const editingId = ref<null | string>(null);
 const selectedItem = ref<UserDto | null>(null);
+const originalPersonaIds = ref<string[]>([]);
 
 const formState = ref({
   email: '',
@@ -109,6 +111,7 @@ function openCreate() {
     password: '',
     personaIds: [],
   };
+  originalPersonaIds.value = [];
   formOpen.value = true;
 }
 
@@ -127,6 +130,7 @@ async function openEdit(record: Record<string, any>) {
         password: '',
         personaIds: detail.personas?.map(p => p.id) || [],
       };
+      originalPersonaIds.value = formState.value.personaIds;
     }
     formOpen.value = true;
   } catch {
@@ -160,6 +164,23 @@ async function assignPersonas(userId: string, personaIds: string[]) {
   }
 }
 
+async function syncPersonas(userId: string, nextPersonaIds: string[]) {
+  const nextSet = new Set(nextPersonaIds);
+  const originalSet = new Set(originalPersonaIds.value);
+  const toRemove = originalPersonaIds.value.filter(id => !nextSet.has(id));
+  const toAdd = nextPersonaIds.filter(id => !originalSet.has(id));
+
+  for (const personaId of toRemove) {
+    await removePersonaApi(userId, personaId);
+  }
+
+  if (toAdd.length > 0) {
+    await assignPersonas(userId, toAdd);
+  }
+
+  originalPersonaIds.value = [...nextPersonaIds];
+}
+
 async function handleSubmit() {
   try {
     if (editingId.value) {
@@ -170,9 +191,7 @@ async function handleSubmit() {
         roles: formState.value.roles,
       };
       await updateUserApi(editingId.value, data);
-      if (formState.value.personaIds.length > 0) {
-        await assignPersonas(editingId.value, formState.value.personaIds);
-      }
+      await syncPersonas(editingId.value, formState.value.personaIds);
       message.success('更新成功');
     } else {
       const data: CreateUserDto = {

@@ -419,8 +419,8 @@ public class AiService : IAiService
     {
         if (string.IsNullOrEmpty(_openAiApiKey))
         {
-            _logger.LogWarning("OpenAI API key not configured, returning mock response");
-            return GetMockPlanResponse(prompt);
+            _logger.LogWarning("OpenAI API key not configured");
+            throw new InvalidOperationException("AI 服务未配置 OpenAI API Key，无法生成真实内容");
         }
 
         try
@@ -468,8 +468,8 @@ public class AiService : IAiService
     {
         if (string.IsNullOrEmpty(_openAiApiKey))
         {
-            _logger.LogWarning("OpenAI API key not configured, returning mock response");
-            return GetMockChatResponse();
+            _logger.LogWarning("OpenAI API key not configured");
+            throw new InvalidOperationException("AI 服务未配置 OpenAI API Key，无法生成真实回复");
         }
 
         try
@@ -511,49 +511,6 @@ public class AiService : IAiService
             _logger.LogError(ex, "Failed to call OpenAI Chat API");
             return "抱歉，AI服务暂时不可用，请稍后重试";
         }
-    }
-
-    private string GetMockPlanResponse(string prompt)
-    {
-        return @"## AI 智能计划
-
-### 目标设定
-1. 完成主要工作任务
-2. 跟进项目进度
-3. 提升专业技能
-
-### 具体任务
-| 优先级 | 任务 | 预计时长 |
-|--------|------|----------|
-| 高 | 重要会议准备 | 2h |
-| 高 | 核心功能开发 | 4h |
-| 中 | 文档整理 | 1h |
-| 低 | 学习新技术 | 1h |
-
-### 时间安排
-- 上午: 重要会议准备、核心功能开发
-- 下午: 核心功能收尾、文档整理
-- 晚间: 学习与反思
-
-### 预期成果
-- 完成今日主要工作目标
-- 产出一份完整的会议材料
-- 掌握一项新技术要点
-
----
-*此为模拟响应，配置OpenAI API Key后可获得真实AI生成内容*";
-    }
-
-    private string GetMockChatResponse()
-    {
-        var responses = new[]
-        {
-            "您好！我是您的AI助手。根据您的工作数据，我可以帮您分析工作进度、生成计划或报告。有什么可以帮您的吗？",
-            "根据您最近的工作日志，您在项目开发上投入了较多时间。建议适当平衡各项目的时间分配。",
-            "您的习惯打卡记录显示，连续坚持很重要。建议每天固定时间进行习惯培养。",
-            "我可以帮您生成每日/周/月度计划，或者根据您的工作数据生成分析报告。请问需要什么服务？"
-        };
-        return responses[Random.Shared.Next(responses.Length)];
     }
 
     private static string GetPlanTypeName(AiPlanType type) => type switch

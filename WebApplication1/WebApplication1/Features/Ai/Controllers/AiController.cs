@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Features.Ai.Dtos;
 using WebApplication1.Features.Ai.Services;
 using WebApplication1.Shared.Common;
@@ -21,39 +22,64 @@ public class AiController : ControllerBase
     }
 
     [HttpPost("generate-plan")]
+    [RequireFeature("AI_PLANNER")]
     public async Task<ActionResult<ApiResult<AiPlanDto>>> GeneratePlan([FromBody] GeneratePlanRequest request, CancellationToken cancellationToken)
     {
         var userId = GetCurrentUserId();
         if (!userId.HasValue)
             return Unauthorized(ApiResult.Fail("用户未认证"));
 
-        var result = await _aiService.GeneratePlanAsync(request, userId.Value, cancellationToken);
-        return Ok(ApiResult<AiPlanDto>.Success(result));
+        try
+        {
+            var result = await _aiService.GeneratePlanAsync(request, userId.Value, cancellationToken);
+            return Ok(ApiResult<AiPlanDto>.Success(result));
+        }
+        catch (InvalidOperationException ex) when (IsAiUnavailable(ex))
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, ApiResult<AiPlanDto>.Fail(ex.Message, StatusCodes.Status503ServiceUnavailable));
+        }
     }
 
     [HttpPost("generate-report")]
+    [RequireFeature("AI_REPORT")]
     public async Task<ActionResult<ApiResult<AiReportDto>>> GenerateReport([FromBody] GenerateReportRequest request, CancellationToken cancellationToken)
     {
         var userId = GetCurrentUserId();
         if (!userId.HasValue)
             return Unauthorized(ApiResult.Fail("用户未认证"));
 
-        var result = await _aiService.GenerateReportAsync(request, userId.Value, cancellationToken);
-        return Ok(ApiResult<AiReportDto>.Success(result));
+        try
+        {
+            var result = await _aiService.GenerateReportAsync(request, userId.Value, cancellationToken);
+            return Ok(ApiResult<AiReportDto>.Success(result));
+        }
+        catch (InvalidOperationException ex) when (IsAiUnavailable(ex))
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, ApiResult<AiReportDto>.Fail(ex.Message, StatusCodes.Status503ServiceUnavailable));
+        }
     }
 
     [HttpPost("chat")]
+    [RequireFeature("AI_ASSISTANT")]
     public async Task<ActionResult<ApiResult<ChatResponse>>> Chat([FromBody] ChatRequest request, CancellationToken cancellationToken)
     {
         var userId = GetCurrentUserId();
         if (!userId.HasValue)
             return Unauthorized(ApiResult.Fail("用户未认证"));
 
-        var result = await _aiService.ChatAsync(request, userId.Value, cancellationToken);
-        return Ok(ApiResult<ChatResponse>.Success(result));
+        try
+        {
+            var result = await _aiService.ChatAsync(request, userId.Value, cancellationToken);
+            return Ok(ApiResult<ChatResponse>.Success(result));
+        }
+        catch (InvalidOperationException ex) when (IsAiUnavailable(ex))
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, ApiResult<ChatResponse>.Fail(ex.Message, StatusCodes.Status503ServiceUnavailable));
+        }
     }
 
     [HttpGet("plans")]
+    [RequireFeature("AI_PLANNER")]
     public async Task<ActionResult<ApiResult<PageResult<AiPlanDto>>>> GetPlans([FromQuery] AiQueryDto query, CancellationToken cancellationToken)
     {
         var userId = GetCurrentUserId();
@@ -62,6 +88,7 @@ public class AiController : ControllerBase
     }
 
     [HttpGet("plans/{id:guid}")]
+    [RequireFeature("AI_PLANNER")]
     public async Task<ActionResult<ApiResult<AiPlanDto>>> GetPlanById(Guid id, CancellationToken cancellationToken)
     {
         var userId = GetCurrentUserId();
@@ -75,6 +102,7 @@ public class AiController : ControllerBase
     }
 
     [HttpDelete("plans/{id:guid}")]
+    [RequireFeature("AI_PLANNER")]
     public async Task<ActionResult<ApiResult>> DeletePlan(Guid id, CancellationToken cancellationToken)
     {
         var userId = GetCurrentUserId();
@@ -88,6 +116,7 @@ public class AiController : ControllerBase
     }
 
     [HttpGet("reports")]
+    [RequireFeature("AI_REPORT")]
     public async Task<ActionResult<ApiResult<PageResult<AiReportDto>>>> GetReports([FromQuery] AiQueryDto query, CancellationToken cancellationToken)
     {
         var userId = GetCurrentUserId();
@@ -96,6 +125,7 @@ public class AiController : ControllerBase
     }
 
     [HttpGet("reports/{id:guid}")]
+    [RequireFeature("AI_REPORT")]
     public async Task<ActionResult<ApiResult<AiReportDto>>> GetReportById(Guid id, CancellationToken cancellationToken)
     {
         var userId = GetCurrentUserId();
@@ -109,6 +139,7 @@ public class AiController : ControllerBase
     }
 
     [HttpDelete("reports/{id:guid}")]
+    [RequireFeature("AI_REPORT")]
     public async Task<ActionResult<ApiResult>> DeleteReport(Guid id, CancellationToken cancellationToken)
     {
         var userId = GetCurrentUserId();
@@ -122,6 +153,7 @@ public class AiController : ControllerBase
     }
 
     [HttpGet("chat/sessions")]
+    [RequireFeature("AI_ASSISTANT")]
     public async Task<ActionResult<ApiResult<PageResult<AiChatSessionDto>>>> GetChatSessions([FromQuery] AiQueryDto query, CancellationToken cancellationToken)
     {
         var userId = GetCurrentUserId();
@@ -133,6 +165,7 @@ public class AiController : ControllerBase
     }
 
     [HttpGet("chat/sessions/{sessionId:guid}/messages")]
+    [RequireFeature("AI_ASSISTANT")]
     public async Task<ActionResult<ApiResult<List<AiChatMessageDto>>>> GetChatMessages(Guid sessionId, CancellationToken cancellationToken)
     {
         var userId = GetCurrentUserId();
@@ -144,6 +177,7 @@ public class AiController : ControllerBase
     }
 
     [HttpDelete("chat/sessions/{id:guid}")]
+    [RequireFeature("AI_ASSISTANT")]
     public async Task<ActionResult<ApiResult>> DeleteChatSession(Guid id, CancellationToken cancellationToken)
     {
         var userId = GetCurrentUserId();
@@ -162,5 +196,10 @@ public class AiController : ControllerBase
         if (Guid.TryParse(userIdClaim, out var userId))
             return userId;
         return null;
+    }
+
+    private static bool IsAiUnavailable(InvalidOperationException ex)
+    {
+        return ex.Message.StartsWith("AI 服务未配置", StringComparison.Ordinal);
     }
 }

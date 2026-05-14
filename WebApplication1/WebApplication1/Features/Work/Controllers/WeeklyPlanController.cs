@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Shared.Common;
 using WebApplication1.Features.Work.Dtos;
 using WebApplication1.Features.Work.Services;
@@ -8,6 +9,7 @@ namespace WebApplication1.Features.Work.Controllers;
 
 [ApiController]
 [Authorize]
+[RequireFeature("WORK_TASK")]
 [Route("api/work/weekly-plans")]
 [Tags("Work - Weekly Plans")]
 public class WeeklyPlanController : BaseApiController

@@ -54,6 +54,35 @@ public class UserAccessContextService(AppDbContext db) : IUserAccessContextServi
             .Select(x => x.Feature.Code)
             .ToListAsync(cancellationToken);
 
+        if (roleLevel >= 3)
+        {
+            planFeatures = await db.Features
+                .AsNoTracking()
+                .Where(x => x.IsEnabled)
+                .Select(x => x.Code)
+                .ToListAsync(cancellationToken);
+        }
+        else if (roleLevel >= 2 && planFeatures.Count == 0)
+        {
+            planFeatures = await db.PlanFeatures
+                .AsNoTracking()
+                .Where(x => x.Plan.Code == "Pro" && x.Feature.IsEnabled)
+                .Select(x => x.Feature.Code)
+                .ToListAsync(cancellationToken);
+        }
+
+        if (planFeatures.Count == 0 && planCode.Equals("Free", StringComparison.OrdinalIgnoreCase))
+        {
+            planFeatures =
+            [
+                "GROWTH_DAILY_PLAN",
+                "GROWTH_HABIT",
+                "GROWTH_KNOWLEDGE",
+                "WORK_LOG",
+                "WORK_TASK",
+            ];
+        }
+
         var personaFeatures = await db.PersonaFeatures
             .AsNoTracking()
             .Where(x => x.Feature.IsEnabled &&

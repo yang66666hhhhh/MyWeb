@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Shared.Common;
 
 namespace WebApplication1.Features.Tasks;
 
 [ApiController]
 [Authorize]
+[RequireFeature("WORK_TASK")]
 [Route("api/tasks")]
 [Tags("Tasks")]
 public class TasksController(ITaskItemService taskService) : BaseApiController

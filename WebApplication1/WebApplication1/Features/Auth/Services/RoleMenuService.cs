@@ -118,10 +118,12 @@ public class RoleMenuService
 
     public async Task<List<RoleMenu>> GetAllAsync(CancellationToken ct = default)
     {
-        return await _context.RoleMenus
+        var menus = await _context.RoleMenus
             .AsNoTracking()
             .OrderBy(x => x.Sort)
             .ToListAsync(ct);
+
+        return BuildTree(menus, null);
     }
 
     public async Task<RoleMenu?> GetByIdAsync(Guid id, CancellationToken ct = default)

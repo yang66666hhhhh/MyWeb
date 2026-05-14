@@ -283,10 +283,9 @@ public static class DbSeeder
         }
 
         // RoleMenus
-        logger?.LogInformation("[DbSeeder] Seeding RoleMenus...");
-        SeedRoleMenus(context, now);
-        await context.SaveChangesAsync();
-        logger?.LogInformation("[DbSeeder] RoleMenus seeded.");
+        logger?.LogInformation("[DbSeeder] Syncing RoleMenus...");
+        await SyncRoleMenusAsync(context, now);
+        logger?.LogInformation("[DbSeeder] RoleMenus synced.");
 
         // WorkTaskTypes - 任务类型
         if (!await context.WorkTaskTypes.AnyAsync())
@@ -729,6 +728,7 @@ public static class DbSeeder
                 new() { Code = "WORK_DEVICE", Name = "设备管理", Category = "Work", Description = "管理工作中使用的设备" },
                 new() { Code = "WORK_TASK", Name = "工作任务", Category = "Work", Description = "管理工作任务" },
                 new() { Code = "WORK_IMPORT", Name = "数据导入", Category = "Work", Description = "Excel数据导入" },
+                new() { Code = "WORK_STATISTICS", Name = "工作统计", Category = "Work", Description = "工作日志与任务统计看板" },
                 new() { Code = "WORK_TEMPLATE", Name = "模板管理", Category = "Work", Description = "行业模板管理" },
                 new() { Code = "WORK_OKR", Name = "OKR管理", Category = "Work", Description = "目标与关键结果管理" },
                 new() { Code = "WORK_GANTT", Name = "甘特图", Category = "Work", Description = "项目甘特图" },
@@ -801,7 +801,7 @@ public static class DbSeeder
             var planFeatures = new List<PlanFeature>();
 
             // Free: basic growth + work log
-            var freeFeatures = new[] { "GROWTH_DAILY_PLAN", "GROWTH_HABIT", "WORK_LOG", "AI_ASSISTANT" };
+            var freeFeatures = new[] { "GROWTH_DAILY_PLAN", "GROWTH_HABIT", "WORK_LOG", "WORK_TASK" };
             foreach (var code in freeFeatures)
             {
                 if (featureDict.TryGetValue(code, out var feature))
@@ -851,7 +851,7 @@ public static class DbSeeder
         logger?.LogInformation("[DbSeeder] Seed completed successfully!");
     }
 
-    private static void SeedRoleMenus(AppDbContext context, DateTime now)
+    private static async Task SyncRoleMenusAsync(AppDbContext context, DateTime now)
     {
         var menusToAdd = new List<RoleMenu>();
 
@@ -903,80 +903,178 @@ public static class DbSeeder
         // ===== 工作台 - 所有人可用 =====
         var dash = L("工作台", "/dashboard/workspace", "lucide:layout-dashboard", "/views/dashboard/workspace/index.vue", 0, 1, true, null, "Dashboard");
 
-        // ===== 个人成长 - 基础（Member） =====
+        // ===== 个人成长 - 默认首页 =====
         var growth = L("个人成长", "/growth", "lucide:sprout", null, 10, 1, true, null, "Growth");
         C(growth, "成长看板", "/growth/dashboard", "lucide:gauge", "/views/growth/dashboard/index.vue", 0, 1, true, null);
         C(growth, "每日计划", "/growth/daily-plans", "lucide:calendar-check", "/views/growth/daily-plans/index.vue", 1, 1, true, null, null, "GROWTH_DAILY_PLAN");
         C(growth, "习惯打卡", "/growth/habits", "lucide:badge-check", "/views/growth/habits/index.vue", 2, 1, true, null, null, "GROWTH_HABIT");
-        // Pro 扩展
-        C(growth, "知识库", "/growth/knowledge-base", "lucide:library", "/views/growth/knowledge-base/index.vue", 3, 2, false, null, null, "GROWTH_KNOWLEDGE");
-        C(growth, "技能管理", "/growth/skills", "lucide:award", "/views/growth/skills/index.vue", 4, 2, false, null, null, "GROWTH_SKILL");
-        C(growth, "专注计时", "/growth/focus-timer", "lucide:timer", "/views/growth/focus-timer/index.vue", 5, 2, false, null);
+        C(growth, "知识库", "/growth/knowledge-base", "lucide:library", "/views/growth/knowledge-base/index.vue", 3, 1, true, null, null, "GROWTH_KNOWLEDGE");
 
-        // ===== 工作中心 - 基础（Member） =====
+        // ===== 工作中心 - 真实主线 =====
         var work = L("工作中心", "/work", "lucide:briefcase", null, 20, 1, true, null, "Work");
         C(work, "工作看板", "/work/dashboard", "lucide:layout-dashboard", "/views/work/dashboard/index.vue", 0, 1, true, null);
         C(work, "工作日志", "/work/work-log", "lucide:clipboard-list", "/views/work/log/index.vue", 1, 1, true, null, null, "WORK_LOG");
-        C(work, "实施日志", "/work/impl-log", "lucide:wrench", "/views/work/impl-log/index.vue", 2, 2, false, "Implementation");
-        C(work, "工作任务", "/work/tasks", "lucide:check-square", "/views/work/tasks/index.vue", 3, 1, true, null, null, "WORK_TASK");
-        // Pro 扩展
+        C(work, "工作任务", "/work/tasks", "lucide:check-square", "/views/work/tasks/index.vue", 2, 1, true, null, null, "WORK_TASK");
         C(work, "工作项目", "/work/project", "lucide:folder-kanban", "/views/work/project/index.vue", 3, 2, false, null, null, "WORK_PROJECT");
         C(work, "设备管理", "/work/device", "lucide:monitor", "/views/work/device/index.vue", 4, 2, false, null, null, "WORK_DEVICE");
         C(work, "数据导入", "/work/import", "lucide:upload", "/views/work/import/index.vue", 5, 2, false, null, null, "WORK_IMPORT");
-        C(work, "统计分析", "/work/statistics", "lucide:bar-chart-3", "/views/work/statistics/index.vue", 6, 2, false, null);
+        C(work, "统计看板", "/work/statistics", "lucide:bar-chart-3", "/views/work/statistics/index.vue", 6, 2, false, null, null, "WORK_STATISTICS");
 
-        // ===== AI 助手 - Pro =====
+        // ===== AI 总结 - Pro =====
         var ai = L("AI 助手", "/ai", "lucide:brain", null, 30, 2, true, null, "AI");
         C(ai, "AI 助手", "/ai/assistant", "lucide:message-square", "/views/ai/assistant/index.vue", 0, 2, true, null, null, "AI_ASSISTANT");
         C(ai, "AI 规划器", "/ai/planner", "lucide:sparkles", "/views/ai/planner/index.vue", 1, 2, true, null, null, "AI_PLANNER");
-        C(ai, "AI 报告", "/ai/reports", "lucide:file-text", "/views/ai/reports/index.vue", 2, 3, false, null, null, "AI_REPORT");
 
-        // ===== 财务资产 - Pro =====
-        var assets = L("财务资产", "/assets", "lucide:wallet", null, 35, 2, true, null, "Assets");
-        C(assets, "资产看板", "/assets/dashboard", "lucide:layout-dashboard", "/views/assets/dashboard/index.vue", 0, 2, true, null);
-        C(assets, "收支记录", "/assets/income", "lucide:trending-up", "/views/assets/income/index.vue", 1, 2, false, null);
-        C(assets, "预算管理", "/assets/budget", "lucide:pie-chart", "/views/assets/budget/index.vue", 2, 2, false, null);
+        // ===== Persona 身份菜单 =====
+        var developer = L("开发中心", "/dev", "lucide:code-2", null, 40, 1, false, "Developer", "Persona");
+        C(developer, "代码仓库", "/dev/code-repository", "lucide:git-branch", "/views/dev/code-repository/index.vue", 0, 1, false, "Developer", null, "DEV_CODE_REPO");
+        C(developer, "问题跟踪", "/dev/issues", "lucide:bug", "/views/dev/issues/index.vue", 1, 1, false, "Developer", null, "DEV_ISSUES");
+        C(developer, "流水线", "/dev/pipelines", "lucide:workflow", "/views/dev/pipelines/index.vue", 2, 1, false, "Developer", null, "DEV_PIPELINES");
 
-        // ===== 数据分析 - Owner =====
-        var analytics = L("数据分析", "/analytics", "lucide:pie-chart", null, 40, 3, true, null, "Analytics");
-        C(analytics, "成长分析", "/analytics/growth", "lucide:trending-up", "/views/analytics/growth/index.vue", 0, 3, true, null);
-        C(analytics, "工作分析", "/analytics/work", "lucide:briefcase", "/views/analytics/work/index.vue", 1, 3, true, null);
-        C(analytics, "财务分析", "/analytics/finance", "lucide:wallet", "/views/analytics/finance/index.vue", 2, 3, true, null);
-        C(analytics, "时间分析", "/analytics/time", "lucide:clock", "/views/analytics/time/index.vue", 3, 3, true, null);
-        C(analytics, "习惯分析", "/analytics/habits", "lucide:badge-check", "/views/analytics/habits/index.vue", 4, 3, true, null);
-        C(analytics, "自定义报表", "/analytics/custom-reports", "lucide:file-bar-chart", "/views/analytics/custom-reports/index.vue", 5, 3, true, null);
-        C(analytics, "AI洞察", "/analytics/ai-insights", "lucide:bot", "/views/analytics/ai-insights/index.vue", 6, 3, true, null);
+        var implementation = L("实施中心", "/implementation", "lucide:wrench", null, 41, 1, false, "Implementation", "Persona");
+        C(implementation, "项目看板", "/implementation/kanban", "lucide:kanban", "/views/implementation/kanban/index.vue", 0, 1, false, "Implementation", null, "IMPL_KANBAN");
+        C(implementation, "客户管理", "/implementation/customers", "lucide:contact", "/views/implementation/customers/index.vue", 1, 1, false, "Implementation", null, "IMPL_CUSTOMER");
 
-        // ===== 平台管理 - Pro =====
+        var designer = L("设计中心", "/design", "lucide:palette", null, 42, 1, false, "Designer", "Persona");
+        C(designer, "设计资产", "/design/assets", "lucide:images", "/views/design/assets/index.vue", 0, 1, false, "Designer", null, "DESIGN_ASSETS");
+        C(designer, "原型管理", "/design/prototypes", "lucide:panels-top-left", "/views/design/prototypes/index.vue", 1, 1, false, "Designer", null, "DESIGN_PROTOTYPE");
+
+        var teacher = L("教学中心", "/teacher", "lucide:graduation-cap", null, 43, 1, false, "Teacher", "Persona");
+        C(teacher, "课程管理", "/teacher/courses", "lucide:book-open", "/views/teacher/courses/index.vue", 0, 1, false, "Teacher", null, "TEACHER_COURSE");
+        C(teacher, "学生管理", "/teacher/students", "lucide:users", "/views/teacher/students/index.vue", 1, 1, false, "Teacher", null, "TEACHER_STUDENT");
+
+        var student = L("学习中心", "/student", "lucide:book-marked", null, 44, 1, false, "Student", "Persona");
+        C(student, "学习计划", "/student/learning", "lucide:book-open-check", "/views/student/learning/index.vue", 0, 1, false, "Student", null, "STUDENT_LEARNING");
+        C(student, "错题本", "/student/mistakes", "lucide:notebook-pen", "/views/student/mistakes/index.vue", 1, 1, false, "Student", null, "STUDENT_MISTAKES");
+        C(student, "考研备考", "/student/postgraduate", "lucide:school", "/views/student/postgraduate/index.vue", 2, 1, false, "Student", null, "STUDENT_EXAM");
+
+        // ===== 平台管理 =====
         var platform = L("平台管理", "/system", "lucide:settings", null, 90, 2, true, null, "System");
         C(platform, "用户管理", "/system/user", "lucide:users", "/views/system/user/index.vue", 0, 2, true, null);
         C(platform, "角色菜单", "/system/role-menu", "lucide:shield", "/views/system/role-menu/index.vue", 1, 3, false, null, "System");
         C(platform, "身份类型", "/system/persona", "lucide:user-check", "/views/system/persona/index.vue", 2, 3, false, null, "System");
 
-        // ===== Persona 专属菜单 =====
-        var dev = L("开发者中心", "/dev", "lucide:code", null, 50, 1, false, "Developer", "Persona");
-        C(dev, "代码仓库", "/dev/code-repository", "lucide:git-branch", "/views/dev/code-repository/index.vue", 0, 1, false, "Developer");
-        C(dev, "问题跟踪", "/dev/issues", "lucide:bug", "/views/dev/issues/index.vue", 1, 1, false, "Developer");
-        C(dev, "流水线", "/dev/pipelines", "lucide:workflow", "/views/dev/pipelines/index.vue", 2, 1, false, "Developer");
+        var desiredByPath = menusToAdd
+            .GroupBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
+            .Select(x => x.First())
+            .ToDictionary(x => x.Path, StringComparer.OrdinalIgnoreCase);
 
-        var des = L("设计师中心", "/design", "lucide:palette", null, 50, 1, false, "Designer", "Persona");
-        C(des, "设计资产", "/design/assets", "lucide:image", "/views/design/assets/index.vue", 0, 1, false, "Designer");
-        C(des, "原型管理", "/design/prototypes", "lucide:figma", "/views/design/prototypes/index.vue", 1, 1, false, "Designer");
+        var existingMenus = await context.RoleMenus.ToListAsync();
+        var existingByPath = existingMenus
+            .GroupBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(x => x.Key, x => x.First(), StringComparer.OrdinalIgnoreCase);
 
-        var tea = L("教师中心", "/teacher", "lucide:presentation", null, 50, 1, false, "Teacher", "Persona");
-        C(tea, "课程管理", "/teacher/courses", "lucide:book-open", "/views/teacher/courses/index.vue", 0, 1, false, "Teacher");
-        C(tea, "学生管理", "/teacher/students", "lucide:users", "/views/teacher/students/index.vue", 1, 1, false, "Teacher");
+        var finalIdsByPath = desiredByPath.ToDictionary(
+            x => x.Key,
+            x => existingByPath.TryGetValue(x.Key, out var existing) ? existing.Id : x.Value.Id,
+            StringComparer.OrdinalIgnoreCase);
+        var desiredPathByInitialId = desiredByPath.Values.ToDictionary(x => x.Id, x => x.Path);
 
-        var imp = L("实施中心", "/implementation", "lucide:wrench", null, 50, 2, false, "Implementation", "Persona");
-        C(imp, "项目看板", "/implementation/kanban", "lucide:kanban", "/views/implementation/kanban/index.vue", 0, 2, false, "Implementation");
-        C(imp, "客户管理", "/implementation/customers", "lucide:building", "/views/implementation/customers/index.vue", 1, 2, false, "Implementation");
+        foreach (var desired in desiredByPath.Values)
+        {
+            if (existingByPath.TryGetValue(desired.Path, out var existing))
+            {
+                desired.Id = existing.Id;
+            }
 
-        var stu = L("学生中心", "/student", "lucide:graduation-cap", null, 50, 1, false, "Student", "Persona");
-        C(stu, "学习计划", "/student/learning", "lucide:calendar-check", "/views/student/learning/index.vue", 0, 1, false, "Student");
-        C(stu, "错题本", "/student/mistakes", "lucide:alert-circle", "/views/student/mistakes/index.vue", 1, 1, false, "Student");
-        C(stu, "考研备考", "/student/postgraduate", "lucide:graduation-cap", "/views/student/postgraduate/index.vue", 2, 1, false, "Student");
+            desired.ParentId = desired.ParentId.HasValue
+                ? ResolveFinalParentId(desired.ParentId.Value, desiredPathByInitialId, finalIdsByPath)
+                : null;
+        }
 
-        context.RoleMenus.AddRange(menusToAdd);
+        var finalIds = finalIdsByPath.Values.ToHashSet();
+        foreach (var desired in desiredByPath.Values)
+        {
+            if (desired.ParentId.HasValue && !finalIds.Contains(desired.ParentId.Value))
+            {
+                desired.ParentId = null;
+            }
+        }
+
+        var newMenuParentIds = new Dictionary<Guid, Guid?>();
+        foreach (var desired in desiredByPath.Values)
+        {
+            if (existingByPath.TryGetValue(desired.Path, out var existing))
+            {
+                continue;
+            }
+
+            newMenuParentIds[desired.Id] = desired.ParentId;
+            desired.ParentId = null;
+            context.RoleMenus.Add(desired);
+        }
+
+        if (newMenuParentIds.Count > 0)
+        {
+            await context.SaveChangesAsync();
+        }
+
+        foreach (var desired in desiredByPath.Values)
+        {
+            if (newMenuParentIds.TryGetValue(desired.Id, out var parentId))
+            {
+                desired.ParentId = parentId;
+            }
+
+            if (existingByPath.TryGetValue(desired.Path, out var existing))
+            {
+                ApplyRoleMenu(existing, desired, resetParent: true);
+            }
+        }
+
+        await context.SaveChangesAsync();
+
+        foreach (var desired in desiredByPath.Values)
+        {
+            if (existingByPath.TryGetValue(desired.Path, out var existing))
+            {
+                existing.ParentId = desired.ParentId;
+            }
+            else
+            {
+                desired.ParentId = desired.ParentId;
+            }
+        }
+
+        var desiredPaths = desiredByPath.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var stale in existingMenus.Where(x => !desiredPaths.Contains(x.Path)))
+        {
+            stale.IsVisible = false;
+            stale.IsEnabled = false;
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    private static Guid? ResolveFinalParentId(
+        Guid desiredParentId,
+        Dictionary<Guid, string> desiredPathByInitialId,
+        Dictionary<string, Guid> finalIdsByPath)
+    {
+        if (!desiredPathByInitialId.TryGetValue(desiredParentId, out var parentPath))
+        {
+            return desiredParentId;
+        }
+
+        return finalIdsByPath.TryGetValue(parentPath, out var finalId)
+            ? finalId
+            : desiredParentId;
+    }
+
+    private static void ApplyRoleMenu(RoleMenu target, RoleMenu source, bool resetParent = false)
+    {
+        target.ParentId = resetParent ? null : source.ParentId;
+        target.Name = source.Name;
+        target.Icon = source.Icon;
+        target.Component = source.Component;
+        target.Sort = source.Sort;
+        target.MinRoleLevel = source.MinRoleLevel;
+        target.IsBaseMenu = source.IsBaseMenu;
+        target.PersonaTag = source.PersonaTag;
+        target.MenuCategory = source.MenuCategory;
+        target.FeatureCode = source.FeatureCode;
+        target.IsVisible = source.IsVisible;
+        target.IsEnabled = source.IsEnabled;
     }
 
     private static string GetWorkLogTitle(string taskTypeCode, string projectCode)

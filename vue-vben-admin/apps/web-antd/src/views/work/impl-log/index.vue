@@ -33,6 +33,8 @@ import {
 import { updateImplLogApi } from '#/api/work/implLog';
 import DynamicFieldForm from '#/components/DynamicForm/DynamicFieldForm.vue';
 
+import type { Dayjs } from 'dayjs';
+
 const loading = ref(false);
 const template = ref<WorkLogTemplate | null>(null);
 const formOpen = ref(false);
@@ -47,6 +49,10 @@ const queryParams = ref({
   startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
   endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
 });
+const dateRange = ref<[Dayjs, Dayjs]>([
+  dayjs(queryParams.value.startDate),
+  dayjs(queryParams.value.endDate),
+]);
 
 const formState = ref({
   workDate: dayjs().format('YYYY-MM-DD'),
@@ -89,6 +95,26 @@ async function loadLogs() {
   } finally {
     loading.value = false;
   }
+}
+
+async function handleDateRangeChange(
+  value: [string, string] | [Dayjs, Dayjs] | null,
+  dateStrings: [string, string],
+) {
+  if (dateStrings[0] && dateStrings[1]) {
+    dateRange.value = [
+      typeof value?.[0] === 'string' ? dayjs(dateStrings[0]) : (value?.[0] ?? dayjs(dateStrings[0])),
+      typeof value?.[1] === 'string' ? dayjs(dateStrings[1]) : (value?.[1] ?? dayjs(dateStrings[1])),
+    ];
+    queryParams.value.startDate = dateStrings[0];
+    queryParams.value.endDate = dateStrings[1];
+  } else {
+    queryParams.value.startDate = '';
+    queryParams.value.endDate = '';
+  }
+
+  queryParams.value.page = 1;
+  await loadLogs();
 }
 
 function openCreate() {
@@ -187,9 +213,9 @@ onMounted(() => {
       <div class="mb-4 flex items-center justify-between">
         <Space>
           <DatePicker.RangePicker
-            v-model:value="[queryParams.startDate, queryParams.endDate]"
+            :value="dateRange"
             format="YYYY-MM-DD"
-            @change="loadLogs"
+            @change="handleDateRangeChange"
           />
         </Space>
         <Space>

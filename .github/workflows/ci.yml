@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore WebApplication1/WebApplication1.Tests/WebApplication1.Tests.csproj
+
+      - name: Test
+        run: dotnet test WebApplication1/WebApplication1.Tests/WebApplication1.Tests.csproj --no-restore --configuration Release
+
+      - name: Check vulnerable NuGet packages
+        shell: pwsh
+        run: |
+          $json = dotnet list WebApplication1/WebApplication1/WebApplication1.csproj package --vulnerable --include-transitive --format json | ConvertFrom-Json
+          $vulnerablePackages = @(
+            $json.projects.frameworks.topLevelPackages
+            $json.projects.frameworks.transitivePackages
+          ) | Where-Object { $_ -and $_.vulnerabilities }
+
+          if ($vulnerablePackages.Count -gt 0) {
+            $vulnerablePackages | ForEach-Object {
+              Write-Host "Vulnerable package: $($_.id) $($_.resolvedVersion)"
+              $_.vulnerabilities | ForEach-Object {
+                Write-Host "  $($_.severity): $($_.advisoryurl)"
+              }
+            }
+            exit 1
+          }
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: vue-vben-admin
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.18.0
+          cache: pnpm
+          cache-dependency-path: vue-vben-admin/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm -F @vben/web-antd run typecheck
+
+      - name: Build
+        run: pnpm -F @vben/web-antd run build

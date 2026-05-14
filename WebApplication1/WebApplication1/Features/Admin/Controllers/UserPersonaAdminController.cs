@@ -125,7 +125,20 @@ public class UserPersonaAdminController : ControllerBase
         if (userPersona == null)
             return NotFound(ApiResult.Fail("Persona not found"));
 
+        var wasPrimary = userPersona.IsPrimary;
         _context.UserPersonas.Remove(userPersona);
+        if (wasPrimary)
+        {
+            var nextPrimary = await _context.UserPersonas
+                .Where(x => x.UserId == id && x.PersonaTypeId != personaTypeId)
+                .OrderBy(x => x.CreatedAt)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (nextPrimary != null)
+            {
+                nextPrimary.IsPrimary = true;
+            }
+        }
+
         await _context.SaveChangesAsync(cancellationToken);
 
         return Ok(ApiResult.Success("Persona removed successfully"));
