@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Shared.Common;
 using WebApplication1.Shared.Data;
@@ -9,7 +10,7 @@ namespace WebApplication1.Features.Work.Services;
 public interface IImplLogService
 {
     Task<PageResult<ImplLogDto>> GetPageAsync(ImplLogQueryDto query, Guid userId, CancellationToken cancellationToken = default);
-    Task<ImplLogDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<ImplLogDto?> GetByIdAsync(Guid id, Guid userId, CancellationToken cancellationToken = default);
     Task<ImplLogDto> CreateAsync(CreateImplLogDto input, Guid userId, CancellationToken cancellationToken = default);
     Task<ImplLogDto?> UpdateAsync(Guid id, UpdateImplLogDto input, Guid userId, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken = default);
@@ -22,6 +23,7 @@ public class ImplLogService(AppDbContext context) : IImplLogService
         var q = context.ImplLogs
             .AsNoTracking()
             .Where(x => x.UserId == userId)
+            .Include(x => x.Project)
             .Include(x => x.Template)
             .AsQueryable();
 
@@ -47,12 +49,13 @@ public class ImplLogService(AppDbContext context) : IImplLogService
         return PageResult<ImplLogDto>.Create(items.Select(MapToDto).ToList(), total, query.Page, query.PageSize);
     }
 
-    public async Task<ImplLogDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<ImplLogDto?> GetByIdAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
     {
         var entity = await context.ImplLogs
             .AsNoTracking()
+            .Include(x => x.Project)
             .Include(x => x.Template)
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId, cancellationToken);
         return entity == null ? null : MapToDto(entity);
     }
 
@@ -64,10 +67,11 @@ public class ImplLogService(AppDbContext context) : IImplLogService
             WorkDate = input.WorkDate,
             WeekDay = input.WorkDate.DayOfWeek.ToString(),
             Title = input.Title,
+            ProjectId = input.ProjectId,
             ProjectName = input.ProjectName,
             TotalHours = input.TotalHours,
             TemplateId = input.TemplateId,
-            ExtraData = input.ExtraData
+            ExtraData = SerializeExtraData(input.ExtraData)
         };
 
         context.ImplLogs.Add(entity);
@@ -77,6 +81,13 @@ public class ImplLogService(AppDbContext context) : IImplLogService
         {
             var template = await context.WorkLogTemplates.FindAsync([input.TemplateId.Value], cancellationToken);
             entity.Template = template;
+        }
+
+        if (input.ProjectId.HasValue)
+        {
+            var project = await context.WorkProjects.FindAsync([input.ProjectId.Value], cancellationToken);
+            entity.Project = project;
+            entity.ProjectName = project?.ProjectName ?? entity.ProjectName;
         }
 
         return MapToDto(entity);
@@ -93,12 +104,23 @@ public class ImplLogService(AppDbContext context) : IImplLogService
             entity.WeekDay = input.WorkDate.Value.DayOfWeek.ToString();
         }
         if (input.Title != null) entity.Title = input.Title;
+        if (input.ProjectId.HasValue || input.ProjectId == null)
+        {
+            entity.ProjectId = input.ProjectId;
+        }
         if (input.ProjectName != null) entity.ProjectName = input.ProjectName;
         if (input.TotalHours.HasValue) entity.TotalHours = input.TotalHours.Value;
         if (input.TemplateId.HasValue) entity.TemplateId = input.TemplateId;
-        if (input.ExtraData != null) entity.ExtraData = input.ExtraData;
+        if (input.ExtraData.HasValue) entity.ExtraData = SerializeExtraData(input.ExtraData);
 
         await context.SaveChangesAsync(cancellationToken);
+
+        if (entity.ProjectId.HasValue)
+        {
+            var project = await context.WorkProjects.FindAsync([entity.ProjectId.Value], cancellationToken);
+            entity.Project = project;
+            entity.ProjectName = project?.ProjectName ?? entity.ProjectName;
+        }
 
         if (entity.TemplateId.HasValue)
         {
@@ -128,14 +150,46 @@ public class ImplLogService(AppDbContext context) : IImplLogService
             WorkDate = entity.WorkDate,
             WeekDay = entity.WeekDay,
             Title = entity.Title,
-            ProjectName = entity.ProjectName,
+            ProjectId = entity.ProjectId,
+            ProjectName = entity.Project?.ProjectName ?? entity.ProjectName,
             TotalHours = entity.TotalHours,
             PersonaCode = entity.PersonaCode,
             TemplateId = entity.TemplateId,
             TemplateName = entity.Template?.Name,
-            ExtraData = entity.ExtraData,
+            ExtraData = ParseExtraData(entity.ExtraData),
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt
         };
+    }
+
+    private static string? SerializeExtraData(JsonElement? extraData)
+    {
+        if (!extraData.HasValue)
+        {
+            return null;
+        }
+
+        var value = extraData.Value;
+        return value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined
+            ? null
+            : value.GetRawText();
+    }
+
+    private static JsonElement? ParseExtraData(string? extraData)
+    {
+        if (string.IsNullOrWhiteSpace(extraData))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(extraData);
+            return document.RootElement.Clone();
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 }

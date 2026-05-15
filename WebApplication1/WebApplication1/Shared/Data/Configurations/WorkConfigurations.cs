@@ -224,3 +224,39 @@ public class WorkLogTemplateConfiguration : IEntityTypeConfiguration<WorkLogTemp
         entity.HasIndex(x => x.PersonaCode).IsUnique();
     }
 }
+
+public class ImplLogConfiguration : IEntityTypeConfiguration<ImplLog>
+{
+    public void Configure(EntityTypeBuilder<ImplLog> entity)
+    {
+        var dateOnlyConverter = new ValueConverter<DateOnly, DateTime>(
+            v => v.ToDateTime(TimeOnly.MinValue),
+            v => DateOnly.FromDateTime(v));
+
+        entity.ToTable("ImplLogs");
+        entity.HasKey(x => x.Id);
+        entity.Property(x => x.WorkDate).HasColumnType("date").HasConversion(dateOnlyConverter).IsRequired();
+        entity.Property(x => x.WeekDay).HasMaxLength(10);
+        entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+        entity.Property(x => x.ProjectName).HasMaxLength(200);
+        entity.Property(x => x.TotalHours).HasPrecision(10, 2);
+        entity.Property(x => x.PersonaCode).HasMaxLength(50);
+        entity.Property(x => x.ExtraData).HasMaxLength(4000);
+        entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+
+        entity.HasOne(x => x.Project)
+            .WithMany()
+            .HasForeignKey(x => x.ProjectId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        entity.HasOne(x => x.Template)
+            .WithMany()
+            .HasForeignKey(x => x.TemplateId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        entity.HasIndex(x => x.ProjectId);
+        entity.HasIndex(x => x.TemplateId);
+        entity.HasIndex(x => x.UserId);
+        entity.HasIndex(x => x.WorkDate);
+    }
+}

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.ComponentModel.DataAnnotations;
 using WebApplication1.Shared.Common;
 
@@ -10,12 +11,13 @@ public class ImplLogDto
     public DateOnly WorkDate { get; set; }
     public string WeekDay { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
+    public Guid? ProjectId { get; set; }
     public string? ProjectName { get; set; }
     public decimal TotalHours { get; set; }
     public string? PersonaCode { get; set; }
     public Guid? TemplateId { get; set; }
     public string? TemplateName { get; set; }
-    public string? ExtraData { get; set; }
+    public JsonElement? ExtraData { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }
@@ -38,6 +40,8 @@ public class CreateImplLogDto
     [MaxLength(200, ErrorMessage = "标题不能超过200个字符")]
     public string Title { get; set; } = string.Empty;
 
+    public Guid? ProjectId { get; set; }
+
     [MaxLength(200, ErrorMessage = "项目名称不能超过200个字符")]
     public string? ProjectName { get; set; }
 
@@ -46,7 +50,7 @@ public class CreateImplLogDto
 
     public Guid? TemplateId { get; set; }
 
-    public string? ExtraData { get; set; }
+    public JsonElement? ExtraData { get; set; }
 }
 
 public class UpdateImplLogDto
@@ -56,6 +60,8 @@ public class UpdateImplLogDto
     [MaxLength(200, ErrorMessage = "标题不能超过200个字符")]
     public string? Title { get; set; }
 
+    public Guid? ProjectId { get; set; }
+
     [MaxLength(200, ErrorMessage = "项目名称不能超过200个字符")]
     public string? ProjectName { get; set; }
 
@@ -64,5 +70,5 @@ public class UpdateImplLogDto
 
     public Guid? TemplateId { get; set; }
 
-    public string? ExtraData { get; set; }
+    public JsonElement? ExtraData { get; set; }
 }

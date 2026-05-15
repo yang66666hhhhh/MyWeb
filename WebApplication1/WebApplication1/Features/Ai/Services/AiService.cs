@@ -14,6 +14,13 @@ namespace WebApplication1.Features.Ai.Services;
 
 public class AiService : IAiService
 {
+    private sealed class AiReportRemarkMeta
+    {
+        public Guid? RelatedProjectId { get; set; }
+
+        public string? RelatedProjectName { get; set; }
+    }
+
     private readonly AppDbContext _context;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<AiService> _logger;
@@ -126,13 +133,26 @@ public class AiService : IAiService
         if (!string.IsNullOrWhiteSpace(query.Type) && Enum.TryParse<AiReportType>(query.Type, true, out var reportType))
             q = q.Where(x => x.Type == reportType);
 
-        var total = await q.CountAsync(cancellationToken);
-        var items = await q
+        if (DateOnly.TryParse(query.StartDate, out var startDate))
+            q = q.Where(x => !x.StartDate.HasValue || x.StartDate >= startDate);
+
+        if (DateOnly.TryParse(query.EndDate, out var endDate))
+            q = q.Where(x => !x.EndDate.HasValue || x.EndDate <= endDate);
+
+        var reportEntities = await q
             .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        var mappedReports = reportEntities
+            .Select(MapToDto)
+            .Where(x => !query.RelatedProjectId.HasValue || x.RelatedProjectId == query.RelatedProjectId.Value)
+            .ToList();
+
+        var total = mappedReports.Count;
+        var items = mappedReports
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
-            .Select(x => MapToDto(x))
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         return PageResult<AiReportDto>.Create(items, total, query.Page, query.PageSize);
     }
@@ -149,21 +169,43 @@ public class AiService : IAiService
         var startDate = DateOnly.TryParse(request.StartDate, out var sd) ? sd : DateOnly.FromDateTime(DateTime.Today.AddDays(-7));
         var endDate = DateOnly.TryParse(request.EndDate, out var ed) ? ed : DateOnly.FromDateTime(DateTime.Today);
 
-        var workLogs = await _context.WorkLogs
+        var workLogsQuery = _context.WorkLogs
             .Where(x => x.UserId == userId)
-            .Where(x => x.WorkDate >= startDate && x.WorkDate <= endDate)
+            .Where(x => x.WorkDate >= startDate && x.WorkDate <= endDate);
+
+        if (request.RelatedProjectId.HasValue)
+            workLogsQuery = workLogsQuery.Where(x => x.ProjectId == request.RelatedProjectId.Value);
+
+        var workLogs = await workLogsQuery
             .Include(x => x.Project)
             .Include(x => x.Items)
             .ThenInclude(i => i.TaskType)
             .OrderByDescending(x => x.WorkDate)
             .ToListAsync(cancellationToken);
 
-        var dailyPlans = await _context.Tasks
+        var implLogsQuery = _context.ImplLogs
             .Where(x => x.UserId == userId)
-            .Where(x => x.PlanDate >= startDate && x.PlanDate <= endDate)
+            .Where(x => x.WorkDate >= startDate && x.WorkDate <= endDate);
+
+        if (request.RelatedProjectId.HasValue)
+            implLogsQuery = implLogsQuery.Where(x => x.ProjectId == request.RelatedProjectId.Value);
+
+        var implLogs = await implLogsQuery
+            .Include(x => x.Project)
+            .OrderByDescending(x => x.WorkDate)
             .ToListAsync(cancellationToken);
 
-        string prompt = BuildReportPrompt(reportType, startDate, endDate, workLogs, dailyPlans, request.IncludeStatistics);
+        var dailyPlansQuery = _context.Tasks
+            .Where(x => x.UserId == userId)
+            .Where(x => x.PlanDate >= startDate && x.PlanDate <= endDate);
+
+        if (request.RelatedProjectId.HasValue)
+            dailyPlansQuery = dailyPlansQuery.Where(x => x.ProjectId == request.RelatedProjectId.Value);
+
+        var dailyPlans = await dailyPlansQuery
+            .ToListAsync(cancellationToken);
+
+        string prompt = BuildReportPrompt(reportType, startDate, endDate, workLogs, implLogs, dailyPlans, request.IncludeStatistics);
 
         var content = await CallOpenAiAsync(prompt, cancellationToken);
 
@@ -173,6 +215,7 @@ public class AiService : IAiService
             Title = $"{startDate:yyyy-MM-dd} 至 {endDate:yyyy-MM-dd} {GetReportTypeName(reportType)}报告",
             Type = reportType,
             Content = content,
+            Remark = BuildReportRemark(request.RelatedProjectId, ResolveRelatedProjectName(workLogs, implLogs)),
             StartDate = startDate,
             EndDate = endDate
         };
@@ -321,7 +364,16 @@ public class AiService : IAiService
             .Take(10)
             .ToListAsync(cancellationToken);
 
-        if (!projects.Any() && !recentLogs.Any()) return string.Empty;
+        var recentImplLogs = await _context.ImplLogs
+            .Where(x => x.UserId == userId)
+            .Where(x => x.WorkDate >= DateOnly.FromDateTime(DateTime.Today.AddDays(-7)))
+            .Include(x => x.Project)
+            .OrderByDescending(x => x.WorkDate)
+            .AsNoTracking()
+            .Take(10)
+            .ToListAsync(cancellationToken);
+
+        if (!projects.Any() && !recentLogs.Any() && !recentImplLogs.Any()) return string.Empty;
 
         var sb = new StringBuilder();
         sb.AppendLine("当前用户的工作信息：");
@@ -332,6 +384,13 @@ public class AiService : IAiService
         sb.AppendLine($"\n最近工作日志 ({recentLogs.Count}条):");
         foreach (var log in recentLogs)
             sb.AppendLine($"- {log.WorkDate}: {log.Title} ({log.TotalHours}h)");
+
+        if (recentImplLogs.Any())
+        {
+            sb.AppendLine($"\n最近实施日志 ({recentImplLogs.Count}条):");
+            foreach (var log in recentImplLogs)
+                sb.AppendLine($"- {log.WorkDate}: {log.Title} [{GetProjectDisplayName(log)}] ({log.TotalHours}h)");
+        }
 
         return sb.ToString();
     }
@@ -369,22 +428,42 @@ public class AiService : IAiService
         return sb.ToString();
     }
 
-    private string BuildReportPrompt(AiReportType reportType, DateOnly startDate, DateOnly endDate, List<WorkLog> workLogs, List<TaskItem> dailyPlans, bool includeStats)
+    private string BuildReportPrompt(
+        AiReportType reportType,
+        DateOnly startDate,
+        DateOnly endDate,
+        List<WorkLog> workLogs,
+        List<ImplLog> implLogs,
+        List<TaskItem> dailyPlans,
+        bool includeStats)
     {
         var sb = new StringBuilder();
         sb.AppendLine($"请生成 {startDate:yyyy年MM月dd日} 至 {endDate:yyyy年MM月dd日} 的");
         sb.AppendLine($"{GetReportTypeName(reportType)}报告。");
 
-        if (includeStats && workLogs.Any())
+        if (includeStats && (workLogs.Any() || implLogs.Any()))
         {
+            var totalLogCount = workLogs.Count + implLogs.Count;
+            var totalHours = workLogs.Sum(x => x.TotalHours) + implLogs.Sum(x => x.TotalHours);
+            var projectCount = workLogs
+                .Select(x => (Guid?)x.ProjectId)
+                .Concat(implLogs.Select(x => x.ProjectId))
+                .Where(x => x.HasValue)
+                .Distinct()
+                .Count();
+
             sb.AppendLine($"\n工作统计:");
+            sb.AppendLine($"- 日志记录总数: {totalLogCount}");
             sb.AppendLine($"- 工作日志总数: {workLogs.Count}");
-            sb.AppendLine($"- 总工时: {workLogs.Sum(x => x.TotalHours):F1}h");
-            sb.AppendLine($"- 涉及项目: {workLogs.Select(x => x.ProjectId).Distinct().Count()}");
+            sb.AppendLine($"- 实施日志总数: {implLogs.Count}");
+            sb.AppendLine($"- 总工时: {totalHours:F1}h");
+            sb.AppendLine($"- 涉及项目: {projectCount}");
 
             var projectHours = workLogs
-                .GroupBy(x => x.Project?.ProjectName ?? "未知")
-                .Select(g => new { Project = g.Key, Hours = g.Sum(x => x.TotalHours) })
+                .Select(x => new { ProjectId = (Guid?)x.ProjectId, Project = GetProjectDisplayName(x), Hours = x.TotalHours })
+                .Concat(implLogs.Select(x => new { ProjectId = x.ProjectId, Project = GetProjectDisplayName(x), Hours = x.TotalHours }))
+                .GroupBy(x => new { x.ProjectId, x.Project })
+                .Select(g => new { g.Key.Project, Hours = g.Sum(x => x.Hours) })
                 .OrderByDescending(x => x.Hours);
 
             sb.AppendLine("\n各项目工时:");
@@ -403,7 +482,14 @@ public class AiService : IAiService
         {
             sb.AppendLine("\n工作日志摘要:");
             foreach (var log in workLogs.Take(5))
-                sb.AppendLine($"- [{log.WorkDate}] {log.Title}: {log.Summary ?? log.OriginalContent}");
+                sb.AppendLine($"- [{log.WorkDate}] {log.Title}: {log.Summary ?? log.OriginalContent ?? "无摘要"}");
+        }
+
+        if (implLogs.Any())
+        {
+            sb.AppendLine("\n实施日志摘要:");
+            foreach (var log in implLogs.Take(5))
+                sb.AppendLine($"- [{log.WorkDate}] {log.Title} [{GetProjectDisplayName(log)}] ({log.TotalHours}h)");
         }
 
         sb.AppendLine("\n请生成分析报告，包括:");
@@ -415,7 +501,7 @@ public class AiService : IAiService
         return sb.ToString();
     }
 
-    private async Task<string> CallOpenAiAsync(string prompt, CancellationToken cancellationToken)
+    protected virtual async Task<string> CallOpenAiAsync(string prompt, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(_openAiApiKey))
         {
@@ -464,7 +550,7 @@ public class AiService : IAiService
         }
     }
 
-    private async Task<string> CallOpenAiChatAsync(List<ChatMessage> messages, CancellationToken cancellationToken)
+    protected virtual async Task<string> CallOpenAiChatAsync(List<ChatMessage> messages, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(_openAiApiKey))
         {
@@ -549,15 +635,63 @@ public class AiService : IAiService
 
     private static AiReportDto MapToDto(AiReport entity) => new()
     {
+        // remark 当前被复用为报告关联项目元信息，保留原字段便于兼容旧数据读取。
         Id = entity.Id,
         UserId = entity.UserId,
         Title = entity.Title,
         Type = entity.Type.ToString(),
         Content = entity.Content,
         Remark = entity.Remark,
+        RelatedProjectId = ParseReportRemark(entity.Remark)?.RelatedProjectId,
+        RelatedProjectName = ParseReportRemark(entity.Remark)?.RelatedProjectName,
         StartDate = entity.StartDate,
         EndDate = entity.EndDate,
         CreatedAt = entity.CreatedAt,
         UpdatedAt = entity.UpdatedAt
     };
+
+    private static string GetProjectDisplayName(WorkLog workLog) => workLog.Project?.ProjectName ?? "未知";
+
+    private static string GetProjectDisplayName(ImplLog implLog) => implLog.Project?.ProjectName ?? implLog.ProjectName ?? "未知";
+
+    private static string? ResolveRelatedProjectName(List<WorkLog> workLogs, List<ImplLog> implLogs)
+    {
+        var workProjectName = workLogs
+            .Select(x => x.Project?.ProjectName)
+            .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x));
+
+        if (!string.IsNullOrWhiteSpace(workProjectName))
+            return workProjectName;
+
+        return implLogs
+            .Select(x => x.Project?.ProjectName ?? x.ProjectName)
+            .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x));
+    }
+
+    private static string? BuildReportRemark(Guid? relatedProjectId, string? relatedProjectName)
+    {
+        if (!relatedProjectId.HasValue && string.IsNullOrWhiteSpace(relatedProjectName))
+            return null;
+
+        return JsonSerializer.Serialize(new AiReportRemarkMeta
+        {
+            RelatedProjectId = relatedProjectId,
+            RelatedProjectName = relatedProjectName,
+        });
+    }
+
+    private static AiReportRemarkMeta? ParseReportRemark(string? remark)
+    {
+        if (string.IsNullOrWhiteSpace(remark))
+            return null;
+
+        try
+        {
+            return JsonSerializer.Deserialize<AiReportRemarkMeta>(remark);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
 }

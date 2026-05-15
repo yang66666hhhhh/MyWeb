@@ -20,6 +20,8 @@ export interface AiReport {
   type: string;
   content?: string;
   remark?: string;
+  relatedProjectId?: string;
+  relatedProjectName?: string;
   startDate?: string;
   endDate?: string;
   createdAt: string;
@@ -93,7 +95,15 @@ export const aiApi = {
   deletePlan: (id: string) =>
     requestClient.delete(`/ai/plans/${id}`),
 
-  getReports: (params?: { keyword?: string; page?: number; pageSize?: number; type?: string; }) =>
+  getReports: (params?: {
+    endDate?: string;
+    keyword?: string;
+    page?: number;
+    pageSize?: number;
+    relatedProjectId?: string;
+    startDate?: string;
+    type?: string;
+  }) =>
     requestClient.get<PageResult<AiReport>>('/ai/reports', { params }),
 
   getReportById: (id: string) =>

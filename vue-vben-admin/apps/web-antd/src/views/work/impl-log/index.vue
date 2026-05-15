@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
@@ -15,6 +15,7 @@ import {
   Modal,
   Popconfirm,
   Row,
+  Select,
   Space,
   Statistic,
   Table,
@@ -28,20 +29,40 @@ import {
   getImplLogsApi,
   getMyWorkLogTemplateApi,
   type ImplLog,
+  type ImplLogExtraData,
   type WorkLogTemplate,
 } from '#/api/work/implLog';
+import { projectApi, type WorkProject } from '#/api/work/project';
 import { updateImplLogApi } from '#/api/work/implLog';
 import DynamicFieldForm from '#/components/DynamicForm/DynamicFieldForm.vue';
 
 import type { Dayjs } from 'dayjs';
 
+const props = withDefaults(
+  defineProps<{
+    context?: 'default' | 'implementation';
+  }>(),
+  {
+    context: 'default',
+  },
+);
+
 const loading = ref(false);
 const template = ref<WorkLogTemplate | null>(null);
+const projects = ref<WorkProject[]>([]);
 const formOpen = ref(false);
 const editingId = ref<string | null>(null);
 const logs = ref<ImplLog[]>([]);
 const totalCount = ref(0);
 const totalHours = ref(0);
+const pageLogs = computed(() =>
+  logs.value.map((log) => ({
+    ...log,
+    extraData: normalizeExtraData(log.extraData),
+  })),
+);
+const deviceCount = computed(() => countUniqueValues(pageLogs.value, 'equipment'));
+const taskTypeCount = computed(() => countUniqueValues(pageLogs.value, 'taskTypes'));
 
 const queryParams = ref({
   page: 1,
@@ -53,13 +74,17 @@ const dateRange = ref<[Dayjs, Dayjs]>([
   dayjs(queryParams.value.startDate),
   dayjs(queryParams.value.endDate),
 ]);
+const workDateValue = computed(() =>
+  formState.value.workDate ? dayjs(formState.value.workDate) : undefined,
+);
 
 const formState = ref({
   workDate: dayjs().format('YYYY-MM-DD'),
   title: '',
+  selectedProjectId: undefined as string | undefined,
   projectName: '',
   totalHours: 8,
-  extraData: {} as Record<string, any>,
+  extraData: {} as ImplLogExtraData,
 });
 
 const columns: any[] = [
@@ -72,12 +97,42 @@ const columns: any[] = [
   { key: 'action', title: '操作', width: 150, fixed: 'right' },
 ];
 
+const pageTitle = computed(() =>
+  props.context === 'implementation' ? '实施日志' : '工作日志',
+);
+
+const pageDescription = computed(() =>
+  props.context === 'implementation'
+    ? '记录实施项目现场工作、设备调试与交付情况'
+    : '记录日常工作日志和项目执行情况',
+);
+
+const createButtonText = computed(() =>
+  props.context === 'implementation' ? '新增实施日志' : '新增日志',
+);
+
+const projectOptions = computed(() =>
+  projects.value.map((item) => ({
+    label: item.projectName,
+    value: item.id,
+  })),
+);
+
 async function loadTemplate() {
   try {
     const res = await getMyWorkLogTemplateApi();
     if (res) {
       template.value = res;
     }
+  } catch {
+    // 静默处理
+  }
+}
+
+async function loadProjects() {
+  try {
+    const result = await projectApi.getPage({ page: 1, pageSize: 100 });
+    projects.value = result.items;
   } catch {
     // 静默处理
   }
@@ -117,11 +172,39 @@ async function handleDateRangeChange(
   await loadLogs();
 }
 
+function handleWorkDateChange(value: Dayjs | string, dateString: string) {
+  formState.value.workDate = dateString || (typeof value === 'string' ? value : '');
+}
+
+function normalizeExtraData(extraData?: ImplLogExtraData | null): ImplLogExtraData {
+  return extraData ?? {};
+}
+
+function countUniqueValues(items: ImplLog[], field: 'equipment' | 'taskTypes'): number {
+  const values = new Set<string>();
+
+  for (const item of items) {
+    const source = item.extraData?.[field];
+    if (!Array.isArray(source)) {
+      continue;
+    }
+
+    for (const value of source) {
+      if (typeof value === 'string' && value.trim().length > 0) {
+        values.add(value);
+      }
+    }
+  }
+
+  return values.size;
+}
+
 function openCreate() {
   editingId.value = null;
   formState.value = {
     workDate: dayjs().format('YYYY-MM-DD'),
     title: '',
+    selectedProjectId: undefined,
     projectName: '',
     totalHours: 8,
     extraData: {},
@@ -135,11 +218,23 @@ function openEdit(record: Record<string, any>) {
   formState.value = {
     workDate: log.workDate,
     title: log.title,
+    selectedProjectId: log.projectId,
     projectName: log.projectName || '',
     totalHours: log.totalHours,
-    extraData: typeof log.extraData === 'string' ? JSON.parse(log.extraData) : (log.extraData || {}),
+    extraData: normalizeExtraData(log.extraData),
   };
   formOpen.value = true;
+}
+
+function handleProjectChange(projectId?: unknown) {
+  if (typeof projectId !== 'string') {
+    return;
+  }
+  const project = projects.value.find((item) => item.id === projectId);
+  if (!project) {
+    return;
+  }
+  formState.value.title = project.projectName;
 }
 
 async function handleSave() {
@@ -153,6 +248,7 @@ async function handleSave() {
       await updateImplLogApi(editingId.value, {
         workDate: formState.value.workDate,
         title: formState.value.title,
+        projectId: formState.value.selectedProjectId,
         projectName: formState.value.projectName,
         totalHours: formState.value.totalHours,
         extraData: formState.value.extraData,
@@ -162,6 +258,7 @@ async function handleSave() {
       await createImplLogApi({
         workDate: formState.value.workDate,
         title: formState.value.title,
+        projectId: formState.value.selectedProjectId,
         projectName: formState.value.projectName,
         totalHours: formState.value.totalHours,
         templateId: template.value?.id,
@@ -188,12 +285,13 @@ async function handleDelete(id: string) {
 
 onMounted(() => {
   loadTemplate();
+  loadProjects();
   loadLogs();
 });
 </script>
 
 <template>
-  <Page description="EAP设备自动化平台实施工程师专用日志" title="实施日志">
+  <Page :description="pageDescription" :title="pageTitle">
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
         <Card><Statistic title="本月日志" :value="totalCount" /></Card>
@@ -202,10 +300,10 @@ onMounted(() => {
         <Card><Statistic title="本月工时" :value="totalHours" suffix="小时" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="涉及设备" :value="0" /></Card>
+        <Card><Statistic title="涉及设备" :value="deviceCount" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="任务类型" :value="0" /></Card>
+        <Card><Statistic title="任务类型" :value="taskTypeCount" /></Card>
       </Col>
     </Row>
 
@@ -219,13 +317,13 @@ onMounted(() => {
           />
         </Space>
         <Space>
-          <Button type="primary" @click="openCreate">新增日志</Button>
+          <Button type="primary" @click="openCreate">{{ createButtonText }}</Button>
         </Space>
       </div>
 
       <Table
         :columns="columns"
-        :data-source="logs"
+        :data-source="pageLogs"
         :loading="loading"
         :scroll="{ x: 1200 }"
         row-key="id"
@@ -255,7 +353,7 @@ onMounted(() => {
 
     <Modal
       v-model:open="formOpen"
-      :title="editingId ? '编辑日志' : '新增日志'"
+      :title="editingId ? '编辑日志' : createButtonText"
       width="800px"
       @ok="handleSave"
     >
@@ -264,9 +362,10 @@ onMounted(() => {
           <Col :span="12">
             <Form.Item label="日期" required>
               <DatePicker
-                v-model:value="formState.workDate"
+                :value="workDateValue"
                 style="width: 100%"
                 format="YYYY-MM-DD"
+                @change="handleWorkDateChange"
               />
             </Form.Item>
           </Col>
@@ -279,6 +378,16 @@ onMounted(() => {
 
         <Form.Item label="项目名称" required>
           <Input v-model:value="formState.title" placeholder="如：胜宏科技HDI二处工业物联网平台实施项目" />
+        </Form.Item>
+
+        <Form.Item v-if="props.context === 'implementation'" label="关联项目">
+          <Select
+            v-model:value="formState.selectedProjectId"
+            :options="projectOptions"
+            allow-clear
+            placeholder="选择实施项目后自动带出项目名"
+            @change="handleProjectChange"
+          />
         </Form.Item>
 
         <Form.Item label="项目地（选填）">

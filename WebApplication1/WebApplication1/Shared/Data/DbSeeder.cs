@@ -934,6 +934,10 @@ public static class DbSeeder
         var implementation = L("实施中心", "/implementation", "lucide:wrench", null, 41, 1, false, "Implementation", "Persona");
         C(implementation, "项目看板", "/implementation/kanban", "lucide:kanban", "/views/implementation/kanban/index.vue", 0, 1, false, "Implementation", null, "IMPL_KANBAN");
         C(implementation, "客户管理", "/implementation/customers", "lucide:contact", "/views/implementation/customers/index.vue", 1, 1, false, "Implementation", null, "IMPL_CUSTOMER");
+        C(implementation, "实施任务", "/implementation/tasks", "lucide:check-square", "/views/implementation/tasks/index.vue", 2, 1, false, "Implementation", null, "WORK_TASK");
+        C(implementation, "实施日志", "/implementation/impl-log", "lucide:clipboard-list", "/views/implementation/impl-log/index.vue", 3, 1, false, "Implementation", null, "WORK_LOG");
+        C(implementation, "周计划", "/implementation/weekly-plan", "lucide:calendar-range", "/views/implementation/weekly-plan/index.vue", 4, 1, false, "Implementation", null, "WORK_TASK");
+        C(implementation, "实施周报", "/implementation/weekly-report", "lucide:file-text", "/views/implementation/weekly-report/index.vue", 5, 2, false, "Implementation", null, "AI_REPORT");
 
         var designer = L("设计中心", "/design", "lucide:palette", null, 42, 1, false, "Designer", "Persona");
         C(designer, "设计资产", "/design/assets", "lucide:images", "/views/design/assets/index.vue", 0, 1, false, "Designer", null, "DESIGN_ASSETS");

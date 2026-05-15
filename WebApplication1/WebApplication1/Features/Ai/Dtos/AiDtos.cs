@@ -26,6 +26,8 @@ public class AiReportDto
     public string Type { get; set; } = string.Empty;
     public string? Content { get; set; }
     public string? Remark { get; set; }
+    public Guid? RelatedProjectId { get; set; }
+    public string? RelatedProjectName { get; set; }
     public DateOnly? StartDate { get; set; }
     public DateOnly? EndDate { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -57,6 +59,7 @@ public class AiQueryDto : PageQueryDto
     public string? Keyword { get; set; }
     public string? StartDate { get; set; }
     public string? EndDate { get; set; }
+    public Guid? RelatedProjectId { get; set; }
 }
 
 public class GeneratePlanRequest

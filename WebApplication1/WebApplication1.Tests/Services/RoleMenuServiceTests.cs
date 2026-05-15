@@ -102,6 +102,22 @@ public class RoleMenuServiceTests : IDisposable
         };
         _context.RoleMenus.Add(devRepo);
 
+        var devPipeline = new RoleMenu
+        {
+            Id = Guid.NewGuid(),
+            Name = "流水线",
+            Path = "/dev/pipelines",
+            ParentId = devCenter.Id,
+            MinRoleLevel = 1,
+            IsBaseMenu = false,
+            PersonaTag = "Developer",
+            FeatureCode = "DEV_PIPELINES",
+            IsVisible = true,
+            IsEnabled = true,
+            Sort = 2
+        };
+        _context.RoleMenus.Add(devPipeline);
+
         // Designer Persona 专属
         var designerCenter = new RoleMenu
         {
@@ -131,6 +147,62 @@ public class RoleMenuServiceTests : IDisposable
             Sort = 50
         };
         _context.RoleMenus.Add(teacherCenter);
+
+        var sharedBase = new RoleMenu
+        {
+            Id = Guid.NewGuid(),
+            Name = "共享中心",
+            Path = "/shared",
+            MinRoleLevel = 1,
+            IsBaseMenu = true,
+            IsVisible = true,
+            IsEnabled = true,
+            Sort = 60
+        };
+        _context.RoleMenus.Add(sharedBase);
+
+        var sharedOverview = new RoleMenu
+        {
+            Id = Guid.NewGuid(),
+            Name = "总览",
+            Path = "/shared/overview",
+            ParentId = sharedBase.Id,
+            MinRoleLevel = 1,
+            IsBaseMenu = true,
+            IsVisible = true,
+            IsEnabled = true,
+            Sort = 0
+        };
+        _context.RoleMenus.Add(sharedOverview);
+
+        var sharedDeveloper = new RoleMenu
+        {
+            Id = Guid.NewGuid(),
+            Name = "共享中心",
+            Path = "/shared",
+            MinRoleLevel = 1,
+            IsBaseMenu = false,
+            PersonaTag = "Developer",
+            IsVisible = true,
+            IsEnabled = true,
+            Sort = 60
+        };
+        _context.RoleMenus.Add(sharedDeveloper);
+
+        var sharedDevOps = new RoleMenu
+        {
+            Id = Guid.NewGuid(),
+            Name = "开发工具",
+            Path = "/shared/dev-tools",
+            ParentId = sharedDeveloper.Id,
+            MinRoleLevel = 1,
+            IsBaseMenu = false,
+            PersonaTag = "Developer",
+            IsVisible = true,
+            IsEnabled = true,
+            Sort = 1
+        };
+        _context.RoleMenus.Add(sharedDevOps);
 
         // PersonaTypes
         var personaTypes = new List<PersonaType>
@@ -204,6 +276,21 @@ public class RoleMenuServiceTests : IDisposable
             }
         }
         return false;
+    }
+
+    private static RoleMenu? FindMenuNodeByPath(IEnumerable<RoleMenu> menus, string path)
+    {
+        foreach (var menu in menus)
+        {
+            if (menu.Path == path) return menu;
+            if (menu.Children != null && menu.Children.Count > 0)
+            {
+                var child = FindMenuNodeByPath(menu.Children, path);
+                if (child != null) return child;
+            }
+        }
+
+        return null;
     }
 
     [Fact]
@@ -305,5 +392,44 @@ public class RoleMenuServiceTests : IDisposable
 
         Assert.True(memberResult.Count <= proResult.Count);
         Assert.True(proResult.Count <= ownerResult.Count);
+    }
+
+    [Fact]
+    public async Task GetMenusForUserAsync_ShouldHideFeatureMenu_WhenFeatureIsMissing()
+    {
+        var userId = CreateUser("Developer");
+
+        var result = await _service.GetMenusForUserAsync(userId, "member", new HashSet<string>());
+
+        Assert.True(FindMenuInTree(result, "开发者中心"));
+        Assert.False(FindMenuInTreeByPath(result, "/dev/pipelines"));
+    }
+
+    [Fact]
+    public async Task GetMenusForUserAsync_ShouldShowFeatureMenu_WhenFeatureIsAvailable()
+    {
+        var userId = CreateUser("Developer");
+
+        var result = await _service.GetMenusForUserAsync(
+            userId,
+            "member",
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "dev_pipelines" });
+
+        Assert.True(FindMenuInTreeByPath(result, "/dev/pipelines"));
+    }
+
+    [Fact]
+    public async Task GetMenusForUserAsync_ShouldMergeDuplicateRootsByPath()
+    {
+        var userId = CreateUser("Developer");
+
+        var result = await _service.GetMenusForUserAsync(userId, "member", new HashSet<string>());
+
+        Assert.Equal(1, result.Count(x => x.Path == "/shared"));
+
+        var shared = FindMenuNodeByPath(result, "/shared");
+        Assert.NotNull(shared);
+        Assert.Contains(shared.Children, x => x.Path == "/shared/overview");
+        Assert.Contains(shared.Children, x => x.Path == "/shared/dev-tools");
     }
 }

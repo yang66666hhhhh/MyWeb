@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
 
@@ -27,6 +28,16 @@ import { weeklyPlanApi, type CreateWeeklyPlanInput, type CreateWeeklyPlanTaskInp
 
 dayjs.extend(weekOfYear);
 
+const props = withDefaults(
+  defineProps<{
+    context?: 'default' | 'implementation';
+  }>(),
+  {
+    context: 'default',
+  },
+);
+
+const router = useRouter();
 const loading = ref(false);
 const formOpen = ref(false);
 const taskFormOpen = ref(false);
@@ -113,6 +124,28 @@ const statusOptions = [
   { label: '已完成', value: 2 },
   { label: '已取消', value: 3 },
 ];
+
+const pageTitle = computed(() =>
+  props.context === 'implementation' ? '实施周计划' : '周计划',
+);
+
+const pageDescription = computed(() =>
+  props.context === 'implementation'
+    ? '规划实施项目周目标、交付节奏和关键任务'
+    : '规划和管理每周工作',
+);
+
+const createButtonText = computed(() =>
+  props.context === 'implementation' ? '新建实施周计划' : '新建周计划',
+);
+
+function goToImplementationReport(plan: WeeklyPlan) {
+  const query = new URLSearchParams({
+    endDate: plan.endDate,
+    startDate: plan.startDate,
+  });
+  void router.push(`/implementation/weekly-report?${query.toString()}`);
+}
 
 async function fetchPage() {
   loading.value = true;
@@ -270,7 +303,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <Page description="规划和管理每周工作" title="周计划">
+  <Page :description="pageDescription" :title="pageTitle">
     <div class="space-y-4">
       <Card>
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -290,7 +323,7 @@ onMounted(() => {
           </Form>
           <div class="flex items-center gap-3">
             <span class="text-gray-500 text-sm">共 {{ total }} 条</span>
-            <Button type="primary" @click="openCreate">新建周计划</Button>
+            <Button type="primary" @click="openCreate">{{ createButtonText }}</Button>
           </div>
         </div>
       </Card>
@@ -307,6 +340,14 @@ onMounted(() => {
         </template>
         <template #extra>
           <Space>
+            <Button
+              v-if="props.context === 'implementation'"
+              size="small"
+              type="link"
+              @click="goToImplementationReport(plan)"
+            >
+              去生成周报
+            </Button>
             <Button size="small" type="link" @click="openTaskForm(plan)">添加任务</Button>
             <Button size="small" type="link" @click="openEdit(plan)">编辑</Button>
             <Popconfirm title="确认删除？" @confirm="handleDelete(plan.id)">
@@ -352,7 +393,7 @@ onMounted(() => {
       </Card>
     </div>
 
-    <Modal v-model:open="formOpen" :title="editingId ? '编辑周计划' : '新建周计划'" @ok="handleSave">
+    <Modal v-model:open="formOpen" :title="editingId ? '编辑周计划' : createButtonText" @ok="handleSave">
       <Form :model="formState" layout="vertical">
         <Row :gutter="16">
           <Col :span="12">

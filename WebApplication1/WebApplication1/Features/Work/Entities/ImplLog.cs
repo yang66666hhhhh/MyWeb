@@ -12,6 +12,8 @@ public class ImplLog : EntityBase
 
     public string Title { get; set; } = string.Empty;
 
+    public Guid? ProjectId { get; set; }
+
     public string? ProjectName { get; set; }
 
     public decimal TotalHours { get; set; }
@@ -21,6 +23,8 @@ public class ImplLog : EntityBase
     public Guid? TemplateId { get; set; }
 
     public string? ExtraData { get; set; }
+
+    public WorkProject? Project { get; set; }
 
     public WorkLogTemplate? Template { get; set; }
 }

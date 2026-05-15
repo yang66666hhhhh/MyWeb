@@ -1,86 +1,111 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
 import {
-  Alert,
   Button,
   Card,
   Col,
+  Input,
   Row,
+  Space,
   Statistic,
   Table,
   Tag,
+  message,
 } from 'ant-design-vue';
 
+import { projectApi, type WorkProject } from '#/api/work/project';
+import {
+  WorkProjectStatus,
+  WorkProjectStatusColor,
+  WorkProjectStatusLabel,
+} from '#/enums/workEnum';
+
+interface CustomerProjectSummary {
+  activeProjects: number;
+  completedProjects: number;
+  customerName: string;
+  latestProject?: WorkProject;
+  projectCount: number;
+  suspendedProjects: number;
+}
+
 const loading = ref(false);
+const keyword = ref('');
+const projects = ref<WorkProject[]>([]);
 
-const customers = ref([
-  {
-    id: '1',
-    name: '客户A',
-    industry: '制造业',
-    contact: '张经理',
-    phone: '13800138001',
-    email: 'customerA@example.com',
-    status: '活跃',
-    projects: 2,
-  },
-  {
-    id: '2',
-    name: '客户B',
-    industry: '金融业',
-    contact: '李总监',
-    phone: '13800138002',
-    email: 'customerB@example.com',
-    status: '活跃',
-    projects: 1,
-  },
-  {
-    id: '3',
-    name: '客户C',
-    industry: '零售业',
-    contact: '王主管',
-    phone: '13800138003',
-    email: 'customerC@example.com',
-    status: '潜在',
-    projects: 0,
-  },
-]);
-
-const columns = [
-  { title: '客户名称', dataIndex: 'name', key: 'name' },
-  { title: '行业', dataIndex: 'industry', key: 'industry' },
-  { title: '联系人', dataIndex: 'contact', key: 'contact' },
-  { title: '电话', dataIndex: 'phone', key: 'phone' },
-  { title: '邮箱', dataIndex: 'email', key: 'email' },
-  { title: '状态', dataIndex: 'status', key: 'status' },
-  { title: '项目数', dataIndex: 'projects', key: 'projects' },
+const columns: any[] = [
+  { title: '客户名称', dataIndex: 'customerName', key: 'customerName', minWidth: 180 },
+  { title: '项目数', dataIndex: 'projectCount', key: 'projectCount', width: 100 },
+  { title: '进行中', dataIndex: 'activeProjects', key: 'activeProjects', width: 100 },
+  { title: '已完成', dataIndex: 'completedProjects', key: 'completedProjects', width: 100 },
+  { title: '已暂停', dataIndex: 'suspendedProjects', key: 'suspendedProjects', width: 100 },
+  { title: '最近项目', key: 'latestProject', width: 260 },
 ];
 
-const statusColors: Record<string, string> = {
-  '活跃': 'green',
-  '潜在': 'blue',
-  '已流失': 'red',
-};
+const customers = computed<CustomerProjectSummary[]>(() => {
+  const groups = new Map<string, WorkProject[]>();
 
-const industryColors: Record<string, string> = {
-  '制造业': 'blue',
-  '金融业': 'purple',
-  '零售业': 'orange',
-};
+  for (const project of projects.value) {
+    const name = project.customerName?.trim();
+    if (!name) continue;
+    groups.set(name, [...(groups.get(name) ?? []), project]);
+  }
+
+  return [...groups.entries()]
+    .map(([customerName, items]) => {
+      const latestProject = [...items].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )[0];
+
+      return {
+        activeProjects: items.filter((item) => item.status === WorkProjectStatus.Active).length,
+        completedProjects: items.filter((item) => item.status === WorkProjectStatus.Completed).length,
+        customerName,
+        latestProject,
+        projectCount: items.length,
+        suspendedProjects: items.filter((item) => item.status === WorkProjectStatus.Suspended).length,
+      };
+    })
+    .filter((item) => !keyword.value || item.customerName.includes(keyword.value))
+    .sort((a, b) => b.projectCount - a.projectCount || a.customerName.localeCompare(b.customerName));
+});
+
+const activeCustomerCount = computed(
+  () => customers.value.filter((item) => item.activeProjects > 0).length,
+);
+const totalProjectCount = computed(
+  () => customers.value.reduce((sum, item) => sum + item.projectCount, 0),
+);
+const completedProjectCount = computed(
+  () => customers.value.reduce((sum, item) => sum + item.completedProjects, 0),
+);
+
+async function fetchProjects() {
+  loading.value = true;
+  try {
+    const result = await projectApi.getPage({ page: 1, pageSize: 200 });
+    projects.value = result.items;
+  } catch {
+    message.error('加载客户项目失败');
+  } finally {
+    loading.value = false;
+  }
+}
+
+function resetFilters() {
+  keyword.value = '';
+}
+
+onMounted(() => {
+  void fetchProjects();
+});
 </script>
 
 <template>
-  <Page description="管理客户信息、联系人和合作项目" title="客户管理">
-    <Alert
-      class="mb-4"
-      message="功能开发中"
-      description="后端API正在开发中，当前为模拟数据"
-      show-icon
-      type="warning"
-    />
+  <Page description="按实施项目汇总客户合作情况" title="客户管理">
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
         <Card>
@@ -89,41 +114,51 @@ const industryColors: Record<string, string> = {
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card>
-          <Statistic title="活跃客户" :value="2" />
+          <Statistic title="活跃客户" :value="activeCustomerCount" />
         </Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card>
-          <Statistic title="潜在客户" :value="1" />
+          <Statistic title="项目总数" :value="totalProjectCount" />
         </Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card>
-          <Statistic title="总项目数" :value="3" />
+          <Statistic title="完成项目" :value="completedProjectCount" />
         </Card>
       </Col>
     </Row>
 
-    <Card title="客户列表">
+    <Card title="客户项目概览">
       <template #extra>
-        <Button type="primary">添加客户</Button>
+        <Space>
+          <Input
+            v-model:value="keyword"
+            allow-clear
+            placeholder="客户名称"
+            style="width: 180px"
+          />
+          <Button @click="resetFilters">重置</Button>
+          <Button :loading="loading" type="primary" @click="fetchProjects">刷新</Button>
+        </Space>
       </template>
       <Table
         :columns="columns"
         :data-source="customers"
         :loading="loading"
-        row-key="id"
+        :pagination="{ pageSize: 10, showSizeChanger: true }"
+        :scroll="{ x: 900 }"
+        row-key="customerName"
       >
         <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'status'">
-            <Tag :color="statusColors[record.status] || 'default'">
-              {{ record.status }}
-            </Tag>
-          </template>
-          <template v-else-if="column.key === 'industry'">
-            <Tag :color="industryColors[record.industry] || 'default'">
-              {{ record.industry }}
-            </Tag>
+          <template v-if="column.key === 'latestProject'">
+            <div v-if="record.latestProject">
+              <div class="font-medium">{{ record.latestProject.projectName }}</div>
+              <Tag :color="WorkProjectStatusColor[record.latestProject.status as WorkProjectStatus]">
+                {{ WorkProjectStatusLabel[record.latestProject.status as WorkProjectStatus] }}
+              </Tag>
+            </div>
+            <span v-else>-</span>
           </template>
         </template>
       </Table>

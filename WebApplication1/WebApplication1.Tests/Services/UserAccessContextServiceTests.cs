@@ -104,4 +104,114 @@ public class UserAccessContextServiceTests : IDisposable
         Assert.Contains("WORK_LOG", result.FeatureCodes);
         Assert.Contains("DEV_CODE_REPO", result.FeatureCodes);
     }
+
+    [Fact]
+    public async Task GetAsync_ShouldReturnDefaultFreeFeatures_WhenFreePlanHasNoConfiguredFeatures()
+    {
+        var user = new AppUser
+        {
+            Username = "free-user",
+            RealName = "Free User",
+            PasswordHash = "test",
+            Roles = "member"
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetAsync(user.Id);
+
+        Assert.NotNull(result);
+        Assert.Equal("Free", result.PlanCode);
+        Assert.Contains("GROWTH_DAILY_PLAN", result.FeatureCodes);
+        Assert.Contains("GROWTH_HABIT", result.FeatureCodes);
+        Assert.Contains("WORK_LOG", result.FeatureCodes);
+        Assert.Contains("WORK_TASK", result.FeatureCodes);
+    }
+
+    [Fact]
+    public async Task GetAsync_ShouldReturnAllEnabledFeatures_ForOwner()
+    {
+        var user = new AppUser
+        {
+            Username = "super-owner",
+            RealName = "Super Owner",
+            PasswordHash = "test",
+            Roles = "owner"
+        };
+        var enabledFeature = new Feature { Code = "AI_SUMMARY", Name = "AI 总结", Category = "AI", IsEnabled = true };
+        var disabledFeature = new Feature { Code = "LEGACY_HIDDEN", Name = "旧功能", Category = "Legacy", IsEnabled = false };
+
+        _context.Users.Add(user);
+        _context.Features.AddRange(enabledFeature, disabledFeature);
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetAsync(user.Id);
+
+        Assert.NotNull(result);
+        Assert.Equal("owner", result.RoleCode);
+        Assert.Contains("AI_SUMMARY", result.FeatureCodes);
+        Assert.DoesNotContain("LEGACY_HIDDEN", result.FeatureCodes);
+    }
+
+    [Fact]
+    public async Task GetAsync_ShouldFallbackToProFeatures_WhenCurrentPlanHasNoFeatures()
+    {
+        var user = new AppUser
+        {
+            Username = "pro-user",
+            RealName = "Pro User",
+            PasswordHash = "test",
+            Roles = "pro"
+        };
+        var enterprise = new Plan { Code = "Enterprise", Name = "企业版", IsActive = true };
+        var pro = new Plan { Code = "Pro", Name = "专业版", IsActive = true };
+        var proFeature = new Feature { Code = "WORK_STATISTICS", Name = "工作统计", Category = "Work", IsEnabled = true };
+
+        _context.Users.Add(user);
+        _context.Plans.AddRange(enterprise, pro);
+        _context.Features.Add(proFeature);
+        _context.PlanFeatures.Add(new PlanFeature { Plan = pro, Feature = proFeature });
+        _context.UserSubscriptions.Add(new UserSubscription
+        {
+            UserId = user.Id,
+            Plan = enterprise,
+            StartAt = DateTime.UtcNow.AddDays(-1),
+            IsActive = true
+        });
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetAsync(user.Id);
+
+        Assert.NotNull(result);
+        Assert.Equal("Enterprise", result.PlanCode);
+        Assert.Contains("WORK_STATISTICS", result.FeatureCodes);
+    }
+
+    [Fact]
+    public async Task GetAsync_ShouldIgnoreInactivePersonas_WhenCollectingPersonaFeatures()
+    {
+        var user = new AppUser
+        {
+            Username = "designer-user",
+            RealName = "Designer User",
+            PasswordHash = "test",
+            Roles = "member"
+        };
+        var inactivePersona = new PersonaType { Code = "Designer", Name = "设计师", IsActive = false };
+        var personaFeature = new Feature { Code = "DESIGN_ASSETS", Name = "设计资产", Category = "Persona", IsEnabled = true };
+
+        _context.Users.Add(user);
+        _context.PersonaTypes.Add(inactivePersona);
+        _context.Features.Add(personaFeature);
+        _context.UserPersonas.Add(new UserPersona { User = user, PersonaType = inactivePersona, IsPrimary = true });
+        _context.PersonaFeatures.Add(new PersonaFeature { PersonaCode = inactivePersona.Code, Feature = personaFeature });
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetAsync(user.Id);
+
+        Assert.NotNull(result);
+        Assert.DoesNotContain("Designer", result.PersonaCodes);
+        Assert.DoesNotContain("DESIGN_ASSETS", result.FeatureCodes);
+    }
 }

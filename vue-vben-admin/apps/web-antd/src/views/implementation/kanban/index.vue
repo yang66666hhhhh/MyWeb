@@ -1,81 +1,107 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
 import {
-  Alert,
   Button,
   Card,
   Col,
+  Input,
   Row,
+  Select,
+  Space,
   Statistic,
   Table,
   Tag,
+  message,
 } from 'ant-design-vue';
 
+import { projectApi, type WorkProject } from '#/api/work/project';
+import {
+  WorkProjectStatus,
+  WorkProjectStatusColor,
+  WorkProjectStatusLabel,
+  WorkProjectType,
+  WorkProjectTypeLabel,
+} from '#/enums/workEnum';
+
 const loading = ref(false);
+const projects = ref<WorkProject[]>([]);
+const keyword = ref('');
+const status = ref<number | undefined>();
 
-const projects = ref([
-  {
-    id: '1',
-    name: '客户A系统实施',
-    customer: '客户A',
-    status: '进行中',
-    progress: 65,
-    startDate: '2024-01-01',
-    endDate: '2024-03-31',
-    manager: '张三',
-  },
-  {
-    id: '2',
-    name: '客户B数据迁移',
-    customer: '客户B',
-    status: '待开始',
-    progress: 0,
-    startDate: '2024-02-01',
-    endDate: '2024-04-30',
-    manager: '李四',
-  },
-  {
-    id: '3',
-    name: '客户C系统升级',
-    customer: '客户C',
-    status: '已完成',
-    progress: 100,
-    startDate: '2023-10-01',
-    endDate: '2024-01-31',
-    manager: '王五',
-  },
-]);
-
-const columns = [
-  { title: '项目名称', dataIndex: 'name', key: 'name' },
-  { title: '客户', dataIndex: 'customer', key: 'customer' },
-  { title: '状态', dataIndex: 'status', key: 'status' },
-  { title: '进度', dataIndex: 'progress', key: 'progress' },
-  { title: '开始日期', dataIndex: 'startDate', key: 'startDate' },
-  { title: '结束日期', dataIndex: 'endDate', key: 'endDate' },
-  { title: '负责人', dataIndex: 'manager', key: 'manager' },
+const statusOptions = [
+  { label: '全部状态', value: undefined },
+  { label: '进行中', value: WorkProjectStatus.Active },
+  { label: '已完成', value: WorkProjectStatus.Completed },
+  { label: '已暂停', value: WorkProjectStatus.Suspended },
+  { label: '已归档', value: WorkProjectStatus.Archived },
 ];
 
-const statusColors: Record<string, string> = {
-  '进行中': 'blue',
-  '待开始': 'default',
-  '已完成': 'green',
-  '已暂停': 'orange',
-};
+const columns: any[] = [
+  { title: '项目名称', dataIndex: 'projectName', key: 'projectName', minWidth: 220 },
+  { title: '客户', dataIndex: 'customerName', key: 'customerName', width: 150 },
+  { title: '项目类型', dataIndex: 'projectType', key: 'projectType', width: 110 },
+  { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
+  { title: '进度', key: 'progress', width: 160 },
+  { title: '开始日期', dataIndex: 'startDate', key: 'startDate', width: 120 },
+  { title: '结束日期', dataIndex: 'endDate', key: 'endDate', width: 120 },
+];
+
+const activeCount = computed(
+  () => projects.value.filter((item) => item.status === WorkProjectStatus.Active).length,
+);
+const completedCount = computed(
+  () => projects.value.filter((item) => item.status === WorkProjectStatus.Completed).length,
+);
+const suspendedCount = computed(
+  () => projects.value.filter((item) => item.status === WorkProjectStatus.Suspended).length,
+);
+
+async function fetchProjects() {
+  loading.value = true;
+  try {
+    const result = await projectApi.getPage({
+      keyword: keyword.value || undefined,
+      page: 1,
+      pageSize: 100,
+      status: status.value,
+    });
+    projects.value = result.items;
+  } catch {
+    message.error('加载项目失败');
+  } finally {
+    loading.value = false;
+  }
+}
+
+function resetFilters() {
+  keyword.value = '';
+  status.value = undefined;
+  void fetchProjects();
+}
+
+function getProgress(project: Record<string, any>) {
+  if (project.status === WorkProjectStatus.Completed) return 100;
+  if (project.status === WorkProjectStatus.Archived) return 100;
+  if (project.status === WorkProjectStatus.Suspended) return 0;
+  if (!project.startDate || !project.endDate) return 0;
+
+  const start = new Date(project.startDate).getTime();
+  const end = new Date(project.endDate).getTime();
+  const now = Date.now();
+  if (Number.isNaN(start) || Number.isNaN(end) || end <= start) return 0;
+  return Math.min(99, Math.max(0, Math.round(((now - start) / (end - start)) * 100)));
+}
+
+onMounted(() => {
+  void fetchProjects();
+});
 </script>
 
 <template>
   <Page description="管理实施项目、跟踪进度和协调资源" title="项目看板">
-    <Alert
-      class="mb-4"
-      message="功能开发中"
-      description="后端API正在开发中，当前为模拟数据"
-      show-icon
-      type="warning"
-    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
         <Card>
@@ -84,35 +110,66 @@ const statusColors: Record<string, string> = {
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card>
-          <Statistic title="进行中" :value="1" />
+          <Statistic title="进行中" :value="activeCount" />
         </Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card>
-          <Statistic title="待开始" :value="1" />
+          <Statistic title="已暂停" :value="suspendedCount" />
         </Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card>
-          <Statistic title="已完成" :value="1" />
+          <Statistic title="已完成" :value="completedCount" />
         </Card>
       </Col>
     </Row>
 
     <Card title="项目列表">
       <template #extra>
-        <Button type="primary">新建项目</Button>
+        <Space>
+          <Input
+            v-model:value="keyword"
+            allow-clear
+            placeholder="项目名称/编号"
+            style="width: 180px"
+            @press-enter="fetchProjects"
+          />
+          <Select
+            v-model:value="status"
+            :options="statusOptions"
+            allow-clear
+            placeholder="状态"
+            style="width: 120px"
+          />
+          <Button type="primary" @click="fetchProjects">查询</Button>
+          <Button @click="resetFilters">重置</Button>
+        </Space>
       </template>
       <Table
         :columns="columns"
         :data-source="projects"
         :loading="loading"
+        :pagination="{ pageSize: 10, showSizeChanger: true }"
+        :scroll="{ x: 980 }"
         row-key="id"
       >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'status'">
-            <Tag :color="statusColors[record.status] || 'default'">
-              {{ record.status }}
+        <template #bodyCell="{ column, record, text }">
+          <template v-if="column.key === 'projectName'">
+            <div class="font-medium">{{ record.projectName }}</div>
+            <div v-if="record.description" class="text-text-secondary line-clamp-1 text-xs">
+              {{ record.description }}
+            </div>
+          </template>
+          <template v-else-if="column.key === 'customerName'">
+            {{ text || '-' }}
+          </template>
+          <template v-else-if="column.key === 'projectType'">
+            {{ WorkProjectTypeLabel[text as WorkProjectType] }}
+          </template>
+          <template v-else-if="column.key === 'status'">
+            <Tag :color="WorkProjectStatusColor[text as WorkProjectStatus]">
+              {{ WorkProjectStatusLabel[text as WorkProjectStatus] }}
             </Tag>
           </template>
           <template v-else-if="column.key === 'progress'">
@@ -120,10 +177,10 @@ const statusColors: Record<string, string> = {
               <div class="h-2 w-20 rounded-full bg-gray-200">
                 <div
                   class="h-full rounded-full bg-blue-500"
-                  :style="{ width: `${record.progress}%` }"
+                  :style="{ width: `${getProgress(record)}%` }"
                 ></div>
               </div>
-              <span>{{ record.progress }}%</span>
+              <span>{{ getProgress(record) }}%</span>
             </div>
           </template>
         </template>

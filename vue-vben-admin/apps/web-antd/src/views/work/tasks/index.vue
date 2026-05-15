@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
 
@@ -25,6 +26,16 @@ import { taskApi, type CreateTaskItemInput, type TaskItem, type TaskItemQuery, t
 import { projectApi } from '#/api/work/project';
 import type { WorkProject } from '#/api/work/project';
 
+const props = withDefaults(
+  defineProps<{
+    context?: 'default' | 'implementation';
+  }>(),
+  {
+    context: 'default',
+  },
+);
+
+const router = useRouter();
 const loading = ref(false);
 const formOpen = ref(false);
 const editingId = ref<null | string>(null);
@@ -103,6 +114,24 @@ const summaryText = computed(() => {
   return `共 ${totalCount} 条任务，已完成 ${completedCount} 条`;
 });
 
+const pageTitle = computed(() =>
+  props.context === 'implementation' ? '实施任务' : '工作任务',
+);
+
+const pageDescription = computed(() =>
+  props.context === 'implementation'
+    ? '跟踪实施项目任务、交付节点和日常推进事项'
+    : '管理和追踪工作任务',
+);
+
+const createButtonText = computed(() =>
+  props.context === 'implementation' ? '新建实施任务' : '新建任务',
+);
+
+const emptyProjectText = computed(() =>
+  props.context === 'implementation' ? '未关联实施项目' : '未关联项目',
+);
+
 async function fetchProjects() {
   try {
     const res = await projectApi.getPage({ page: 1, pageSize: 100 });
@@ -163,6 +192,10 @@ function openCreate() {
     remark: '',
   });
   formOpen.value = true;
+}
+
+function goToWeeklyReport() {
+  void router.push('/implementation/weekly-report');
 }
 
 function openEdit(record: Record<string, any>) {
@@ -244,7 +277,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <Page description="管理和追踪工作任务" title="工作任务">
+  <Page :description="pageDescription" :title="pageTitle">
     <div class="space-y-4">
       <Card>
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -267,7 +300,10 @@ onMounted(() => {
           </Form>
           <div class="flex items-center gap-3">
             <span class="text-gray-500 text-sm">{{ summaryText }}</span>
-            <Button type="primary" @click="openCreate">新建任务</Button>
+            <Button v-if="props.context === 'implementation'" @click="goToWeeklyReport">
+              查看实施周报
+            </Button>
+            <Button type="primary" @click="openCreate">{{ createButtonText }}</Button>
           </div>
         </div>
       </Card>
@@ -286,6 +322,9 @@ onMounted(() => {
             <template v-if="column.key === 'title'">
               <div>
                 <div class="font-medium">{{ record.title }}</div>
+                <div class="text-gray-400 text-xs">
+                  {{ record.projectName || emptyProjectText }}
+                </div>
                 <div v-if="record.description" class="text-gray-400 text-xs">{{ record.description }}</div>
               </div>
             </template>
@@ -315,7 +354,7 @@ onMounted(() => {
 
     <Modal
       v-model:open="formOpen"
-      :title="editingId ? '编辑任务' : '新建任务'"
+      :title="editingId ? '编辑任务' : createButtonText"
       width="600px"
       @ok="handleSave"
     >
