@@ -10,6 +10,7 @@ public class WorkProjectDto
     public string? ProjectCode { get; set; }
     public WorkProjectType ProjectType { get; set; }
     public string? CustomerName { get; set; }
+    public string? Location { get; set; }
     public string? Description { get; set; }
     public DateOnly? StartDate { get; set; }
     public DateOnly? EndDate { get; set; }
@@ -25,6 +26,7 @@ public class CreateWorkProjectDto
     public string? ProjectCode { get; set; }
     public WorkProjectType ProjectType { get; set; } = WorkProjectType.Internal;
     public string? CustomerName { get; set; }
+    public string? Location { get; set; }
     public string? Description { get; set; }
     public DateOnly? StartDate { get; set; }
     public DateOnly? EndDate { get; set; }

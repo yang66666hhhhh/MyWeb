@@ -27,6 +27,19 @@ public class ImplLogController(IImplLogService implLogService) : BaseApiControll
         return Ok(ApiResult<PageResult<ImplLogDto>>.Success(result));
     }
 
+    [HttpGet("summary")]
+    public async Task<ActionResult<ApiResult<ImplLogSummaryDto>>> GetSummary(
+        [FromQuery] ImplLogQueryDto query,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+
+        var result = await implLogService.GetSummaryAsync(query, userId.Value, cancellationToken);
+        return Ok(ApiResult<ImplLogSummaryDto>.Success(result));
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ApiResult<ImplLogDto>>> GetById(Guid id, CancellationToken cancellationToken)
     {

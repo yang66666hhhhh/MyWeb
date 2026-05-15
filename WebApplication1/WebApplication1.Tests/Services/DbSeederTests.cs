@@ -63,6 +63,19 @@ public class DbSeederTests : IDisposable
         Assert.Empty(orphanedParents);
     }
 
+    [Fact]
+    public async Task SeedAsync_ShouldCreateWorkProjectsWithLocation()
+    {
+        await DbSeeder.SeedAsync(_context);
+
+        var projects = await _context.WorkProjects
+            .AsNoTracking()
+            .ToListAsync();
+
+        Assert.NotEmpty(projects);
+        Assert.All(projects, project => Assert.False(string.IsNullOrWhiteSpace(project.Location)));
+    }
+
     private static void AssertMenuWithChildren(
         List<WebApplication1.Features.Auth.Entities.RoleMenu> menus,
         string parentPath,

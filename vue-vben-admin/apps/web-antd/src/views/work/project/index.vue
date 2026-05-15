@@ -44,8 +44,10 @@ const editingId = ref<null | string>(null);
 const selectedItem = ref<WorkProject | null>(null);
 
 const formState = ref({
+  customerName: '',
   description: '',
   endDate: '',
+  location: '',
   projectCode: '',
   projectName: '',
   projectType: 0,
@@ -71,6 +73,8 @@ const typeOptions = [
 
 const columns: any[] = [
   { dataIndex: 'projectName', key: 'projectName', title: '项目名称', minWidth: 180 },
+  { dataIndex: 'customerName', key: 'customerName', title: '客户', width: 120 },
+  { dataIndex: 'location', key: 'location', title: '项目地', width: 120 },
   { dataIndex: 'projectCode', key: 'projectCode', title: '项目编号', width: 120 },
   { dataIndex: 'projectType', key: 'projectType', title: '项目类型', width: 100 },
   { dataIndex: 'status', key: 'status', title: '状态', width: 90 },
@@ -90,8 +94,10 @@ const { changePage, items, load, loading, query, resetQuery, search, total } = u
 function openCreate() {
   editingId.value = null;
   formState.value = {
+    customerName: '',
     description: '',
     endDate: '',
+    location: '',
     projectCode: '',
     projectName: '',
     projectType: 0,
@@ -108,8 +114,10 @@ async function openEdit(record: Record<string, any>) {
     const detail = await getWorkProjectApi(project.id);
     if (detail) {
       formState.value = {
+        customerName: detail.customerName || '',
         description: detail.description || '',
         endDate: detail.endDate || '',
+        location: detail.location || '',
         projectCode: detail.projectCode || '',
         projectName: detail.projectName,
         projectType: detail.projectType ?? 0,
@@ -251,6 +259,12 @@ onMounted(() => {
           <Input v-model:value="formState.projectName" placeholder="项目名称" />
         </Form.Item>
         <div class="grid grid-cols-2 gap-4">
+          <Form.Item label="客户名称">
+            <Input v-model:value="formState.customerName" placeholder="如：客户A" />
+          </Form.Item>
+          <Form.Item label="项目地">
+            <Input v-model:value="formState.location" placeholder="如：惠州" />
+          </Form.Item>
           <Form.Item label="项目编号">
             <Input v-model:value="formState.projectCode" placeholder="项目编号" />
           </Form.Item>
@@ -277,6 +291,8 @@ onMounted(() => {
       <div v-if="selectedItem">
         <Descriptions bordered :column="1" size="small">
           <Descriptions.Item label="项目名称">{{ selectedItem.projectName }}</Descriptions.Item>
+          <Descriptions.Item label="客户名称">{{ selectedItem.customerName || '-' }}</Descriptions.Item>
+          <Descriptions.Item label="项目地">{{ selectedItem.location || '-' }}</Descriptions.Item>
           <Descriptions.Item label="项目编号">{{ selectedItem.projectCode || '-' }}</Descriptions.Item>
           <Descriptions.Item label="项目类型">{{ WorkProjectTypeLabel[selectedItem.projectType as WorkProjectType] }}</Descriptions.Item>
           <Descriptions.Item label="状态">

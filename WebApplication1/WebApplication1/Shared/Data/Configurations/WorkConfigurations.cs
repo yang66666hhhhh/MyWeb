@@ -20,6 +20,7 @@ public class WorkProjectConfiguration : IEntityTypeConfiguration<WorkProject>
         entity.Property(x => x.ProjectCode).HasMaxLength(50);
         entity.Property(x => x.ProjectType).HasConversion<int>().HasDefaultValue(WorkProjectType.Internal);
         entity.Property(x => x.CustomerName).HasMaxLength(100);
+        entity.Property(x => x.Location).HasMaxLength(100);
         entity.Property(x => x.Description).HasMaxLength(1000);
         entity.Property(x => x.StartDate).HasColumnType("date").HasConversion(dateOnlyConverter);
         entity.Property(x => x.EndDate).HasColumnType("date").HasConversion(dateOnlyConverter);

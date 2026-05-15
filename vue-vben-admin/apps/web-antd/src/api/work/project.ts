@@ -16,6 +16,7 @@ export interface CreateWorkProjectInput {
   projectCode?: string;
   projectType?: number;
   customerName?: string;
+  location?: string;
   description?: string;
   startDate?: string;
   endDate?: string;
@@ -26,6 +27,7 @@ export interface UpdateWorkProjectInput {
   projectCode?: string;
   projectType?: number;
   customerName?: string;
+  location?: string;
   description?: string;
   startDate?: string;
   endDate?: string;

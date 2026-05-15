@@ -24,7 +24,10 @@ public class WorkProjectService : IWorkProjectService
 
         if (!string.IsNullOrWhiteSpace(query.Keyword))
         {
-            q = q.Where(x => x.ProjectName.Contains(query.Keyword) || (x.ProjectCode != null && x.ProjectCode.Contains(query.Keyword)));
+            q = q.Where(x =>
+                x.ProjectName.Contains(query.Keyword) ||
+                (x.ProjectCode != null && x.ProjectCode.Contains(query.Keyword)) ||
+                (x.Location != null && x.Location.Contains(query.Keyword)));
         }
 
         if (query.Status.HasValue)
@@ -45,6 +48,7 @@ public class WorkProjectService : IWorkProjectService
                 ProjectCode = x.ProjectCode,
                 ProjectType = x.ProjectType,
                 CustomerName = x.CustomerName,
+                Location = x.Location,
                 Description = x.Description,
                 StartDate = x.StartDate,
                 EndDate = x.EndDate,
@@ -69,6 +73,7 @@ public class WorkProjectService : IWorkProjectService
             ProjectCode = entity.ProjectCode,
             ProjectType = entity.ProjectType,
             CustomerName = entity.CustomerName,
+            Location = entity.Location,
             Description = entity.Description,
             StartDate = entity.StartDate,
             EndDate = entity.EndDate,
@@ -87,6 +92,7 @@ public class WorkProjectService : IWorkProjectService
             ProjectCode = input.ProjectCode,
             ProjectType = input.ProjectType,
             CustomerName = input.CustomerName,
+            Location = input.Location,
             Description = input.Description,
             StartDate = input.StartDate,
             EndDate = input.EndDate,
@@ -103,6 +109,7 @@ public class WorkProjectService : IWorkProjectService
             ProjectCode = entity.ProjectCode,
             ProjectType = entity.ProjectType,
             CustomerName = entity.CustomerName,
+            Location = entity.Location,
             Description = entity.Description,
             StartDate = entity.StartDate,
             EndDate = entity.EndDate,
@@ -122,6 +129,7 @@ public class WorkProjectService : IWorkProjectService
         entity.ProjectCode = input.ProjectCode;
         entity.ProjectType = input.ProjectType;
         entity.CustomerName = input.CustomerName;
+        entity.Location = input.Location;
         entity.Description = input.Description;
         entity.StartDate = input.StartDate;
         entity.EndDate = input.EndDate;
@@ -137,6 +145,7 @@ public class WorkProjectService : IWorkProjectService
             ProjectCode = entity.ProjectCode,
             ProjectType = entity.ProjectType,
             CustomerName = entity.CustomerName,
+            Location = entity.Location,
             Description = entity.Description,
             StartDate = entity.StartDate,
             EndDate = entity.EndDate,

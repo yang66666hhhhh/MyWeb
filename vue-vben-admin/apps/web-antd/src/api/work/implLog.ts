@@ -36,6 +36,13 @@ export interface ImplLogQuery {
   pageSize?: number;
 }
 
+export interface ImplLogSummary {
+  totalCount: number;
+  totalHours: number;
+  uniqueEquipmentCount: number;
+  uniqueTaskTypeCount: number;
+}
+
 export interface CreateImplLogRequest {
   workDate: string;
   title: string;
@@ -58,6 +65,10 @@ export interface UpdateImplLogRequest {
 
 export function getImplLogsApi(query: ImplLogQuery) {
   return requestClient.get<{ items: ImplLog[]; total: number }>('/work/impl-logs', { params: query });
+}
+
+export function getImplLogSummaryApi(query: ImplLogQuery) {
+  return requestClient.get<ImplLogSummary>('/work/impl-logs/summary', { params: query });
 }
 
 export function getImplLogByIdApi(id: string) {

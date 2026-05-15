@@ -11,6 +11,7 @@ import {
   Row,
   Space,
   Statistic,
+  type TableColumnsType,
   Table,
   Tag,
   message,
@@ -28,6 +29,7 @@ interface CustomerProjectSummary {
   completedProjects: number;
   customerName: string;
   latestProject?: WorkProject;
+  locations: string[];
   projectCount: number;
   suspendedProjects: number;
 }
@@ -36,8 +38,9 @@ const loading = ref(false);
 const keyword = ref('');
 const projects = ref<WorkProject[]>([]);
 
-const columns: any[] = [
+const columns: TableColumnsType<CustomerProjectSummary> = [
   { title: '客户名称', dataIndex: 'customerName', key: 'customerName', minWidth: 180 },
+  { title: '项目地', dataIndex: 'locations', key: 'locations', width: 220 },
   { title: '项目数', dataIndex: 'projectCount', key: 'projectCount', width: 100 },
   { title: '进行中', dataIndex: 'activeProjects', key: 'activeProjects', width: 100 },
   { title: '已完成', dataIndex: 'completedProjects', key: 'completedProjects', width: 100 },
@@ -65,29 +68,60 @@ const customers = computed<CustomerProjectSummary[]>(() => {
         completedProjects: items.filter((item) => item.status === WorkProjectStatus.Completed).length,
         customerName,
         latestProject,
+        locations: [...new Set(items.map((item) => item.location?.trim()).filter((item): item is string => !!item))],
         projectCount: items.length,
         suspendedProjects: items.filter((item) => item.status === WorkProjectStatus.Suspended).length,
       };
     })
-    .filter((item) => !keyword.value || item.customerName.includes(keyword.value))
+    .filter((item) =>
+      !keyword.value ||
+      item.customerName.includes(keyword.value) ||
+      item.locations.some((location) => location.includes(keyword.value)),
+    )
     .sort((a, b) => b.projectCount - a.projectCount || a.customerName.localeCompare(b.customerName));
 });
 
 const activeCustomerCount = computed(
   () => customers.value.filter((item) => item.activeProjects > 0).length,
 );
-const totalProjectCount = computed(
-  () => customers.value.reduce((sum, item) => sum + item.projectCount, 0),
-);
 const completedProjectCount = computed(
   () => customers.value.reduce((sum, item) => sum + item.completedProjects, 0),
 );
+const totalLocationCount = computed(
+  () => new Set(customers.value.flatMap((item) => item.locations)).size,
+);
+
+function formatLocations(locations: string[]) {
+  if (locations.length === 0) {
+    return '-';
+  }
+
+  if (locations.length <= 2) {
+    return locations.join(' / ');
+  }
+
+  return `${locations.slice(0, 2).join(' / ')} 等 ${locations.length} 地`;
+}
 
 async function fetchProjects() {
   loading.value = true;
   try {
-    const result = await projectApi.getPage({ page: 1, pageSize: 200 });
-    projects.value = result.items;
+    const allProjects: WorkProject[] = [];
+    let page = 1;
+    const pageSize = 100;
+
+    while (true) {
+      const result = await projectApi.getPage({ page, pageSize });
+      allProjects.push(...result.items);
+
+      if (allProjects.length >= result.total || result.items.length < pageSize) {
+        break;
+      }
+
+      page += 1;
+    }
+
+    projects.value = allProjects;
   } catch {
     message.error('加载客户项目失败');
   } finally {
@@ -119,7 +153,7 @@ onMounted(() => {
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card>
-          <Statistic title="项目总数" :value="totalProjectCount" />
+          <Statistic title="覆盖项目地" :value="totalLocationCount" />
         </Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
@@ -135,7 +169,7 @@ onMounted(() => {
           <Input
             v-model:value="keyword"
             allow-clear
-            placeholder="客户名称"
+            placeholder="客户名称/项目地"
             style="width: 180px"
           />
           <Button @click="resetFilters">重置</Button>
@@ -151,9 +185,15 @@ onMounted(() => {
         row-key="customerName"
       >
         <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'latestProject'">
+          <template v-if="column.key === 'locations'">
+            <span>{{ formatLocations(record.locations) }}</span>
+          </template>
+          <template v-else-if="column.key === 'latestProject'">
             <div v-if="record.latestProject">
               <div class="font-medium">{{ record.latestProject.projectName }}</div>
+              <div v-if="record.latestProject.location" class="text-text-secondary text-xs">
+                {{ record.latestProject.location }}
+              </div>
               <Tag :color="WorkProjectStatusColor[record.latestProject.status as WorkProjectStatus]">
                 {{ WorkProjectStatusLabel[record.latestProject.status as WorkProjectStatus] }}
               </Tag>

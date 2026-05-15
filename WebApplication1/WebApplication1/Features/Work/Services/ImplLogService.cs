@@ -10,6 +10,7 @@ namespace WebApplication1.Features.Work.Services;
 public interface IImplLogService
 {
     Task<PageResult<ImplLogDto>> GetPageAsync(ImplLogQueryDto query, Guid userId, CancellationToken cancellationToken = default);
+    Task<ImplLogSummaryDto> GetSummaryAsync(ImplLogQueryDto query, Guid userId, CancellationToken cancellationToken = default);
     Task<ImplLogDto?> GetByIdAsync(Guid id, Guid userId, CancellationToken cancellationToken = default);
     Task<ImplLogDto> CreateAsync(CreateImplLogDto input, Guid userId, CancellationToken cancellationToken = default);
     Task<ImplLogDto?> UpdateAsync(Guid id, UpdateImplLogDto input, Guid userId, CancellationToken cancellationToken = default);
@@ -20,23 +21,7 @@ public class ImplLogService(AppDbContext context) : IImplLogService
 {
     public async Task<PageResult<ImplLogDto>> GetPageAsync(ImplLogQueryDto query, Guid userId, CancellationToken cancellationToken = default)
     {
-        var q = context.ImplLogs
-            .AsNoTracking()
-            .Where(x => x.UserId == userId)
-            .Include(x => x.Project)
-            .Include(x => x.Template)
-            .AsQueryable();
-
-        if (query.WorkDate.HasValue)
-            q = q.Where(x => x.WorkDate == query.WorkDate.Value);
-        if (query.StartDate.HasValue)
-            q = q.Where(x => x.WorkDate >= query.StartDate.Value);
-        if (query.EndDate.HasValue)
-            q = q.Where(x => x.WorkDate <= query.EndDate.Value);
-        if (!string.IsNullOrWhiteSpace(query.Keyword))
-            q = q.Where(x => x.Title.Contains(query.Keyword) || (x.ProjectName != null && x.ProjectName.Contains(query.Keyword)));
-        if (query.TemplateId.HasValue)
-            q = q.Where(x => x.TemplateId == query.TemplateId.Value);
+        var q = BuildQuery(query, userId);
 
         var total = await q.CountAsync(cancellationToken);
         var items = await q
@@ -47,6 +32,30 @@ public class ImplLogService(AppDbContext context) : IImplLogService
             .ToListAsync(cancellationToken);
 
         return PageResult<ImplLogDto>.Create(items.Select(MapToDto).ToList(), total, query.Page, query.PageSize);
+    }
+
+    public async Task<ImplLogSummaryDto> GetSummaryAsync(ImplLogQueryDto query, Guid userId, CancellationToken cancellationToken = default)
+    {
+        var q = BuildQuery(query, userId);
+        var items = await q.ToListAsync(cancellationToken);
+
+        var equipment = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var taskTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var item in items)
+        {
+            var extraData = ParseExtraData(item.ExtraData);
+            AppendUniqueValues(extraData, "equipment", equipment);
+            AppendUniqueValues(extraData, "taskTypes", taskTypes);
+        }
+
+        return new ImplLogSummaryDto
+        {
+            TotalCount = items.Count,
+            TotalHours = items.Sum(x => x.TotalHours),
+            UniqueEquipmentCount = equipment.Count,
+            UniqueTaskTypeCount = taskTypes.Count,
+        };
     }
 
     public async Task<ImplLogDto?> GetByIdAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
@@ -162,6 +171,32 @@ public class ImplLogService(AppDbContext context) : IImplLogService
         };
     }
 
+    private IQueryable<ImplLog> BuildQuery(ImplLogQueryDto query, Guid userId)
+    {
+        var q = context.ImplLogs
+            .AsNoTracking()
+            .Where(x => x.UserId == userId)
+            .Include(x => x.Project)
+            .Include(x => x.Template)
+            .AsQueryable();
+
+        if (query.WorkDate.HasValue)
+            q = q.Where(x => x.WorkDate == query.WorkDate.Value);
+        if (query.StartDate.HasValue)
+            q = q.Where(x => x.WorkDate >= query.StartDate.Value);
+        if (query.EndDate.HasValue)
+            q = q.Where(x => x.WorkDate <= query.EndDate.Value);
+        if (!string.IsNullOrWhiteSpace(query.Keyword))
+            q = q.Where(x =>
+                x.Title.Contains(query.Keyword) ||
+                (x.ProjectName != null && x.ProjectName.Contains(query.Keyword)) ||
+                (x.ExtraData != null && x.ExtraData.Contains(query.Keyword)));
+        if (query.TemplateId.HasValue)
+            q = q.Where(x => x.TemplateId == query.TemplateId.Value);
+
+        return q;
+    }
+
     private static string? SerializeExtraData(JsonElement? extraData)
     {
         if (!extraData.HasValue)
@@ -190,6 +225,28 @@ public class ImplLogService(AppDbContext context) : IImplLogService
         catch (JsonException)
         {
             return null;
+        }
+    }
+
+    private static void AppendUniqueValues(JsonElement? extraData, string propertyName, HashSet<string> values)
+    {
+        if (!extraData.HasValue || extraData.Value.ValueKind != JsonValueKind.Object)
+        {
+            return;
+        }
+
+        if (!extraData.Value.TryGetProperty(propertyName, out var property) || property.ValueKind != JsonValueKind.Array)
+        {
+            return;
+        }
+
+        foreach (var item in property.EnumerateArray())
+        {
+            var value = item.GetString();
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                values.Add(value);
+            }
         }
     }
 }

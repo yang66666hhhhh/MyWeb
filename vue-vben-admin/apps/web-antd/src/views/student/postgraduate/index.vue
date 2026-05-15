@@ -1,182 +1,195 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
 import {
-  Alert,
   Button,
   Card,
   Col,
+  Empty,
   Progress,
   Row,
   Statistic,
+  type TableColumnsType,
   Table,
   Tag,
-  Timeline,
+  message,
 } from 'ant-design-vue';
 
+import { getExamDashboardApi, type ExamDashboard, type PostgraduateTask } from '#/api/growth/postgraduate';
+
 const loading = ref(false);
+const dashboard = ref<ExamDashboard>({
+  materialCount: 0,
+  mistakeCount: 0,
+  recentRecords: [],
+  reviewTaskCount: 0,
+  subjects: [],
+  todayTasks: [],
+  weeklyHours: 0,
+});
 
-const subjects = ref([
-  {
-    id: '1',
-    name: '政治',
-    progress: 45,
-    status: '进行中',
-    nextReview: '2024-01-20',
-  },
-  {
-    id: '2',
-    name: '英语',
-    progress: 60,
-    status: '进行中',
-    nextReview: '2024-01-18',
-  },
-  {
-    id: '3',
-    name: '数学',
-    progress: 35,
-    status: '进行中',
-    nextReview: '2024-01-22',
-  },
-  {
-    id: '4',
-    name: '专业课',
-    progress: 50,
-    status: '进行中',
-    nextReview: '2024-01-25',
-  },
-]);
-
-const milestones = [
-  {
-    date: '2024-03-01',
-    title: '基础阶段结束',
-    description: '完成所有科目的基础知识学习',
-  },
-  {
-    date: '2024-06-01',
-    title: '强化阶段结束',
-    description: '完成重点难点的深入学习',
-  },
-  {
-    date: '2024-09-01',
-    title: '冲刺阶段开始',
-    description: '开始模拟考试和真题训练',
-  },
-  {
-    date: '2024-12-01',
-    title: '考试',
-    description: '研究生入学考试',
-  },
-];
-
-const columns = [
-  { title: '科目', dataIndex: 'name', key: 'name' },
-  { title: '进度', dataIndex: 'progress', key: 'progress' },
-  { title: '状态', dataIndex: 'status', key: 'status' },
-  { title: '下次复习', dataIndex: 'nextReview', key: 'nextReview' },
-];
-
-const subjectColors: Record<string, string> = {
-  '政治': 'red',
-  '英语': 'blue',
-  '数学': 'green',
-  '专业课': 'purple',
+const statusLabels: Record<number, string> = {
+  0: '待开始',
+  1: '进行中',
+  2: '已完成',
+  3: '已取消',
 };
+
+const statusColors: Record<number, string> = {
+  0: 'default',
+  1: 'processing',
+  2: 'success',
+  3: 'error',
+};
+
+const priorityLabels: Record<number, string> = {
+  1: '低',
+  2: '中',
+  3: '高',
+  4: '紧急',
+};
+
+const typeLabels: Record<number, string> = {
+  0: '学习任务',
+  1: '复习任务',
+  2: '冲刺训练',
+};
+
+const taskColumns: TableColumnsType<PostgraduateTask> = [
+  { title: '任务标题', dataIndex: 'title', key: 'title', minWidth: 220 },
+  { title: '类型', dataIndex: 'type', key: 'type', width: 110 },
+  { title: '优先级', dataIndex: 'priority', key: 'priority', width: 100 },
+  { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
+  { title: '截止日期', dataIndex: 'dueDate', key: 'dueDate', width: 120 },
+];
+
+const averageProgress = computed(() => {
+  if (dashboard.value.subjects.length === 0) {
+    return 0;
+  }
+  return Math.round(
+    dashboard.value.subjects.reduce((sum, item) => sum + item.progress, 0) /
+      dashboard.value.subjects.length,
+  );
+});
+
+async function fetchDashboard() {
+  loading.value = true;
+  try {
+    dashboard.value = await getExamDashboardApi();
+  } catch {
+    message.error('加载考研备考面板失败');
+  } finally {
+    loading.value = false;
+  }
+}
+
+onMounted(() => {
+  void fetchDashboard();
+});
 </script>
 
 <template>
   <Page description="备考研究生入学考试，跟踪各科目复习进度" title="考研备考">
-    <Alert
-      class="mb-4"
-      message="功能开发中"
-      description="后端API正在开发中，当前为模拟数据"
-      show-icon
-      type="warning"
-    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
-        <Card>
-          <Statistic title="考试科目" :value="4" />
-        </Card>
+        <Card><Statistic title="今日任务" :value="dashboard.todayTasks.length" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card>
-          <Statistic title="平均进度" :value="48" suffix="%" />
-        </Card>
+        <Card><Statistic title="待复习错题" :value="dashboard.mistakeCount" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card>
-          <Statistic title="距离考试" :value="320" suffix="天" />
-        </Card>
+        <Card><Statistic title="资料总数" :value="dashboard.materialCount" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card>
-          <Statistic title="复习阶段" value="基础" />
-        </Card>
+        <Card><Statistic title="平均进度" :value="averageProgress" suffix="%" /></Card>
       </Col>
     </Row>
 
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="12" :xs="24">
         <Card title="科目进度">
-          <div v-for="subject in subjects" :key="subject.id" class="mb-4">
+          <div
+            v-for="subject in dashboard.subjects"
+            :key="subject.id"
+            class="mb-4 last:mb-0"
+          >
             <div class="mb-2 flex items-center justify-between">
-              <Tag :color="subjectColors[subject.name] || 'default'">
-                {{ subject.name }}
-              </Tag>
+              <div class="flex items-center gap-2">
+                <Tag :color="subject.color || 'blue'">{{ subject.name }}</Tag>
+                <span class="text-text-secondary text-xs">
+                  本周 {{ subject.weeklyHours }}h / 目标 {{ subject.targetHours }}h
+                </span>
+              </div>
               <span>{{ subject.progress }}%</span>
             </div>
             <Progress :percent="subject.progress" :show-info="false" />
           </div>
+          <Empty v-if="dashboard.subjects.length === 0" description="暂无科目进度数据" />
         </Card>
       </Col>
+
       <Col :lg="12" :xs="24">
-        <Card title="备考里程碑">
-          <Timeline>
-            <Timeline.Item v-for="milestone in milestones" :key="milestone.date">
-              <div>
-                <div class="font-bold">{{ milestone.title }}</div>
-                <div class="text-gray-500">{{ milestone.date }}</div>
-                <div>{{ milestone.description }}</div>
+        <Card title="最近学习记录">
+          <div v-if="dashboard.recentRecords.length === 0" class="py-6">
+            <Empty description="暂无学习记录" />
+          </div>
+          <div v-else class="space-y-3">
+            <div
+              v-for="record in dashboard.recentRecords"
+              :key="record.id"
+              class="rounded border border-gray-200 p-3"
+            >
+              <div class="mb-1 flex items-center justify-between">
+                <Tag color="cyan">{{ record.subject }}</Tag>
+                <span class="text-text-secondary text-xs">{{ record.recordDate }}</span>
               </div>
-            </Timeline.Item>
-          </Timeline>
+              <div class="mb-1 text-sm">{{ record.summary }}</div>
+              <div class="text-text-secondary text-xs">{{ record.durationMinutes }} 分钟</div>
+            </div>
+          </div>
         </Card>
       </Col>
     </Row>
 
-    <Card title="学习计划">
+    <Card title="今日任务清单">
       <template #extra>
-        <Button type="primary">制定计划</Button>
+        <Button :loading="loading" type="primary" @click="fetchDashboard">刷新面板</Button>
       </template>
       <Table
-        :columns="columns"
-        :data-source="subjects"
+        :columns="taskColumns"
+        :data-source="dashboard.todayTasks"
         :loading="loading"
+        :pagination="false"
+        :scroll="{ x: 860 }"
         row-key="id"
       >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'name'">
-            <Tag :color="subjectColors[record.name] || 'default'">
-              {{ record.name }}
+        <template #bodyCell="{ column, record, text }">
+          <template v-if="column.key === 'title'">
+            <div class="font-medium">{{ record.title }}</div>
+            <div v-if="record.description" class="text-text-secondary line-clamp-1 text-xs">
+              {{ record.description }}
+            </div>
+          </template>
+          <template v-else-if="column.key === 'type'">
+            <Tag color="cyan">{{ typeLabels[Number(text)] || '学习任务' }}</Tag>
+          </template>
+          <template v-else-if="column.key === 'priority'">
+            <Tag color="blue">{{ priorityLabels[Number(text)] || '中' }}</Tag>
+          </template>
+          <template v-else-if="column.key === 'status'">
+            <Tag :color="statusColors[Number(text)] || 'default'">
+              {{ statusLabels[Number(text)] || '待开始' }}
             </Tag>
           </template>
-          <template v-else-if="column.key === 'progress'">
-            <div class="flex items-center gap-2">
-              <div class="h-2 w-20 rounded-full bg-gray-200">
-                <div
-                  class="h-full rounded-full bg-blue-500"
-                  :style="{ width: `${record.progress}%` }"
-                ></div>
-              </div>
-              <span>{{ record.progress }}%</span>
-            </div>
+          <template v-else-if="column.key === 'dueDate'">
+            <span>{{ text || '-' }}</span>
           </template>
         </template>
       </Table>
+      <Empty v-if="dashboard.todayTasks.length === 0 && !loading" description="当前没有到期或待办的任务" />
     </Card>
   </Page>
 </template>

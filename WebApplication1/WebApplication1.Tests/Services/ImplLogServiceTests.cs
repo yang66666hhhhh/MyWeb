@@ -154,4 +154,69 @@ public class ImplLogServiceTests : IDisposable
         Assert.Equal("新项目", result.ProjectName);
         Assert.Equal("更新后的日志", result.Title);
     }
+
+    [Fact]
+    public async Task GetSummaryAsync_ShouldAggregateFilteredResult()
+    {
+        var userId = Guid.NewGuid();
+        using var firstExtraData = JsonDocument.Parse("""
+            {
+              "location": "惠州",
+              "equipment": ["PLC", "扫码枪"],
+              "taskTypes": ["调试", "巡检"]
+            }
+            """);
+        using var secondExtraData = JsonDocument.Parse("""
+            {
+              "location": "惠州",
+              "equipment": ["PLC", "工控机"],
+              "taskTypes": ["巡检", "交付"]
+            }
+            """);
+
+        _context.ImplLogs.AddRange(
+            new ImplLog
+            {
+                UserId = userId,
+                WorkDate = new DateOnly(2026, 5, 15),
+                WeekDay = "Friday",
+                Title = "现场调试",
+                ProjectName = "实施项目A",
+                TotalHours = 8,
+                ExtraData = firstExtraData.RootElement.GetRawText(),
+            },
+            new ImplLog
+            {
+                UserId = userId,
+                WorkDate = new DateOnly(2026, 5, 16),
+                WeekDay = "Saturday",
+                Title = "交付巡检",
+                ProjectName = "实施项目B",
+                TotalHours = 6,
+                ExtraData = secondExtraData.RootElement.GetRawText(),
+            },
+            new ImplLog
+            {
+                UserId = Guid.NewGuid(),
+                WorkDate = new DateOnly(2026, 5, 16),
+                WeekDay = "Saturday",
+                Title = "其他用户日志",
+                ProjectName = "外部项目",
+                TotalHours = 10,
+                ExtraData = firstExtraData.RootElement.GetRawText(),
+            });
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetSummaryAsync(new ImplLogQueryDto
+        {
+            Keyword = "惠州",
+            StartDate = new DateOnly(2026, 5, 15),
+            EndDate = new DateOnly(2026, 5, 16),
+        }, userId);
+
+        Assert.Equal(2, result.TotalCount);
+        Assert.Equal(14, result.TotalHours);
+        Assert.Equal(3, result.UniqueEquipmentCount);
+        Assert.Equal(3, result.UniqueTaskTypeCount);
+    }
 }

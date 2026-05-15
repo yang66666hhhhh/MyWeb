@@ -12,6 +12,7 @@ import {
   Select,
   Space,
   Statistic,
+  type TableColumnsType,
   Table,
   Tag,
   message,
@@ -39,9 +40,10 @@ const statusOptions = [
   { label: '已归档', value: WorkProjectStatus.Archived },
 ];
 
-const columns: any[] = [
+const columns: TableColumnsType<WorkProject> = [
   { title: '项目名称', dataIndex: 'projectName', key: 'projectName', minWidth: 220 },
   { title: '客户', dataIndex: 'customerName', key: 'customerName', width: 150 },
+  { title: '项目地', dataIndex: 'location', key: 'location', width: 120 },
   { title: '项目类型', dataIndex: 'projectType', key: 'projectType', width: 110 },
   { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
   { title: '进度', key: 'progress', width: 160 },
@@ -55,20 +57,34 @@ const activeCount = computed(
 const completedCount = computed(
   () => projects.value.filter((item) => item.status === WorkProjectStatus.Completed).length,
 );
-const suspendedCount = computed(
-  () => projects.value.filter((item) => item.status === WorkProjectStatus.Suspended).length,
+const locationCount = computed(
+  () => new Set(projects.value.map((item) => item.location?.trim()).filter((item): item is string => !!item)).size,
 );
 
 async function fetchProjects() {
   loading.value = true;
   try {
-    const result = await projectApi.getPage({
-      keyword: keyword.value || undefined,
-      page: 1,
-      pageSize: 100,
-      status: status.value,
-    });
-    projects.value = result.items;
+    const allProjects: WorkProject[] = [];
+    let page = 1;
+    const pageSize = 100;
+
+    while (true) {
+      const result = await projectApi.getPage({
+        keyword: keyword.value || undefined,
+        page,
+        pageSize,
+        status: status.value,
+      });
+      allProjects.push(...result.items);
+
+      if (allProjects.length >= result.total || result.items.length < pageSize) {
+        break;
+      }
+
+      page += 1;
+    }
+
+    projects.value = allProjects;
   } catch {
     message.error('加载项目失败');
   } finally {
@@ -82,7 +98,7 @@ function resetFilters() {
   void fetchProjects();
 }
 
-function getProgress(project: Record<string, any>) {
+function getProgress(project: WorkProject) {
   if (project.status === WorkProjectStatus.Completed) return 100;
   if (project.status === WorkProjectStatus.Archived) return 100;
   if (project.status === WorkProjectStatus.Suspended) return 0;
@@ -93,6 +109,10 @@ function getProgress(project: Record<string, any>) {
   const now = Date.now();
   if (Number.isNaN(start) || Number.isNaN(end) || end <= start) return 0;
   return Math.min(99, Math.max(0, Math.round(((now - start) / (end - start)) * 100)));
+}
+
+function toProject(record: Record<string, any>): WorkProject {
+  return record as WorkProject;
 }
 
 onMounted(() => {
@@ -115,7 +135,7 @@ onMounted(() => {
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card>
-          <Statistic title="已暂停" :value="suspendedCount" />
+          <Statistic title="覆盖项目地" :value="locationCount" />
         </Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
@@ -131,7 +151,7 @@ onMounted(() => {
           <Input
             v-model:value="keyword"
             allow-clear
-            placeholder="项目名称/编号"
+            placeholder="项目名称/编号/项目地"
             style="width: 180px"
             @press-enter="fetchProjects"
           />
@@ -164,6 +184,9 @@ onMounted(() => {
           <template v-else-if="column.key === 'customerName'">
             {{ text || '-' }}
           </template>
+          <template v-else-if="column.key === 'location'">
+            {{ text || '-' }}
+          </template>
           <template v-else-if="column.key === 'projectType'">
             {{ WorkProjectTypeLabel[text as WorkProjectType] }}
           </template>
@@ -177,10 +200,10 @@ onMounted(() => {
               <div class="h-2 w-20 rounded-full bg-gray-200">
                 <div
                   class="h-full rounded-full bg-blue-500"
-                  :style="{ width: `${getProgress(record)}%` }"
+                  :style="{ width: `${getProgress(toProject(record))}%` }"
                 ></div>
               </div>
-              <span>{{ getProgress(record) }}%</span>
+              <span>{{ getProgress(toProject(record)) }}%</span>
             </div>
           </template>
         </template>

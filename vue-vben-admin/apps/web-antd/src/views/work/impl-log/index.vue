@@ -18,6 +18,7 @@ import {
   Select,
   Space,
   Statistic,
+  type TableColumnsType,
   Table,
   Tag,
 } from 'ant-design-vue';
@@ -27,6 +28,7 @@ import {
   createImplLogApi,
   deleteImplLogApi,
   getImplLogsApi,
+  getImplLogSummaryApi,
   getMyWorkLogTemplateApi,
   type ImplLog,
   type ImplLogExtraData,
@@ -37,6 +39,18 @@ import { updateImplLogApi } from '#/api/work/implLog';
 import DynamicFieldForm from '#/components/DynamicForm/DynamicFieldForm.vue';
 
 import type { Dayjs } from 'dayjs';
+
+interface ImplLogTableRow extends ImplLog {
+  extraData: ImplLogExtraData;
+}
+
+interface ImplLogFormState {
+  extraData: ImplLogExtraData;
+  selectedProjectId?: string;
+  title: string;
+  totalHours: number;
+  workDate: string;
+}
 
 const props = withDefaults(
   defineProps<{
@@ -55,18 +69,19 @@ const editingId = ref<string | null>(null);
 const logs = ref<ImplLog[]>([]);
 const totalCount = ref(0);
 const totalHours = ref(0);
-const pageLogs = computed(() =>
+const totalDeviceCount = ref(0);
+const totalTaskTypeCount = ref(0);
+const pageLogs = computed<ImplLogTableRow[]>(() =>
   logs.value.map((log) => ({
     ...log,
     extraData: normalizeExtraData(log.extraData),
   })),
 );
-const deviceCount = computed(() => countUniqueValues(pageLogs.value, 'equipment'));
-const taskTypeCount = computed(() => countUniqueValues(pageLogs.value, 'taskTypes'));
 
 const queryParams = ref({
   page: 1,
   pageSize: 20,
+  keyword: '',
   startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
   endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
 });
@@ -78,16 +93,17 @@ const workDateValue = computed(() =>
   formState.value.workDate ? dayjs(formState.value.workDate) : undefined,
 );
 
-const formState = ref({
+const formState = ref<ImplLogFormState>({
   workDate: dayjs().format('YYYY-MM-DD'),
   title: '',
   selectedProjectId: undefined as string | undefined,
-  projectName: '',
   totalHours: 8,
-  extraData: {} as ImplLogExtraData,
+  extraData: {
+    location: '',
+  } as ImplLogExtraData,
 });
 
-const columns: any[] = [
+const columns: TableColumnsType<ImplLogTableRow> = [
   { title: '日期', dataIndex: 'workDate', key: 'workDate', width: 120 },
   { title: '项目', dataIndex: 'title', key: 'title', minWidth: 200 },
   { title: '工时', dataIndex: 'totalHours', key: 'totalHours', width: 80 },
@@ -110,6 +126,7 @@ const pageDescription = computed(() =>
 const createButtonText = computed(() =>
   props.context === 'implementation' ? '新增实施日志' : '新增日志',
 );
+const summaryText = computed(() => `共 ${totalCount.value} 条日志`);
 
 const projectOptions = computed(() =>
   projects.value.map((item) => ({
@@ -141,10 +158,15 @@ async function loadProjects() {
 async function loadLogs() {
   loading.value = true;
   try {
-    const res = await getImplLogsApi(queryParams.value);
-    logs.value = res.items;
-    totalCount.value = res.total;
-    totalHours.value = res.items.reduce((sum, log) => sum + log.totalHours, 0);
+    const [pageResult, summaryResult] = await Promise.all([
+      getImplLogsApi(queryParams.value),
+      getImplLogSummaryApi(queryParams.value),
+    ]);
+    logs.value = pageResult.items;
+    totalCount.value = summaryResult.totalCount;
+    totalHours.value = summaryResult.totalHours;
+    totalDeviceCount.value = summaryResult.uniqueEquipmentCount;
+    totalTaskTypeCount.value = summaryResult.uniqueTaskTypeCount;
   } catch {
     message.error('加载失败');
   } finally {
@@ -176,27 +198,34 @@ function handleWorkDateChange(value: Dayjs | string, dateString: string) {
   formState.value.workDate = dateString || (typeof value === 'string' ? value : '');
 }
 
-function normalizeExtraData(extraData?: ImplLogExtraData | null): ImplLogExtraData {
-  return extraData ?? {};
+function handleTableChange(pagination: { current?: number; pageSize?: number }) {
+  queryParams.value.page = pagination.current ?? 1;
+  queryParams.value.pageSize = pagination.pageSize ?? 20;
+  void loadLogs();
 }
 
-function countUniqueValues(items: ImplLog[], field: 'equipment' | 'taskTypes'): number {
-  const values = new Set<string>();
+function normalizeExtraData(extraData?: ImplLogExtraData | null): ImplLogExtraData {
+  return {
+    location: '',
+    ...(extraData ?? {}),
+  };
+}
 
-  for (const item of items) {
-    const source = item.extraData?.[field];
-    if (!Array.isArray(source)) {
-      continue;
-    }
+function search() {
+  queryParams.value.page = 1;
+  void loadLogs();
+}
 
-    for (const value of source) {
-      if (typeof value === 'string' && value.trim().length > 0) {
-        values.add(value);
-      }
-    }
-  }
-
-  return values.size;
+function resetFilters() {
+  queryParams.value.keyword = '';
+  queryParams.value.startDate = dayjs().startOf('month').format('YYYY-MM-DD');
+  queryParams.value.endDate = dayjs().endOf('month').format('YYYY-MM-DD');
+  queryParams.value.page = 1;
+  dateRange.value = [
+    dayjs(queryParams.value.startDate),
+    dayjs(queryParams.value.endDate),
+  ];
+  void loadLogs();
 }
 
 function openCreate() {
@@ -205,25 +234,32 @@ function openCreate() {
     workDate: dayjs().format('YYYY-MM-DD'),
     title: '',
     selectedProjectId: undefined,
-    projectName: '',
     totalHours: 8,
-    extraData: {},
+    extraData: {
+      location: '',
+    },
   };
   formOpen.value = true;
 }
 
-function openEdit(record: Record<string, any>) {
-  const log = record as ImplLog;
+function openEdit(log: ImplLogTableRow) {
   editingId.value = log.id;
   formState.value = {
     workDate: log.workDate,
     title: log.title,
     selectedProjectId: log.projectId,
-    projectName: log.projectName || '',
     totalHours: log.totalHours,
     extraData: normalizeExtraData(log.extraData),
   };
   formOpen.value = true;
+}
+
+function toTableRow(record: Record<string, any>): ImplLogTableRow {
+  const log = record as ImplLog;
+  return {
+    ...log,
+    extraData: normalizeExtraData(log.extraData),
+  };
 }
 
 function handleProjectChange(projectId?: unknown) {
@@ -235,6 +271,9 @@ function handleProjectChange(projectId?: unknown) {
     return;
   }
   formState.value.title = project.projectName;
+  if (!formState.value.extraData.location && project.location) {
+    formState.value.extraData.location = project.location;
+  }
 }
 
 async function handleSave() {
@@ -249,7 +288,6 @@ async function handleSave() {
         workDate: formState.value.workDate,
         title: formState.value.title,
         projectId: formState.value.selectedProjectId,
-        projectName: formState.value.projectName,
         totalHours: formState.value.totalHours,
         extraData: formState.value.extraData,
       });
@@ -259,7 +297,6 @@ async function handleSave() {
         workDate: formState.value.workDate,
         title: formState.value.title,
         projectId: formState.value.selectedProjectId,
-        projectName: formState.value.projectName,
         totalHours: formState.value.totalHours,
         templateId: template.value?.id,
         extraData: formState.value.extraData,
@@ -300,23 +337,40 @@ onMounted(() => {
         <Card><Statistic title="本月工时" :value="totalHours" suffix="小时" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="涉及设备" :value="deviceCount" /></Card>
+        <Card><Statistic title="涉及设备" :value="totalDeviceCount" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="任务类型" :value="taskTypeCount" /></Card>
+        <Card><Statistic title="任务类型" :value="totalTaskTypeCount" /></Card>
       </Col>
     </Row>
 
     <Card>
       <div class="mb-4 flex items-center justify-between">
+        <Form layout="inline">
+          <Form.Item label="关键词">
+            <Input
+              v-model:value="queryParams.keyword"
+              placeholder="搜索项目、项目地..."
+              style="width: 200px"
+              @pressEnter="search"
+            />
+          </Form.Item>
+          <Form.Item label="日期范围">
+            <DatePicker.RangePicker
+              :value="dateRange"
+              format="YYYY-MM-DD"
+              @change="handleDateRangeChange"
+            />
+          </Form.Item>
+          <Form.Item>
+            <Space>
+              <Button type="primary" @click="search">查询</Button>
+              <Button @click="resetFilters">重置</Button>
+            </Space>
+          </Form.Item>
+        </Form>
         <Space>
-          <DatePicker.RangePicker
-            :value="dateRange"
-            format="YYYY-MM-DD"
-            @change="handleDateRangeChange"
-          />
-        </Space>
-        <Space>
+          <span class="text-gray-500 text-sm">{{ summaryText }}</span>
           <Button type="primary" @click="openCreate">{{ createButtonText }}</Button>
         </Space>
       </div>
@@ -325,8 +379,10 @@ onMounted(() => {
         :columns="columns"
         :data-source="pageLogs"
         :loading="loading"
+        :pagination="{ current: queryParams.page, pageSize: queryParams.pageSize, showSizeChanger: true, showTotal: (value: number) => `共 ${value} 条`, total: totalCount }"
         :scroll="{ x: 1200 }"
         row-key="id"
+        @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'equipment'">
@@ -341,7 +397,7 @@ onMounted(() => {
           </template>
           <template v-else-if="column.key === 'action'">
             <Space>
-              <Button size="small" type="link" @click="openEdit(record)">编辑</Button>
+              <Button size="small" type="link" @click="openEdit(toTableRow(record))">编辑</Button>
               <Popconfirm title="确认删除？" @confirm="handleDelete(record.id)">
                 <Button danger size="small" type="link">删除</Button>
               </Popconfirm>
@@ -391,7 +447,7 @@ onMounted(() => {
         </Form.Item>
 
         <Form.Item label="项目地（选填）">
-          <Input v-model:value="formState.projectName" placeholder="如：惠州" />
+          <Input v-model:value="formState.extraData.location" placeholder="如：惠州" />
         </Form.Item>
 
         <Card v-if="template" title="扩展字段" class="mb-4">

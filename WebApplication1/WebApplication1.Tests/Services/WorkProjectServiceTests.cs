@@ -37,6 +37,7 @@ public class WorkProjectServiceTests : IDisposable
         {
             ProjectName = "Test Project",
             ProjectCode = "TP001",
+            Location = "惠州",
             ProjectType = WorkProjectType.Internal,
             Status = WorkProjectStatus.Active
         };
@@ -46,6 +47,7 @@ public class WorkProjectServiceTests : IDisposable
         Assert.NotNull(result);
         Assert.Equal("Test Project", result.ProjectName);
         Assert.Equal("TP001", result.ProjectCode);
+        Assert.Equal("惠州", result.Location);
         Assert.NotEqual(Guid.Empty, result.Id);
     }
 
@@ -114,6 +116,20 @@ public class WorkProjectServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task GetPageAsync_ShouldFilterByLocationKeyword()
+    {
+        _context.WorkProjects.Add(new WorkProject { ProjectName = "Alpha Project", Location = "惠州", Status = WorkProjectStatus.Active });
+        _context.WorkProjects.Add(new WorkProject { ProjectName = "Beta Project", Location = "苏州", Status = WorkProjectStatus.Active });
+        await _context.SaveChangesAsync();
+
+        var query = new WorkProjectQueryDto { Page = 1, PageSize = 10, Keyword = "惠州" };
+        var result = await _service.GetPageAsync(query);
+
+        Assert.Single(result.Items);
+        Assert.Equal("惠州", result.Items[0].Location);
+    }
+
+    [Fact]
     public async Task GetPageAsync_ShouldFilterByStatus()
     {
         _context.WorkProjects.Add(new WorkProject { ProjectName = "Active Project", Status = WorkProjectStatus.Active });
@@ -141,6 +157,7 @@ public class WorkProjectServiceTests : IDisposable
         var input = new UpdateWorkProjectDto
         {
             ProjectName = "Updated Name",
+            Location = "东莞",
             Status = WorkProjectStatus.Completed
         };
 
@@ -148,6 +165,7 @@ public class WorkProjectServiceTests : IDisposable
 
         Assert.NotNull(result);
         Assert.Equal("Updated Name", result.ProjectName);
+        Assert.Equal("东莞", result.Location);
         Assert.Equal(WorkProjectStatus.Completed, result.Status);
     }
 

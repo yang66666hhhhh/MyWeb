@@ -15,6 +15,8 @@ public class WorkProject : EntityBase
 
     public string? CustomerName { get; set; }
 
+    public string? Location { get; set; }
+
     public string? Description { get; set; }
 
     public DateOnly? StartDate { get; set; }

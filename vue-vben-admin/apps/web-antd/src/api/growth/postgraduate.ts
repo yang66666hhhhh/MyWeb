@@ -49,7 +49,17 @@ export interface ExamMaterialQuery extends PageQuery {
 }
 
 export type SavePostgraduateTaskInput = Omit<PostgraduateTask, 'createdAt' | 'id' | 'updatedAt'>;
-export type SaveExamMistakeInput = Omit<ExamMistake, 'createdAt' | 'id' | 'updatedAt'>;
+export interface SaveExamMistakeInput {
+  question: string;
+  answer?: null | string;
+  explanation?: null | string;
+  subject: string;
+  tags?: null | string;
+  status?: number;
+  reviewCount?: number;
+  lastReviewDate?: null | string;
+  nextReviewDate?: null | string;
+}
 export type SaveExamMaterialInput = Omit<ExamMaterial, 'createdAt' | 'id' | 'updatedAt'>;
 
 export async function getPostgraduateTaskPageApi(params: PostgraduateTaskQuery) {

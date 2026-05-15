@@ -31,6 +31,14 @@ public class ImplLogQueryDto : PageQueryDto
     public Guid? TemplateId { get; set; }
 }
 
+public class ImplLogSummaryDto
+{
+    public int TotalCount { get; set; }
+    public decimal TotalHours { get; set; }
+    public int UniqueEquipmentCount { get; set; }
+    public int UniqueTaskTypeCount { get; set; }
+}
+
 public class CreateImplLogDto
 {
     [Required(ErrorMessage = "工作日期不能为空")]
