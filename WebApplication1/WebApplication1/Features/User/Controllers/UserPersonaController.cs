@@ -11,7 +11,7 @@ using WebApplication1.Shared.Data;
 namespace WebApplication1.Features.User.Controllers;
 
 [ApiController]
-[Route("api/user/persona")]
+[Route("api/account/persona")]
 [Authorize]
 [Tags("User Personas")]
 public class UserPersonaController : ControllerBase

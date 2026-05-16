@@ -9,7 +9,7 @@ namespace WebApplication1.Features.User;
 
 [ApiController]
 [Authorize]
-[Route("api/user/profile")]
+[Route("api/account/profile")]
 [Tags("User")]
 public class UserProfileController(AppDbContext context) : ControllerBase
 {

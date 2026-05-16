@@ -9,7 +9,7 @@ using WebApplication1.Shared.Data;
 namespace WebApplication1.Features.Auth.Controllers;
 
 [ApiController]
-[Route("api/subscriptions")]
+[Route("api/system/subscriptions")]
 [Authorize]
 [Tags("Subscriptions")]
 public class SubscriptionController(AppDbContext context, IUserAccessContextService accessContextService) : BaseApiController

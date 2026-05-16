@@ -55,29 +55,29 @@ export interface CreateTemplateFieldInput {
 }
 
 export async function getTemplatePageApi(params?: PageQuery) {
-  return requestClient.get<PageResult<IndustryTemplate>>('/templates', { params });
+  return requestClient.get<PageResult<IndustryTemplate>>('/work/templates', { params });
 }
 
 export async function getTemplateApi(id: string) {
-  return requestClient.get<IndustryTemplate>(`/templates/${id}`);
+  return requestClient.get<IndustryTemplate>(`/work/templates/${id}`);
 }
 
 export async function getTemplateFieldsApi(id: string) {
-  return requestClient.get<TemplateField[]>(`/templates/${id}/fields`);
+  return requestClient.get<TemplateField[]>(`/work/templates/${id}/fields`);
 }
 
 export async function createTemplateApi(data: CreateTemplateInput) {
-  return requestClient.post<IndustryTemplate>('/templates', data);
+  return requestClient.post<IndustryTemplate>('/work/templates', data);
 }
 
 export async function updateTemplateApi(id: string, data: CreateTemplateInput) {
-  return requestClient.put<IndustryTemplate>(`/templates/${id}`, data);
+  return requestClient.put<IndustryTemplate>(`/work/templates/${id}`, data);
 }
 
 export async function deleteTemplateApi(id: string) {
-  return requestClient.delete(`/templates/${id}`);
+  return requestClient.delete(`/work/templates/${id}`);
 }
 
 export async function setDefaultTemplateApi(id: string) {
-  return requestClient.post(`/templates/${id}/set-default`);
+  return requestClient.post(`/work/templates/${id}/set-default`);
 }

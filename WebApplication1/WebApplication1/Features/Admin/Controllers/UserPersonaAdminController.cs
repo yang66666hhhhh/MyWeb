@@ -11,7 +11,7 @@ using WebApplication1.Shared.Data;
 namespace WebApplication1.Features.Admin.Controllers;
 
 [ApiController]
-[Route("api/admin/users")]
+[Route("api/system/users")]
 [Authorize(Roles = "owner")]
 [Tags("Admin - Users")]
 public class UserPersonaAdminController : ControllerBase
@@ -25,7 +25,7 @@ public class UserPersonaAdminController : ControllerBase
         _personaService = personaService;
     }
 
-    [HttpGet]
+    [HttpGet("personas")]
     public async Task<ActionResult<ApiResult<PageResult<UserPersonaDto>>>> GetUsers(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,

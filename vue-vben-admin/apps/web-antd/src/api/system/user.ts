@@ -46,31 +46,31 @@ export function getUserPageApi(params: {
   pageSize?: number;
   status?: number;
 }) {
-  return requestClient.get<{ items: UserDto[]; total: number }>('/users', { params });
+  return requestClient.get<{ items: UserDto[]; total: number }>('/system/users', { params });
 }
 
 export function getUserApi(id: string) {
-  return requestClient.get<UserDto>(`/users/${id}`);
+  return requestClient.get<UserDto>(`/system/users/${id}`);
 }
 
 export function createUserApi(data: CreateUserDto) {
-  return requestClient.post<UserDto>('/users', data);
+  return requestClient.post<UserDto>('/system/users', data);
 }
 
 export function updateUserApi(id: string, data: UpdateUserDto) {
-  return requestClient.put<UserDto>(`/users/${id}`, data);
+  return requestClient.put<UserDto>(`/system/users/${id}`, data);
 }
 
 export function deleteUserApi(id: string) {
-  return requestClient.delete(`/users/${id}`);
+  return requestClient.delete(`/system/users/${id}`);
 }
 
 export function resetPasswordApi(id: string, data: { newPassword: string }) {
-  return requestClient.post(`/users/${id}/reset-password`, data);
+  return requestClient.post(`/system/users/${id}/reset-password`, data);
 }
 
 export function changePasswordApi(id: string, data: { newPassword: string; oldPassword: string; }) {
-  return requestClient.post(`/users/${id}/change-password`, data);
+  return requestClient.post(`/system/users/${id}/change-password`, data);
 }
 
 export interface AssignPersonaRequest {
@@ -79,9 +79,9 @@ export interface AssignPersonaRequest {
 }
 
 export function assignPersonaApi(userId: string, data: AssignPersonaRequest) {
-  return requestClient.post(`/admin/users/${userId}/personas`, data);
+  return requestClient.post(`/system/users/${userId}/personas`, data);
 }
 
 export function removePersonaApi(userId: string, personaTypeId: string) {
-  return requestClient.delete(`/admin/users/${userId}/personas/${personaTypeId}`);
+  return requestClient.delete(`/system/users/${userId}/personas/${personaTypeId}`);
 }

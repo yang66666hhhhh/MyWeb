@@ -1,6 +1,8 @@
-import type { BaseEntity, PageQuery, PageResult } from './types';
+import type { BaseEntity, PageQuery, PageResult } from '../growth/types';
 
 import { requestClient } from '#/api/request';
+
+const postgraduateBaseUrl = '/student/postgraduate';
 
 export interface PostgraduateTask extends BaseEntity {
   title: string;
@@ -63,67 +65,67 @@ export interface SaveExamMistakeInput {
 export type SaveExamMaterialInput = Omit<ExamMaterial, 'createdAt' | 'id' | 'updatedAt'>;
 
 export async function getPostgraduateTaskPageApi(params: PostgraduateTaskQuery) {
-  return requestClient.get<PageResult<PostgraduateTask>>('/postgraduate/tasks', { params });
+  return requestClient.get<PageResult<PostgraduateTask>>(`${postgraduateBaseUrl}/tasks`, { params });
 }
 
 export async function getPostgraduateTaskApi(id: string) {
-  return requestClient.get<PostgraduateTask>(`/postgraduate/tasks/${id}`);
+  return requestClient.get<PostgraduateTask>(`${postgraduateBaseUrl}/tasks/${id}`);
 }
 
 export async function createPostgraduateTaskApi(data: SavePostgraduateTaskInput) {
-  return requestClient.post<PostgraduateTask>('/postgraduate/tasks', data);
+  return requestClient.post<PostgraduateTask>(`${postgraduateBaseUrl}/tasks`, data);
 }
 
 export async function updatePostgraduateTaskApi(id: string, data: SavePostgraduateTaskInput) {
-  return requestClient.put<PostgraduateTask>(`/postgraduate/tasks/${id}`, data);
+  return requestClient.put<PostgraduateTask>(`${postgraduateBaseUrl}/tasks/${id}`, data);
 }
 
 export async function deletePostgraduateTaskApi(id: string) {
-  return requestClient.delete(`/postgraduate/tasks/${id}`);
+  return requestClient.delete(`${postgraduateBaseUrl}/tasks/${id}`);
 }
 
 export async function getMistakePageApi(params: ExamMistakeQuery) {
-  return requestClient.get<PageResult<ExamMistake>>('/postgraduate/mistakes', { params });
+  return requestClient.get<PageResult<ExamMistake>>(`${postgraduateBaseUrl}/mistakes`, { params });
 }
 
 export async function getMistakeApi(id: string) {
-  return requestClient.get<ExamMistake>(`/postgraduate/mistakes/${id}`);
+  return requestClient.get<ExamMistake>(`${postgraduateBaseUrl}/mistakes/${id}`);
 }
 
 export async function createMistakeApi(data: SaveExamMistakeInput) {
-  return requestClient.post<ExamMistake>('/postgraduate/mistakes', data);
+  return requestClient.post<ExamMistake>(`${postgraduateBaseUrl}/mistakes`, data);
 }
 
 export async function updateMistakeApi(id: string, data: SaveExamMistakeInput) {
-  return requestClient.put<ExamMistake>(`/postgraduate/mistakes/${id}`, data);
+  return requestClient.put<ExamMistake>(`${postgraduateBaseUrl}/mistakes/${id}`, data);
 }
 
 export async function updateMistakeReviewStatusApi(id: string, status: string) {
-  return requestClient.put<ExamMistake>(`/postgraduate/mistakes/${id}`, { status: status === 'reviewed' ? 1 : (status === 'mastered' ? 2 : 0) });
+  return requestClient.put<ExamMistake>(`${postgraduateBaseUrl}/mistakes/${id}`, { status: status === 'reviewed' ? 1 : (status === 'mastered' ? 2 : 0) });
 }
 
 export async function deleteMistakeApi(id: string) {
-  return requestClient.delete(`/postgraduate/mistakes/${id}`);
+  return requestClient.delete(`${postgraduateBaseUrl}/mistakes/${id}`);
 }
 
 export async function getMaterialPageApi(params: ExamMaterialQuery) {
-  return requestClient.get<PageResult<ExamMaterial>>('/postgraduate/materials', { params });
+  return requestClient.get<PageResult<ExamMaterial>>(`${postgraduateBaseUrl}/materials`, { params });
 }
 
 export async function getMaterialApi(id: string) {
-  return requestClient.get<ExamMaterial>(`/postgraduate/materials/${id}`);
+  return requestClient.get<ExamMaterial>(`${postgraduateBaseUrl}/materials/${id}`);
 }
 
 export async function createMaterialApi(data: SaveExamMaterialInput) {
-  return requestClient.post<ExamMaterial>('/postgraduate/materials', data);
+  return requestClient.post<ExamMaterial>(`${postgraduateBaseUrl}/materials`, data);
 }
 
 export async function updateMaterialApi(id: string, data: SaveExamMaterialInput) {
-  return requestClient.put<ExamMaterial>(`/postgraduate/materials/${id}`, data);
+  return requestClient.put<ExamMaterial>(`${postgraduateBaseUrl}/materials/${id}`, data);
 }
 
 export async function deleteMaterialApi(id: string) {
-  return requestClient.delete(`/postgraduate/materials/${id}`);
+  return requestClient.delete(`${postgraduateBaseUrl}/materials/${id}`);
 }
 
 export interface ExamDashboard {
@@ -150,5 +152,5 @@ export interface ExamDashboard {
 }
 
 export async function getExamDashboardApi() {
-  return requestClient.get<ExamDashboard>('/postgraduate/dashboard');
+  return requestClient.get<ExamDashboard>(`${postgraduateBaseUrl}/dashboard`);
 }

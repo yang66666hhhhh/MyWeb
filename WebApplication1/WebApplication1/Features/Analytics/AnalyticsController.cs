@@ -7,7 +7,7 @@ namespace WebApplication1.Features.Analytics;
 
 [ApiController]
 [Authorize]
-[Route("api/analytics")]
+[Route("api/growth/analytics")]
 [Tags("Analytics")]
 public class AnalyticsController(IAnalyticsService analyticsService) : BaseApiController
 {

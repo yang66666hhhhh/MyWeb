@@ -10,7 +10,7 @@ namespace WebApplication1.Features.Auth.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/tags")]
+[Route("api/system/tags")]
 [Tags("Tags")]
 public class TagsController(AppDbContext db) : ControllerBase
 {

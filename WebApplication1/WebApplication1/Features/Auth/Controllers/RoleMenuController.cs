@@ -11,7 +11,7 @@ using WebApplication1.Shared.Data;
 namespace WebApplication1.Features.Auth.Controllers;
 
 [ApiController]
-[Route("api/role-menus")]
+[Route("api/system/role-menus")]
 [Authorize]
 [Tags("Admin - Role Menus")]
 public class RoleMenuController(

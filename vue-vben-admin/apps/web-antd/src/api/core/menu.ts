@@ -29,33 +29,33 @@ export type UpsertRoleMenuInput = Omit<RoleMenuItem, 'children' | 'id'>;
  * 获取当前用户菜单（基于角色+身份+标签）
  */
 export async function getMyMenusApi(): Promise<RoleMenuItem[]> {
-  return requestClient.get<RoleMenuItem[]>('/role-menus/mine');
+  return requestClient.get<RoleMenuItem[]>('/system/role-menus/mine');
 }
 
 /**
  * 获取菜单列表（管理用）
  */
 export async function getMenuListApi(): Promise<RoleMenuItem[]> {
-  return requestClient.get<RoleMenuItem[]>('/role-menus');
+  return requestClient.get<RoleMenuItem[]>('/system/role-menus');
 }
 
 /**
  * 创建菜单
  */
 export async function createRoleMenuApi(data: UpsertRoleMenuInput) {
-  return requestClient.post<RoleMenuItem>('/role-menus', data);
+  return requestClient.post<RoleMenuItem>('/system/role-menus', data);
 }
 
 /**
  * 更新菜单
  */
 export async function updateRoleMenuApi(id: string, data: UpsertRoleMenuInput) {
-  return requestClient.put<RoleMenuItem>(`/role-menus/${id}`, data);
+  return requestClient.put<RoleMenuItem>(`/system/role-menus/${id}`, data);
 }
 
 /**
  * 删除菜单
  */
 export async function deleteRoleMenuApi(id: string) {
-  return requestClient.delete(`/role-menus/${id}`);
+  return requestClient.delete(`/system/role-menus/${id}`);
 }

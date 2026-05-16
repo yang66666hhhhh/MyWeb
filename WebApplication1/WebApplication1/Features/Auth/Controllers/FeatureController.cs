@@ -8,7 +8,7 @@ using WebApplication1.Shared.Data;
 namespace WebApplication1.Features.Auth.Controllers;
 
 [ApiController]
-[Route("api/admin/features")]
+[Route("api/system/features")]
 [Authorize(Roles = "owner")]
 [Tags("Admin - Features")]
 public class FeatureController(AppDbContext context) : ControllerBase

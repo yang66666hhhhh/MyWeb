@@ -30,7 +30,7 @@ import {
   type PostgraduateTask,
   type SavePostgraduateTaskInput,
   updatePostgraduateTaskApi,
-} from '#/api/growth/postgraduate';
+} from '#/api/student/postgraduate';
 
 import type { Dayjs } from 'dayjs';
 

@@ -31,7 +31,7 @@ import {
   type SaveExamMistakeInput,
   updateMistakeApi,
   updateMistakeReviewStatusApi,
-} from '#/api/growth/postgraduate';
+} from '#/api/student/postgraduate';
 
 import type { Dayjs } from 'dayjs';
 

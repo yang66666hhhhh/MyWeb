@@ -28,21 +28,21 @@ export interface ProjectQuery extends PageQuery {
 export type SaveProjectInput = Omit<Project, 'createdAt' | 'id' | 'updatedAt'>;
 
 export async function getProjectPageApi(params: ProjectQuery) {
-  return requestClient.get<PageResult<Project>>('/projects', { params });
+  return requestClient.get<PageResult<Project>>('/growth/projects', { params });
 }
 
 export async function getProjectApi(id: string) {
-  return requestClient.get<Project>(`/projects/${id}`);
+  return requestClient.get<Project>(`/growth/projects/${id}`);
 }
 
 export async function createProjectApi(data: SaveProjectInput) {
-  return requestClient.post<Project>('/projects', data);
+  return requestClient.post<Project>('/growth/projects', data);
 }
 
 export async function updateProjectApi(id: string, data: SaveProjectInput) {
-  return requestClient.put<Project>(`/projects/${id}`, data);
+  return requestClient.put<Project>(`/growth/projects/${id}`, data);
 }
 
 export async function deleteProjectApi(id: string) {
-  return requestClient.delete(`/projects/${id}`);
+  return requestClient.delete(`/growth/projects/${id}`);
 }

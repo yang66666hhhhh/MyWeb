@@ -39,17 +39,17 @@ export interface TaskPriorityDistribution {
 
 export const analyticsApi = {
   getDashboard: () =>
-    requestClient.get<DashboardOverview>('/analytics/dashboard'),
+    requestClient.get<DashboardOverview>('/growth/analytics/dashboard'),
 
   getTaskTrends: (startDate: string, endDate: string) =>
-    requestClient.get<TaskTrend[]>('/analytics/task-trends', { params: { startDate, endDate } }),
+    requestClient.get<TaskTrend[]>('/growth/analytics/task-trends', { params: { startDate, endDate } }),
 
   getTaskDistribution: () =>
-    requestClient.get<TaskDistribution[]>('/analytics/task-distribution'),
+    requestClient.get<TaskDistribution[]>('/growth/analytics/task-distribution'),
 
   getWorkVsGrowth: () =>
-    requestClient.get<WorkVsGrowth[]>('/analytics/work-vs-growth'),
+    requestClient.get<WorkVsGrowth[]>('/growth/analytics/work-vs-growth'),
 
   getPriorityDistribution: () =>
-    requestClient.get<TaskPriorityDistribution[]>('/analytics/priority-distribution'),
+    requestClient.get<TaskPriorityDistribution[]>('/growth/analytics/priority-distribution'),
 };

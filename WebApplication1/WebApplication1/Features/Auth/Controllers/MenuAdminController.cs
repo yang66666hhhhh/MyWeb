@@ -10,7 +10,7 @@ namespace WebApplication1.Features.Auth.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/admin/menus")]
+[Route("api/system/menus")]
 [Tags("Admin - Menus")]
 public class MenuAdminController(AppDbContext db) : ControllerBase
 {

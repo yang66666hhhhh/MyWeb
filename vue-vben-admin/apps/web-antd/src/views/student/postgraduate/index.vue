@@ -17,7 +17,7 @@ import {
   message,
 } from 'ant-design-vue';
 
-import { getExamDashboardApi, type ExamDashboard, type PostgraduateTask } from '#/api/growth/postgraduate';
+import { getExamDashboardApi, type ExamDashboard, type PostgraduateTask } from '#/api/student/postgraduate';
 
 const loading = ref(false);
 const dashboard = ref<ExamDashboard>({

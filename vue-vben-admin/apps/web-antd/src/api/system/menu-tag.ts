@@ -74,63 +74,63 @@ export interface CreateMenuItemDto {
 
 export const tagApi = {
   list() {
-    return requestClient.get<TagDto[]>('/tags');
+    return requestClient.get<TagDto[]>('/system/tags');
   },
   create(data: CreateTagDto) {
-    return requestClient.post<TagDto>('/tags', data);
+    return requestClient.post<TagDto>('/system/tags', data);
   },
   update(id: string, data: CreateTagDto) {
-    return requestClient.put<TagDto>(`/tags/${id}`, data);
+    return requestClient.put<TagDto>(`/system/tags/${id}`, data);
   },
   delete(id: string) {
-    return requestClient.delete(`/tags/${id}`);
+    return requestClient.delete(`/system/tags/${id}`);
   },
 };
 
 export const menuAdminApi = {
   getAll() {
-    return requestClient.get<MenuTreeAdminDto[]>('/admin/menus');
+    return requestClient.get<MenuTreeAdminDto[]>('/system/menus');
   },
   getPaths() {
-    return requestClient.get<MenuPathDto[]>('/admin/menus/paths');
+    return requestClient.get<MenuPathDto[]>('/system/menus/paths');
   },
   create(data: any) {
-    return requestClient.post('/admin/menus', data);
+    return requestClient.post('/system/menus', data);
   },
   update(id: string, data: any) {
-    return requestClient.put(`/admin/menus/${id}`, data);
+    return requestClient.put(`/system/menus/${id}`, data);
   },
   delete(id: string) {
-    return requestClient.delete(`/admin/menus/${id}`);
+    return requestClient.delete(`/system/menus/${id}`);
   },
 };
 
 export const userTagApi = {
   getUsers() {
-    return requestClient.get<UserTagDto[]>('/admin/user-tags/users');
+    return requestClient.get<UserTagDto[]>('/system/user-tags/users');
   },
   getUserTags(userId: string) {
-    return requestClient.get<string[]>(`/admin/user-tags/${userId}`);
+    return requestClient.get<string[]>(`/system/user-tags/${userId}`);
   },
   updateUserTags(userId: string, tagIds: string[]) {
-    return requestClient.put(`/admin/user-tags/${userId}`, tagIds);
+    return requestClient.put(`/system/user-tags/${userId}`, tagIds);
   },
 };
 
 export const userTypeApi = {
   list() {
-    return requestClient.get<UserTypeDto[]>('/admin/user-types');
+    return requestClient.get<UserTypeDto[]>('/system/user-types');
   },
   create(data: CreateUserTypeDto) {
-    return requestClient.post<UserTypeDto>('/admin/user-types', data);
+    return requestClient.post<UserTypeDto>('/system/user-types', data);
   },
   update(id: string, data: CreateUserTypeDto) {
-    return requestClient.put<UserTypeDto>(`/admin/user-types/${id}`, data);
+    return requestClient.put<UserTypeDto>(`/system/user-types/${id}`, data);
   },
   delete(id: string) {
-    return requestClient.delete(`/admin/user-types/${id}`);
+    return requestClient.delete(`/system/user-types/${id}`);
   },
   assign(userId: string, userTypeId?: string) {
-    return requestClient.put(`/admin/user-types/${userId}/assign`, userTypeId);
+    return requestClient.put(`/system/user-types/${userId}/assign`, userTypeId);
   },
 };

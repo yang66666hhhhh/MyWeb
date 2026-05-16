@@ -8,7 +8,7 @@ using WebApplication1.Shared.Data;
 namespace WebApplication1.Features.Auth.Controllers;
 
 [ApiController]
-[Route("api/admin/persona-features")]
+[Route("api/system/persona-features")]
 [Authorize(Roles = "owner")]
 [Tags("Admin - Features")]
 public class PersonaFeatureController(AppDbContext context) : ControllerBase

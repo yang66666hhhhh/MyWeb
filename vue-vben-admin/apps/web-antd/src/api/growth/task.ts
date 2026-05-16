@@ -69,23 +69,23 @@ export interface UpdateTaskItemInput {
 
 export const taskApi = {
   getPage: (params?: TaskItemQuery) =>
-    requestClient.get<PageResult<TaskItem>>('/tasks', { params }),
+    requestClient.get<PageResult<TaskItem>>('/growth/tasks', { params }),
 
   getById: (id: string) =>
-    requestClient.get<TaskItem>(`/tasks/${id}`),
+    requestClient.get<TaskItem>(`/growth/tasks/${id}`),
 
   create: (data: CreateTaskItemInput) =>
-    requestClient.post<TaskItem>('/tasks', data),
+    requestClient.post<TaskItem>('/growth/tasks', data),
 
   update: (id: string, data: UpdateTaskItemInput) =>
-    requestClient.put<TaskItem>(`/tasks/${id}`, data),
+    requestClient.put<TaskItem>(`/growth/tasks/${id}`, data),
 
   delete: (id: string) =>
-    requestClient.delete(`/tasks/${id}`),
+    requestClient.delete(`/growth/tasks/${id}`),
 
   complete: (id: string) =>
-    requestClient.post(`/tasks/${id}/complete`),
+    requestClient.post(`/growth/tasks/${id}/complete`),
 
   convertToLog: (data: { originalContent?: string; taskId: string; totalHours?: number; workDate: string; }) =>
-    requestClient.post('/tasks/convert-to-log', data),
+    requestClient.post('/growth/tasks/convert-to-log', data),
 };

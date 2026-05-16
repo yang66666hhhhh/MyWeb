@@ -8,8 +8,8 @@ namespace WebApplication1.Features.Growth.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/growth/postgraduate")]
-[Tags("Growth - Postgraduate")]
+[Route("api/student/postgraduate")]
+[Tags("Student - Postgraduate")]
 public class PostgraduateController(
     IPostgraduateTaskService taskService,
     IExamMistakeService mistakeService,

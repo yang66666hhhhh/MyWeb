@@ -11,7 +11,7 @@ namespace WebApplication1.Features.Work.Controllers;
 [ApiController]
 [Authorize]
 [RequireFeature("WORK_IMPORT")]
-[Route("api/work/import")]
+[Route("api/work/imports")]
 [RequestSizeLimit(10 * 1024 * 1024)]
 [Tags("Work - Import")]
 public class WorkImportsController(IWorkImportService importService) : BaseApiController

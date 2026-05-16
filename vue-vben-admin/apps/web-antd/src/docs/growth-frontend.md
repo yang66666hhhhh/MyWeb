@@ -9,7 +9,6 @@ src/
       daily-plan.ts
       habit.ts
       knowledge-base.ts
-      postgraduate.ts
       project.ts
       types.ts
       work-log.ts
@@ -37,7 +36,6 @@ src/
           HabitForm.vue
         index.vue
       knowledge-base/
-      postgraduate/
       project/
       work-log/
 ```
@@ -52,7 +50,6 @@ The route module is `src/router/routes/modules/growth.ts`.
 /growth/habits
 /growth/work-logs
 /growth/knowledge-base
-/growth/postgraduate
 /growth/projects
 ```
 
@@ -117,15 +114,14 @@ Development proxy is split by responsibility:
 
 ```text
 /api/auth           -> http://localhost:5320/api
-/api/user           -> http://localhost:5320/api
+/api/account        -> http://localhost:5320/api
 /api/menu           -> http://localhost:5320/api
-/api/daily-plans    -> http://localhost:5062/api
-/api/habits         -> http://localhost:5062/api
-/api/work-logs      -> http://localhost:5062/api
-/api/knowledge-base -> http://localhost:5062/api
-/api/postgraduate   -> http://localhost:5062/api
-/api/projects       -> http://localhost:5062/api
+/api/growth/daily-plans    -> http://localhost:5062/api
+/api/growth/habits         -> http://localhost:5062/api
+/api/growth/knowledge-base -> http://localhost:5062/api
+/api/growth/projects       -> http://localhost:5062/api
+/api/student               -> http://localhost:5062/api
 ```
 
 Auth, user info and menu still use the Vben mock server until the ASP.NET Core API implements them.
-Business modules call the ASP.NET Core API. Frontend code calls `/daily-plans`; Vite proxies `/api/daily-plans` to backend `/api/daily-plans`.
+Business modules call the ASP.NET Core API. Frontend code calls `/growth/daily-plans`; Vite proxies `/api/growth/daily-plans` to backend `/api/growth/daily-plans`.

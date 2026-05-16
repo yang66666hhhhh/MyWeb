@@ -150,20 +150,20 @@ export async function getDailyPlanPageApi(params: DailyPlanQuery) {
     ...rest,
     ...(date ? { endDate: date, startDate: date } : {}),
   };
-  const result = await requestClient.get<PageResult<DailyPlan>>('/daily-plans', {
+  const result = await requestClient.get<PageResult<DailyPlan>>('/growth/daily-plans', {
     params: requestParams,
   });
   return normalizeDailyPlanPage(result);
 }
 
 export async function getDailyPlanApi(id: string) {
-  const result = await requestClient.get<DailyPlan>(`/daily-plans/${id}`);
+  const result = await requestClient.get<DailyPlan>(`/growth/daily-plans/${id}`);
   return enrichDailyPlan(result) as DailyPlan;
 }
 
 export async function createDailyPlanApi(data: CreateDailyPlanInput) {
   const result = await requestClient.post<DailyPlan>(
-    '/daily-plans',
+    '/growth/daily-plans',
     toDailyPlanPayload(data),
   );
   persistSchedule(result.id, data);
@@ -175,7 +175,7 @@ export async function updateDailyPlanApi(
   data: UpdateDailyPlanInput,
 ) {
   const result = await requestClient.put<DailyPlan>(
-    `/daily-plans/${id}`,
+    `/growth/daily-plans/${id}`,
     toDailyPlanPayload(data),
   );
   persistSchedule(id, data);
@@ -184,7 +184,7 @@ export async function updateDailyPlanApi(
 
 export async function completeDailyPlanApi(id: string) {
   const result = await requestClient.request<DailyPlan>(
-    `/daily-plans/${id}/complete`,
+    `/growth/daily-plans/${id}/complete`,
     {
       method: 'PATCH',
     },
@@ -209,7 +209,7 @@ export async function updateDailyPlanStatusApi(
 }
 
 export async function deleteDailyPlanApi(id: string) {
-  await requestClient.delete(`/daily-plans/${id}`);
+  await requestClient.delete(`/growth/daily-plans/${id}`);
   clearSchedule(id);
   return true;
 }

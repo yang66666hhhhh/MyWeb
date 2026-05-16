@@ -7,7 +7,7 @@ using WebApplication1.Shared.Common;
 namespace WebApplication1.Features.Admin.Controllers;
 
 [ApiController]
-[Route("api/admin/persona-types")]
+[Route("api/system/persona-types")]
 [Authorize]
 [Tags("Admin - Personas")]
 public class PersonaTypeController : ControllerBase

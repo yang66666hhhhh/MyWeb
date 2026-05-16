@@ -7,7 +7,7 @@ namespace WebApplication1.Features.User;
 
 [ApiController]
 [Authorize]
-[Route("api/user")]
+[Route("api/account")]
 [Tags("User")]
 public class UserController(IAuthService authService) : ControllerBase
 {

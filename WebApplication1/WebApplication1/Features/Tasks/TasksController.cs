@@ -8,7 +8,7 @@ namespace WebApplication1.Features.Tasks;
 [ApiController]
 [Authorize]
 [RequireFeature("WORK_TASK")]
-[Route("api/tasks")]
+[Route("api/growth/tasks")]
 [Tags("Tasks")]
 public class TasksController(ITaskItemService taskService) : BaseApiController
 {

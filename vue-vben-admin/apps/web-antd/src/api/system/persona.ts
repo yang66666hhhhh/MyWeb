@@ -32,36 +32,36 @@ export interface UpdatePersonaTypeDto {
 
 export const personaApi = {
   getAll(params?: { isActive?: boolean }) {
-    return requestClient.get<PersonaType[]>('/admin/persona-types/all', { params });
+    return requestClient.get<PersonaType[]>('/system/persona-types/all', { params });
   },
   list(params?: { isActive?: boolean }) {
-    return requestClient.get<PersonaType[]>('/admin/persona-types/all', { params });
+    return requestClient.get<PersonaType[]>('/system/persona-types/all', { params });
   },
   getPage(params: { isActive?: boolean; keyword?: string; page?: number; pageSize?: number; }) {
-    return requestClient.get<{ items: PersonaType[]; total: number }>('/admin/persona-types', { params });
+    return requestClient.get<{ items: PersonaType[]; total: number }>('/system/persona-types', { params });
   },
   getById(id: string) {
-    return requestClient.get<PersonaType>(`/admin/persona-types/${id}`);
+    return requestClient.get<PersonaType>(`/system/persona-types/${id}`);
   },
   create(data: CreatePersonaTypeDto) {
-    return requestClient.post<PersonaType>('/admin/persona-types', data);
+    return requestClient.post<PersonaType>('/system/persona-types', data);
   },
   update(id: string, data: UpdatePersonaTypeDto) {
-    return requestClient.put<PersonaType>(`/admin/persona-types/${id}`, data);
+    return requestClient.put<PersonaType>(`/system/persona-types/${id}`, data);
   },
   delete(id: string) {
-    return requestClient.delete(`/admin/persona-types/${id}`);
+    return requestClient.delete(`/system/persona-types/${id}`);
   },
 };
 
 export const currentPersonaApi = {
   getCurrent() {
-    return requestClient.get<PersonaType>('/user/persona/current');
+    return requestClient.get<PersonaType>('/account/persona/current');
   },
   getAvailable() {
-    return requestClient.get<PersonaType[]>('/user/persona/available');
+    return requestClient.get<PersonaType[]>('/account/persona/available');
   },
   switch(personaTypeId: string) {
-    return requestClient.put('/user/persona/switch', { personaTypeId });
+    return requestClient.put(`/account/persona/set-primary/${personaTypeId}`);
   },
 };
