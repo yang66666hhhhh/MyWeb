@@ -294,21 +294,93 @@ public static class DbSeeder
         await SyncRoleMenusAsync(context, now);
         logger?.LogInformation("[DbSeeder] RoleMenus synced.");
 
-        if (!await context.StudentSubjects.AnyAsync())
+        var lisaSeedUser = await context.Users.FirstOrDefaultAsync(u => u.Username == "lisa");
+        if (lisaSeedUser is not null && !await context.StudentSubjects.AnyAsync(x => x.UserId == lisaSeedUser.Id))
         {
-            logger?.LogInformation("[DbSeeder] Seeding StudentSubjects...");
+            logger?.LogInformation("[DbSeeder] Seeding Lisa student subjects...");
             var subjects = new List<StudentSubject>
             {
-                new() { Id = Guid.NewGuid(), Name = "数据结构", Description = "算法与数据结构核心专题", Color = "blue", TargetHours = 120, Sort = 0, IsActive = true, CreatedAt = now },
-                new() { Id = Guid.NewGuid(), Name = "操作系统", Description = "进程、内存、文件系统与 I/O", Color = "cyan", TargetHours = 100, Sort = 1, IsActive = true, CreatedAt = now },
-                new() { Id = Guid.NewGuid(), Name = "计算机网络", Description = "协议栈、路由、传输层与应用层", Color = "green", TargetHours = 90, Sort = 2, IsActive = true, CreatedAt = now },
-                new() { Id = Guid.NewGuid(), Name = "数学", Description = "高数、线代与概率统计", Color = "purple", TargetHours = 180, Sort = 3, IsActive = true, CreatedAt = now },
-                new() { Id = Guid.NewGuid(), Name = "英语", Description = "阅读、翻译、写作与词汇", Color = "orange", TargetHours = 120, Sort = 4, IsActive = true, CreatedAt = now },
-                new() { Id = Guid.NewGuid(), Name = "政治", Description = "选择题、分析题与时政复习", Color = "red", TargetHours = 80, Sort = 5, IsActive = true, CreatedAt = now },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Name = "数据结构", Description = "算法与数据结构核心专题", Color = "blue", TargetHours = 120, Sort = 0, IsActive = true, CreatedAt = now },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Name = "操作系统", Description = "进程、内存、文件系统与 I/O", Color = "cyan", TargetHours = 100, Sort = 1, IsActive = true, CreatedAt = now },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Name = "计算机网络", Description = "协议栈、路由、传输层与应用层", Color = "green", TargetHours = 90, Sort = 2, IsActive = true, CreatedAt = now },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Name = "数学", Description = "高数、线代与概率统计", Color = "purple", TargetHours = 180, Sort = 3, IsActive = true, CreatedAt = now },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Name = "英语", Description = "阅读、翻译、写作与词汇", Color = "orange", TargetHours = 120, Sort = 4, IsActive = true, CreatedAt = now },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Name = "政治", Description = "选择题、分析题与时政复习", Color = "red", TargetHours = 80, Sort = 5, IsActive = true, CreatedAt = now },
             };
             context.StudentSubjects.AddRange(subjects);
             await context.SaveChangesAsync();
-            logger?.LogInformation("[DbSeeder] StudentSubjects seeded.");
+            logger?.LogInformation("[DbSeeder] Lisa student subjects seeded.");
+        }
+
+        if (lisaSeedUser is not null && !await context.PostgraduateTasks.AnyAsync(x => x.UserId == lisaSeedUser.Id))
+        {
+            logger?.LogInformation("[DbSeeder] Seeding Lisa student tasks...");
+            var tasks = new List<PostgraduateTask>
+            {
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Title = "完成数据结构树与图专题", Description = "刷完图遍历、最短路径和最小生成树核心题，整理易错模板。", DueDate = today, Status = PostgraduateTaskStatus.InProgress, Priority = PostgraduateTaskPriority.Urgent, Type = PostgraduateTaskType.Practice, CreatedAt = now.AddHours(-8) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Title = "英语阅读精读 2 篇", Description = "记录长难句、替换表达和错题原因。", DueDate = today, Status = PostgraduateTaskStatus.Pending, Priority = PostgraduateTaskPriority.High, Type = PostgraduateTaskType.Study, CreatedAt = now.AddHours(-7) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Title = "数学线代矩阵相似复盘", Description = "复习特征值、相似对角化和二次型判定。", DueDate = today.AddDays(1), Status = PostgraduateTaskStatus.Pending, Priority = PostgraduateTaskPriority.High, Type = PostgraduateTaskType.Review, CreatedAt = now.AddDays(-1) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Title = "政治马原选择题 50 题", Description = "重点看错选项背后的概念混淆。", DueDate = today.AddDays(-1), Status = PostgraduateTaskStatus.Overdue, Priority = PostgraduateTaskPriority.Medium, Type = PostgraduateTaskType.Practice, CreatedAt = now.AddDays(-3) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Title = "计算机网络 TCP 专题", Description = "梳理握手、挥手、拥塞控制和可靠传输。", DueDate = today.AddDays(2), Status = PostgraduateTaskStatus.Pending, Priority = PostgraduateTaskPriority.Medium, Type = PostgraduateTaskType.Study, CreatedAt = now.AddDays(-2) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Title = "操作系统进程调度小测", Description = "完成一套调度算法练习并核对平均周转时间。", DueDate = today.AddDays(-2), Status = PostgraduateTaskStatus.Completed, Priority = PostgraduateTaskPriority.Medium, Type = PostgraduateTaskType.Mock, CreatedAt = now.AddDays(-4), UpdatedAt = now.AddDays(-2) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Title = "本周错题二次复盘", Description = "把仍然卡住的错题加入下周复习清单。", DueDate = today.AddDays(3), Status = PostgraduateTaskStatus.Pending, Priority = PostgraduateTaskPriority.Low, Type = PostgraduateTaskType.Review, CreatedAt = now.AddDays(-1) },
+            };
+            context.PostgraduateTasks.AddRange(tasks);
+            await context.SaveChangesAsync();
+            logger?.LogInformation("[DbSeeder] Lisa student tasks seeded.");
+        }
+
+        if (lisaSeedUser is not null && !await context.ExamMistakes.AnyAsync(x => x.UserId == lisaSeedUser.Id))
+        {
+            logger?.LogInformation("[DbSeeder] Seeding Lisa exam mistakes...");
+            var mistakes = new List<ExamMistake>
+            {
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Subject = "数据结构", Question = "Dijkstra 算法在存在负权边时为什么不适用？", Answer = "负权边会破坏已确定最短距离不再变小的贪心前提。", Explanation = "可用反例验证：已出队节点仍可能被负权边松弛。", Tags = "图论,最短路径,贪心", ReviewCount = 1, LastReviewDate = today.AddDays(-3), NextReviewDate = today, Status = ExamMistakeStatus.Reviewed, CreatedAt = now.AddDays(-8) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Subject = "数学", Question = "矩阵可对角化的充分必要条件如何判断？", Answer = "n 阶矩阵有 n 个线性无关特征向量。", Explanation = "不要只看特征值个数，还要比较几何重数与代数重数。", Tags = "线代,特征值,对角化", ReviewCount = 0, NextReviewDate = today.AddDays(-1), Status = ExamMistakeStatus.Pending, CreatedAt = now.AddDays(-6) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Subject = "英语", Question = "长难句中插入语导致主干识别错误。", Answer = "先划主谓宾，再回填修饰成分。", Explanation = "遇到逗号、破折号、同位语时先临时跳过。", Tags = "阅读,长难句", ReviewCount = 2, LastReviewDate = today.AddDays(-1), NextReviewDate = today.AddDays(2), Status = ExamMistakeStatus.Reviewed, CreatedAt = now.AddDays(-10) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Subject = "操作系统", Question = "银行家算法安全序列判断漏掉 Available 回收。", Answer = "每完成一个进程，都要把 Allocation 加回 Available。", Explanation = "按 Need <= Available 逐步模拟，不能只比较初始资源。", Tags = "死锁,银行家算法", ReviewCount = 1, LastReviewDate = today.AddDays(-4), NextReviewDate = today, Status = ExamMistakeStatus.Pending, CreatedAt = now.AddDays(-9) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Subject = "计算机网络", Question = "TCP 拥塞控制和流量控制概念混淆。", Answer = "拥塞控制面向网络，流量控制面向接收端。", Explanation = "分别对应拥塞窗口 cwnd 和接收窗口 rwnd。", Tags = "TCP,拥塞控制,流量控制", ReviewCount = 3, LastReviewDate = today.AddDays(-2), NextReviewDate = today.AddDays(5), Status = ExamMistakeStatus.Mastered, CreatedAt = now.AddDays(-14), UpdatedAt = now.AddDays(-2) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Subject = "政治", Question = "实践和认识的辩证关系表述不完整。", Answer = "实践决定认识，认识反作用于实践。", Explanation = "分析题要写出来源、动力、目的、检验标准四个角度。", Tags = "马原,认识论", ReviewCount = 0, NextReviewDate = today.AddDays(1), Status = ExamMistakeStatus.Pending, CreatedAt = now.AddDays(-5) },
+            };
+            context.ExamMistakes.AddRange(mistakes);
+            await context.SaveChangesAsync();
+            logger?.LogInformation("[DbSeeder] Lisa exam mistakes seeded.");
+        }
+
+        if (lisaSeedUser is not null && !await context.ExamMaterials.AnyAsync(x => x.UserId == lisaSeedUser.Id))
+        {
+            logger?.LogInformation("[DbSeeder] Seeding Lisa exam materials...");
+            var materials = new List<ExamMaterial>
+            {
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Title = "数据结构图论模板", Subject = "数据结构", Type = ExamMaterialType.Template, Tags = "图论,模板,邻接表", Content = "DFS/BFS、拓扑排序、Dijkstra、Floyd 的适用条件和复杂度对照。", CreatedAt = now.AddDays(-12) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Title = "线代相似对角化总结", Subject = "数学", Type = ExamMaterialType.Summary, Tags = "线代,矩阵,二次型", Content = "按特征值、特征向量、相似对角化、正交变换四块整理。", CreatedAt = now.AddDays(-9) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Title = "英语阅读替换表达", Subject = "英语", Type = ExamMaterialType.Note, Tags = "阅读,词汇,写作", Content = "记录真题中常见同义替换，按态度词、逻辑词、动作词分类。", CreatedAt = now.AddDays(-7) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Title = "操作系统调度公式卡片", Subject = "操作系统", Type = ExamMaterialType.Formula, Tags = "调度,周转时间,等待时间", Content = "周转时间=完成时间-到达时间；带权周转时间=周转时间/服务时间。", CreatedAt = now.AddDays(-6) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Title = "TCP 重点问答", Subject = "计算机网络", Type = ExamMaterialType.Summary, Tags = "TCP,可靠传输,拥塞控制", Content = "三次握手、四次挥手、滑动窗口、超时重传、快重传快恢复。", CreatedAt = now.AddDays(-4) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Title = "政治马原分析题框架", Subject = "政治", Type = ExamMaterialType.Template, Tags = "马原,分析题", Content = "概念解释、原理展开、材料扣题、方法论落点四步答题。", CreatedAt = now.AddDays(-3) },
+            };
+            context.ExamMaterials.AddRange(materials);
+            await context.SaveChangesAsync();
+            logger?.LogInformation("[DbSeeder] Lisa exam materials seeded.");
+        }
+
+        if (lisaSeedUser is not null && !await context.StudentStudyRecords.AnyAsync(x => x.UserId == lisaSeedUser.Id))
+        {
+            logger?.LogInformation("[DbSeeder] Seeding Lisa study records...");
+            var records = new List<StudentStudyRecord>
+            {
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Subject = "数据结构", Summary = "完成图遍历与最短路径专题练习", RecordDate = today, DurationMinutes = 95, TaskTitle = "完成数据结构树与图专题", Remark = "Dijkstra 负权边条件还需要二刷。", CreatedAt = now.AddHours(-3) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Subject = "英语", Summary = "精读阅读真题并整理长难句", RecordDate = today, DurationMinutes = 70, TaskTitle = "英语阅读精读 2 篇", Remark = "主干识别速度比上周好。", CreatedAt = now.AddHours(-2) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Subject = "数学", Summary = "复习矩阵相似与二次型", RecordDate = today.AddDays(-1), DurationMinutes = 120, TaskTitle = "数学线代矩阵相似复盘", Remark = "相似对角化判断仍需加强。", CreatedAt = now.AddDays(-1).AddHours(2) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Subject = "操作系统", Summary = "完成进程调度算法小测", RecordDate = today.AddDays(-2), DurationMinutes = 80, TaskTitle = "操作系统进程调度小测", Remark = "平均等待时间计算已掌握。", CreatedAt = now.AddDays(-2).AddHours(1) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Subject = "计算机网络", Summary = "梳理 TCP 可靠传输与拥塞控制", RecordDate = today.AddDays(-3), DurationMinutes = 90, TaskTitle = "计算机网络 TCP 专题", Remark = "cwnd 与 rwnd 对比清楚了。", CreatedAt = now.AddDays(-3).AddHours(2) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Subject = "政治", Summary = "马原认识论选择题复盘", RecordDate = today.AddDays(-4), DurationMinutes = 55, TaskTitle = "政治马原选择题 50 题", Remark = "分析题框架需要背熟。", CreatedAt = now.AddDays(-4).AddHours(3) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Subject = "数据结构", Summary = "二叉树遍历和线索二叉树", RecordDate = today.AddDays(-5), DurationMinutes = 75, TaskTitle = "数据结构基础回顾", Remark = "递归转非递归还要继续练。", CreatedAt = now.AddDays(-5).AddHours(2) },
+                new() { Id = Guid.NewGuid(), UserId = lisaSeedUser.Id, Subject = "英语", Summary = "作文功能句积累", RecordDate = today.AddDays(-6), DurationMinutes = 45, TaskTitle = "英语作文素材整理", Remark = "整理了图表作文开头句。", CreatedAt = now.AddDays(-6).AddHours(1) },
+            };
+            context.StudentStudyRecords.AddRange(records);
+            await context.SaveChangesAsync();
+            logger?.LogInformation("[DbSeeder] Lisa study records seeded.");
         }
 
         // WorkTaskTypes - 任务类型
