@@ -27,7 +27,7 @@ import {
   type ExamMistake,
   type PostgraduateTask,
   updatePostgraduateTaskApi,
-} from '#/api/student/postgraduate';
+} from '#/api/student';
 
 interface SubjectInsight {
   materialCount: number;

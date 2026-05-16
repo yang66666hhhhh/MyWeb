@@ -24,7 +24,7 @@ import {
   type ExamMistake,
   updateMistakeApi,
   updateMistakeReviewStatusApi,
-} from '#/api/student/postgraduate';
+} from '#/api/student';
 
 import type { Dayjs } from 'dayjs';
 

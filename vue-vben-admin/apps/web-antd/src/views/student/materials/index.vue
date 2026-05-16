@@ -28,7 +28,7 @@ import {
   type ExamMaterial,
   type SaveExamMaterialInput,
   updateMaterialApi,
-} from '#/api/student/postgraduate';
+} from '#/api/student';
 
 interface MaterialFormState {
   content: string;

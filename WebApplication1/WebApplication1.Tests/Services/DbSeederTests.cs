@@ -42,7 +42,7 @@ public class DbSeederTests : IDisposable
             "/implementation/weekly-report");
         AssertMenuWithChildren(menus, "/design", "/design/assets", "/design/prototypes");
         AssertMenuWithChildren(menus, "/teacher", "/teacher/courses", "/teacher/students");
-        AssertMenuWithChildren(menus, "/student", "/student/postgraduate", "/student/learning", "/student/review", "/student/mistakes", "/student/materials");
+        AssertMenuWithChildren(menus, "/student", "/student/dashboard", "/student/learning", "/student/review", "/student/mistakes", "/student/materials");
     }
 
     [Fact]

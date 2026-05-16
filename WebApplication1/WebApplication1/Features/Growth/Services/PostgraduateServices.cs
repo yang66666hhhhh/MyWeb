@@ -48,9 +48,15 @@ public class PostgraduateTaskService(AppDbContext dbContext, ILogger<Postgraduat
         return PageResult<PostgraduateTaskDto>.Create(items.Select(ToDto).ToList(), total, page, pageSize);
     }
 
-    public async Task<PostgraduateTaskDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<PostgraduateTaskDto?> GetByIdAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        var task = await dbContext.PostgraduateTasks.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var tasks = dbContext.PostgraduateTasks.AsNoTracking().Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            tasks = tasks.Where(x => x.UserId == userId.Value);
+        }
+
+        var task = await tasks.FirstOrDefaultAsync(cancellationToken);
         return task is null ? null : ToDto(task);
     }
 
@@ -73,9 +79,15 @@ public class PostgraduateTaskService(AppDbContext dbContext, ILogger<Postgraduat
         return ToDto(task);
     }
 
-    public async Task<PostgraduateTaskDto?> UpdateAsync(Guid id, UpdatePostgraduateTaskDto input, CancellationToken cancellationToken = default)
+    public async Task<PostgraduateTaskDto?> UpdateAsync(Guid id, UpdatePostgraduateTaskDto input, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        var task = await dbContext.PostgraduateTasks.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var tasks = dbContext.PostgraduateTasks.Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            tasks = tasks.Where(x => x.UserId == userId.Value);
+        }
+
+        var task = await tasks.FirstOrDefaultAsync(cancellationToken);
         if (task is null) return null;
 
         if (input.Title is not null) task.Title = input.Title;
@@ -89,9 +101,15 @@ public class PostgraduateTaskService(AppDbContext dbContext, ILogger<Postgraduat
         return ToDto(task);
     }
 
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        var task = await dbContext.PostgraduateTasks.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var tasks = dbContext.PostgraduateTasks.Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            tasks = tasks.Where(x => x.UserId == userId.Value);
+        }
+
+        var task = await tasks.FirstOrDefaultAsync(cancellationToken);
         if (task is null) return false;
 
         dbContext.PostgraduateTasks.Remove(task);
@@ -149,9 +167,15 @@ public class ExamMistakeService(AppDbContext dbContext, ILogger<ExamMistakeServi
         return PageResult<ExamMistakeDto>.Create(items.Select(ToDto).ToList(), total, page, pageSize);
     }
 
-    public async Task<ExamMistakeDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<ExamMistakeDto?> GetByIdAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        var mistake = await dbContext.ExamMistakes.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var mistakes = dbContext.ExamMistakes.AsNoTracking().Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            mistakes = mistakes.Where(x => x.UserId == userId.Value);
+        }
+
+        var mistake = await mistakes.FirstOrDefaultAsync(cancellationToken);
         return mistake is null ? null : ToDto(mistake);
     }
 
@@ -173,9 +197,15 @@ public class ExamMistakeService(AppDbContext dbContext, ILogger<ExamMistakeServi
         return ToDto(mistake);
     }
 
-    public async Task<ExamMistakeDto?> UpdateAsync(Guid id, UpdateExamMistakeDto input, CancellationToken cancellationToken = default)
+    public async Task<ExamMistakeDto?> UpdateAsync(Guid id, UpdateExamMistakeDto input, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        var mistake = await dbContext.ExamMistakes.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var mistakes = dbContext.ExamMistakes.Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            mistakes = mistakes.Where(x => x.UserId == userId.Value);
+        }
+
+        var mistake = await mistakes.FirstOrDefaultAsync(cancellationToken);
         if (mistake is null) return null;
 
         if (input.Question is not null) mistake.Question = input.Question;
@@ -192,9 +222,15 @@ public class ExamMistakeService(AppDbContext dbContext, ILogger<ExamMistakeServi
         return ToDto(mistake);
     }
 
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        var mistake = await dbContext.ExamMistakes.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var mistakes = dbContext.ExamMistakes.Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            mistakes = mistakes.Where(x => x.UserId == userId.Value);
+        }
+
+        var mistake = await mistakes.FirstOrDefaultAsync(cancellationToken);
         if (mistake is null) return false;
 
         dbContext.ExamMistakes.Remove(mistake);
@@ -260,9 +296,15 @@ public class ExamMaterialService(AppDbContext dbContext, ILogger<ExamMaterialSer
         return PageResult<ExamMaterialDto>.Create(items.Select(ToDto).ToList(), total, page, pageSize);
     }
 
-    public async Task<ExamMaterialDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<ExamMaterialDto?> GetByIdAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        var material = await dbContext.ExamMaterials.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var materials = dbContext.ExamMaterials.AsNoTracking().Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            materials = materials.Where(x => x.UserId == userId.Value);
+        }
+
+        var material = await materials.FirstOrDefaultAsync(cancellationToken);
         return material is null ? null : ToDto(material);
     }
 
@@ -284,9 +326,15 @@ public class ExamMaterialService(AppDbContext dbContext, ILogger<ExamMaterialSer
         return ToDto(material);
     }
 
-    public async Task<ExamMaterialDto?> UpdateAsync(Guid id, UpdateExamMaterialDto input, CancellationToken cancellationToken = default)
+    public async Task<ExamMaterialDto?> UpdateAsync(Guid id, UpdateExamMaterialDto input, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        var material = await dbContext.ExamMaterials.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var materials = dbContext.ExamMaterials.Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            materials = materials.Where(x => x.UserId == userId.Value);
+        }
+
+        var material = await materials.FirstOrDefaultAsync(cancellationToken);
         if (material is null) return null;
 
         if (input.Title is not null) material.Title = input.Title;
@@ -299,9 +347,15 @@ public class ExamMaterialService(AppDbContext dbContext, ILogger<ExamMaterialSer
         return ToDto(material);
     }
 
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        var material = await dbContext.ExamMaterials.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var materials = dbContext.ExamMaterials.Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            materials = materials.Where(x => x.UserId == userId.Value);
+        }
+
+        var material = await materials.FirstOrDefaultAsync(cancellationToken);
         if (material is null) return false;
 
         dbContext.ExamMaterials.Remove(material);

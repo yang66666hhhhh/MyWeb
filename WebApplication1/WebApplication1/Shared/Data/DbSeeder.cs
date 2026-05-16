@@ -117,7 +117,7 @@ public static class DbSeeder
                 new() { Id = Guid.NewGuid(), Path = "/work/daily-plan", Name = "每日计划", Icon = "ant-design:calendar", Sort = 13, IsActive = true, CreatedAt = now },
                 new() { Id = Guid.NewGuid(), Path = "/work/import", Name = "数据导入", Icon = "ant-design:upload", Sort = 14, IsActive = true, CreatedAt = now },
                 new() { Id = Guid.NewGuid(), Path = "/growth/habits", Name = "习惯打卡", Icon = "ant-design:check-circle", Sort = 20, IsActive = true, CreatedAt = now },
-                new() { Id = Guid.NewGuid(), Path = "/student/postgraduate", Name = "学习总览", Icon = "ant-design:dashboard", Sort = 21, IsActive = true, CreatedAt = now },
+                new() { Id = Guid.NewGuid(), Path = "/student/dashboard", Name = "学习总览", Icon = "ant-design:dashboard", Sort = 21, IsActive = true, CreatedAt = now },
                 new() { Id = Guid.NewGuid(), Path = "/student/review", Name = "复习日程", Icon = "ant-design:clock-circle", Sort = 22, IsActive = true, CreatedAt = now },
                 new() { Id = Guid.NewGuid(), Path = "/student/mistakes", Name = "错题本", Icon = "ant-design:warning", Sort = 23, IsActive = true, CreatedAt = now },
                 new() { Id = Guid.NewGuid(), Path = "/student/materials", Name = "学习资料", Icon = "ant-design:database", Sort = 24, IsActive = true, CreatedAt = now },
@@ -144,7 +144,7 @@ public static class DbSeeder
                 new() { Id = Guid.NewGuid(), Name = "每日计划", Path = "/work/daily-plan", Icon = "ant-design:calendar", Sort = 13, IsActive = true, CreatedAt = now },
                 new() { Id = Guid.NewGuid(), Name = "数据导入", Path = "/work/import", Icon = "ant-design:upload", Sort = 14, IsActive = true, CreatedAt = now },
                 new() { Id = Guid.NewGuid(), Name = "习惯打卡", Path = "/growth/habits", Icon = "ant-design:check-circle", Sort = 20, IsActive = true, CreatedAt = now },
-                new() { Id = Guid.NewGuid(), Name = "学习总览", Path = "/student/postgraduate", Icon = "ant-design:dashboard", Sort = 21, IsActive = true, CreatedAt = now },
+                new() { Id = Guid.NewGuid(), Name = "学习总览", Path = "/student/dashboard", Icon = "ant-design:dashboard", Sort = 21, IsActive = true, CreatedAt = now },
                 new() { Id = Guid.NewGuid(), Name = "复习日程", Path = "/student/review", Icon = "ant-design:clock-circle", Sort = 22, IsActive = true, CreatedAt = now },
                 new() { Id = Guid.NewGuid(), Name = "错题本", Path = "/student/mistakes", Icon = "ant-design:warning", Sort = 23, IsActive = true, CreatedAt = now },
                 new() { Id = Guid.NewGuid(), Name = "学习资料", Path = "/student/materials", Icon = "ant-design:database", Sort = 24, IsActive = true, CreatedAt = now },
@@ -165,7 +165,7 @@ public static class DbSeeder
                 new() { MenuItemId = menuItemDict["/work/daily-plan"].Id, TagId = tagDict["日志管理"].Id },
                 new() { MenuItemId = menuItemDict["/work/import"].Id, TagId = tagDict["日志管理"].Id },
                 new() { MenuItemId = menuItemDict["/growth/habits"].Id, TagId = tagDict["习惯养成"].Id },
-                new() { MenuItemId = menuItemDict["/student/postgraduate"].Id, TagId = tagDict["考研学习"].Id },
+                new() { MenuItemId = menuItemDict["/student/dashboard"].Id, TagId = tagDict["考研学习"].Id },
                 new() { MenuItemId = menuItemDict["/student/review"].Id, TagId = tagDict["考研学习"].Id },
                 new() { MenuItemId = menuItemDict["/student/mistakes"].Id, TagId = tagDict["考研学习"].Id },
                 new() { MenuItemId = menuItemDict["/student/materials"].Id, TagId = tagDict["考研学习"].Id },
@@ -956,7 +956,7 @@ public static class DbSeeder
         C(teacher, "学生管理", "/teacher/students", "lucide:users", "/views/teacher/students/index.vue", 1, 1, false, "Teacher", null, "TEACHER_STUDENT");
 
         var student = L("学习中心", "/student", "lucide:book-marked", null, 44, 1, false, "Student", "Persona");
-        C(student, "学习总览", "/student/postgraduate", "lucide:layout-dashboard", "/views/student/postgraduate/index.vue", 0, 1, false, "Student", null, "STUDENT_EXAM");
+        C(student, "学习总览", "/student/dashboard", "lucide:layout-dashboard", "/views/student/dashboard/index.vue", 0, 1, false, "Student", null, "STUDENT_EXAM");
         C(student, "学习计划", "/student/learning", "lucide:book-open-check", "/views/student/learning/index.vue", 1, 1, false, "Student", null, "STUDENT_LEARNING");
         C(student, "复习日程", "/student/review", "lucide:alarm-clock-check", "/views/student/review/index.vue", 2, 1, false, "Student", null, "STUDENT_REVIEW");
         C(student, "错题本", "/student/mistakes", "lucide:notebook-pen", "/views/student/mistakes/index.vue", 3, 1, false, "Student", null, "STUDENT_MISTAKES");

@@ -62,7 +62,7 @@ public class RoleMenuServiceTests : IDisposable
         {
             Id = Guid.NewGuid(),
             Name = "考研备考",
-            Path = "/student/postgraduate",
+            Path = "/student/dashboard",
             ParentId = memberGrowth.Id,
             MinRoleLevel = 3,
             IsBaseMenu = false,

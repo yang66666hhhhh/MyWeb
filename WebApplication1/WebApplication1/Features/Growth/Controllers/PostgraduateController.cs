@@ -8,8 +8,8 @@ namespace WebApplication1.Features.Growth.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/student/postgraduate")]
-[Tags("Student - Postgraduate")]
+[Route("api/student")]
+[Tags("Student")]
 public class PostgraduateController(
     IPostgraduateTaskService taskService,
     IExamMistakeService mistakeService,
@@ -28,7 +28,8 @@ public class PostgraduateController(
     [HttpGet("tasks/{id:guid}")]
     public async Task<ActionResult<ApiResult<PostgraduateTaskDto>>> GetTaskById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await taskService.GetByIdAsync(id, cancellationToken);
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var result = await taskService.GetByIdAsync(id, userId, cancellationToken);
         if (result is null)
             return NotFound(ApiResult<PostgraduateTaskDto>.Fail("任务不存在", StatusCodes.Status404NotFound));
         return Ok(ApiResult<PostgraduateTaskDto>.Success(result));
@@ -97,7 +98,8 @@ public class PostgraduateController(
         [FromBody] UpdatePostgraduateTaskDto input,
         CancellationToken cancellationToken)
     {
-        var result = await taskService.UpdateAsync(id, input, cancellationToken);
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var result = await taskService.UpdateAsync(id, input, userId, cancellationToken);
         if (result is null)
             return NotFound(ApiResult<PostgraduateTaskDto>.Fail("任务不存在", StatusCodes.Status404NotFound));
         return Ok(ApiResult<PostgraduateTaskDto>.Success(result, "更新成功"));
@@ -106,7 +108,8 @@ public class PostgraduateController(
     [HttpDelete("tasks/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteTask(Guid id, CancellationToken cancellationToken)
     {
-        var deleted = await taskService.DeleteAsync(id, cancellationToken);
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var deleted = await taskService.DeleteAsync(id, userId, cancellationToken);
         if (!deleted)
             return NotFound(ApiResult.Fail("任务不存在"));
         return Ok(ApiResult.Success("删除成功"));
@@ -125,7 +128,8 @@ public class PostgraduateController(
     [HttpGet("mistakes/{id:guid}")]
     public async Task<ActionResult<ApiResult<ExamMistakeDto>>> GetMistakeById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await mistakeService.GetByIdAsync(id, cancellationToken);
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var result = await mistakeService.GetByIdAsync(id, userId, cancellationToken);
         if (result is null)
             return NotFound(ApiResult<ExamMistakeDto>.Fail("错题不存在", StatusCodes.Status404NotFound));
         return Ok(ApiResult<ExamMistakeDto>.Success(result));
@@ -150,7 +154,8 @@ public class PostgraduateController(
         [FromBody] UpdateExamMistakeDto input,
         CancellationToken cancellationToken)
     {
-        var result = await mistakeService.UpdateAsync(id, input, cancellationToken);
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var result = await mistakeService.UpdateAsync(id, input, userId, cancellationToken);
         if (result is null)
             return NotFound(ApiResult<ExamMistakeDto>.Fail("错题不存在", StatusCodes.Status404NotFound));
         return Ok(ApiResult<ExamMistakeDto>.Success(result, "更新成功"));
@@ -159,7 +164,8 @@ public class PostgraduateController(
     [HttpDelete("mistakes/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteMistake(Guid id, CancellationToken cancellationToken)
     {
-        var deleted = await mistakeService.DeleteAsync(id, cancellationToken);
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var deleted = await mistakeService.DeleteAsync(id, userId, cancellationToken);
         if (!deleted)
             return NotFound(ApiResult.Fail("错题不存在"));
         return Ok(ApiResult.Success("删除成功"));
@@ -178,7 +184,8 @@ public class PostgraduateController(
     [HttpGet("materials/{id:guid}")]
     public async Task<ActionResult<ApiResult<ExamMaterialDto>>> GetMaterialById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await materialService.GetByIdAsync(id, cancellationToken);
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var result = await materialService.GetByIdAsync(id, userId, cancellationToken);
         if (result is null)
             return NotFound(ApiResult<ExamMaterialDto>.Fail("资料不存在", StatusCodes.Status404NotFound));
         return Ok(ApiResult<ExamMaterialDto>.Success(result));
@@ -203,7 +210,8 @@ public class PostgraduateController(
         [FromBody] UpdateExamMaterialDto input,
         CancellationToken cancellationToken)
     {
-        var result = await materialService.UpdateAsync(id, input, cancellationToken);
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var result = await materialService.UpdateAsync(id, input, userId, cancellationToken);
         if (result is null)
             return NotFound(ApiResult<ExamMaterialDto>.Fail("资料不存在", StatusCodes.Status404NotFound));
         return Ok(ApiResult<ExamMaterialDto>.Success(result, "更新成功"));
@@ -212,7 +220,8 @@ public class PostgraduateController(
     [HttpDelete("materials/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteMaterial(Guid id, CancellationToken cancellationToken)
     {
-        var deleted = await materialService.DeleteAsync(id, cancellationToken);
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var deleted = await materialService.DeleteAsync(id, userId, cancellationToken);
         if (!deleted)
             return NotFound(ApiResult.Fail("资料不存在"));
         return Ok(ApiResult.Success("删除成功"));
