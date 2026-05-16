@@ -24,8 +24,10 @@ public class RoleMenuService
             .Where(x => x.IsEnabled)
             .ToListAsync(ct);
 
+        var menuById = allMenus.ToDictionary(x => x.Id);
+
         var matched = allMenus
-            .Where(m => UserCanViewMenu(m, access.RoleLevel, access.PersonaCodes, access.FeatureCodes))
+            .Where(m => UserCanViewMenuWithAncestors(m, menuById, access.RoleLevel, access.PersonaCodes, access.FeatureCodes))
             .ToList();
 
         var matchedIds = matched.Select(x => x.Id).ToHashSet();
@@ -73,6 +75,34 @@ public class RoleMenuService
             availableFeatureCodes.ToHashSet(StringComparer.OrdinalIgnoreCase));
 
         return await GetMenusForUserAsync(access, ct);
+    }
+
+    private static bool UserCanViewMenuWithAncestors(
+        RoleMenu menu,
+        IReadOnlyDictionary<Guid, RoleMenu> menuById,
+        int userRoleLevel,
+        IReadOnlySet<string> userPersonaCodes,
+        IReadOnlySet<string> availableFeatureCodes)
+    {
+        var current = menu;
+        var visited = new HashSet<Guid>();
+
+        while (true)
+        {
+            if (!visited.Add(current.Id))
+                return false;
+
+            if (!UserCanViewMenu(current, userRoleLevel, userPersonaCodes, availableFeatureCodes))
+                return false;
+
+            if (!current.ParentId.HasValue)
+                return true;
+
+            if (!menuById.TryGetValue(current.ParentId.Value, out var parent))
+                return false;
+
+            current = parent;
+        }
     }
 
     private static bool UserCanViewMenu(RoleMenu menu, int userRoleLevel, IReadOnlySet<string> userPersonaCodes, IReadOnlySet<string> availableFeatureCodes)

@@ -204,6 +204,33 @@ public class RoleMenuServiceTests : IDisposable
         };
         _context.RoleMenus.Add(sharedDevOps);
 
+        var proOnlyParent = new RoleMenu
+        {
+            Id = Guid.NewGuid(),
+            Name = "Pro专区",
+            Path = "/pro-only",
+            MinRoleLevel = 2,
+            IsBaseMenu = false,
+            IsVisible = true,
+            IsEnabled = true,
+            Sort = 70
+        };
+        _context.RoleMenus.Add(proOnlyParent);
+
+        var misplacedMemberChild = new RoleMenu
+        {
+            Id = Guid.NewGuid(),
+            Name = "错误挂载的普通功能",
+            Path = "/pro-only/member-child",
+            ParentId = proOnlyParent.Id,
+            MinRoleLevel = 1,
+            IsBaseMenu = false,
+            IsVisible = true,
+            IsEnabled = true,
+            Sort = 0
+        };
+        _context.RoleMenus.Add(misplacedMemberChild);
+
         // PersonaTypes
         var personaTypes = new List<PersonaType>
         {
@@ -301,6 +328,8 @@ public class RoleMenuServiceTests : IDisposable
 
         Assert.NotNull(result);
         Assert.True(FindMenuInTree(result, "个人成长"));
+        Assert.False(FindMenuInTree(result, "知识库"));
+        Assert.False(FindMenuInTree(result, "考研备考"));
     }
 
     [Fact]
@@ -416,6 +445,17 @@ public class RoleMenuServiceTests : IDisposable
             new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "dev_pipelines" });
 
         Assert.True(FindMenuInTreeByPath(result, "/dev/pipelines"));
+    }
+
+    [Fact]
+    public async Task GetMenusForUserAsync_ShouldHideChild_WhenParentRequiresHigherRole()
+    {
+        var userId = CreateUser();
+
+        var result = await _service.GetMenusForUserAsync(userId, "member", new HashSet<string>());
+
+        Assert.False(FindMenuInTreeByPath(result, "/pro-only"));
+        Assert.False(FindMenuInTreeByPath(result, "/pro-only/member-child"));
     }
 
     [Fact]
