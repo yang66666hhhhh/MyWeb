@@ -64,7 +64,7 @@ public class UserAccessContextServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetAsync_ShouldMergePlanAndPersonaFeatures()
+    public async Task GetAsync_ShouldReturnOwnerFeaturesAndPersonaCodes()
     {
         var user = new AppUser
         {
@@ -103,6 +103,68 @@ public class UserAccessContextServiceTests : IDisposable
         Assert.Contains("Developer", result.PersonaCodes);
         Assert.Contains("WORK_LOG", result.FeatureCodes);
         Assert.Contains("DEV_CODE_REPO", result.FeatureCodes);
+    }
+
+    [Fact]
+    public async Task GetAsync_ShouldNotGrantPersonaFeature_WhenPlanDoesNotIncludeIt()
+    {
+        var user = new AppUser
+        {
+            Username = "developer-member",
+            RealName = "Developer Member",
+            PasswordHash = "test",
+            Roles = "member"
+        };
+        var free = new Plan { Code = "Free", Name = "免费版", IsActive = true };
+        var workLog = new Feature { Code = "WORK_LOG", Name = "工作日志", Category = "Work" };
+        var devRepo = new Feature { Code = "DEV_CODE_REPO", Name = "代码仓库", Category = "Persona" };
+        var developer = new PersonaType { Code = "Developer", Name = "开发者", IsActive = true };
+
+        _context.Users.Add(user);
+        _context.Plans.Add(free);
+        _context.Features.AddRange(workLog, devRepo);
+        _context.PlanFeatures.Add(new PlanFeature { Plan = free, Feature = workLog });
+        _context.PersonaTypes.Add(developer);
+        _context.UserPersonas.Add(new UserPersona { User = user, PersonaType = developer, IsPrimary = true });
+        _context.PersonaFeatures.Add(new PersonaFeature { PersonaCode = developer.Code, Feature = devRepo });
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetAsync(user.Id);
+
+        Assert.NotNull(result);
+        Assert.Contains("Developer", result.PersonaCodes);
+        Assert.Contains("WORK_LOG", result.FeatureCodes);
+        Assert.DoesNotContain("DEV_CODE_REPO", result.FeatureCodes);
+    }
+
+    [Fact]
+    public async Task GetAsync_ShouldGrantPersonaFeature_WhenPlanAndPersonaBothAllowIt()
+    {
+        var user = new AppUser
+        {
+            Username = "student-member",
+            RealName = "Student Member",
+            PasswordHash = "test",
+            Roles = "member"
+        };
+        var free = new Plan { Code = "Free", Name = "免费版", IsActive = true };
+        var studentExam = new Feature { Code = "STUDENT_EXAM", Name = "考研备考", Category = "Persona" };
+        var student = new PersonaType { Code = "Student", Name = "学生", IsActive = true };
+
+        _context.Users.Add(user);
+        _context.Plans.Add(free);
+        _context.Features.Add(studentExam);
+        _context.PlanFeatures.Add(new PlanFeature { Plan = free, Feature = studentExam });
+        _context.PersonaTypes.Add(student);
+        _context.UserPersonas.Add(new UserPersona { User = user, PersonaType = student, IsPrimary = true });
+        _context.PersonaFeatures.Add(new PersonaFeature { PersonaCode = student.Code, Feature = studentExam });
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetAsync(user.Id);
+
+        Assert.NotNull(result);
+        Assert.Contains("Student", result.PersonaCodes);
+        Assert.Contains("STUDENT_EXAM", result.FeatureCodes);
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Features.Growth.Dtos;
 using WebApplication1.Features.Growth.Services.Interfaces;
 using WebApplication1.Shared.Common;
@@ -17,6 +18,7 @@ public class PostgraduateController(
     IStudentSubjectService subjectService,
     IStudentStudyRecordService recordService) : BaseApiController
 {
+    [RequireFeature("STUDENT_LEARNING")]
     [HttpGet("tasks")]
     public async Task<ActionResult<ApiResult<PageResult<PostgraduateTaskDto>>>> GetTasks(
         [FromQuery] PostgraduateTaskQueryDto query,
@@ -27,6 +29,7 @@ public class PostgraduateController(
         return Ok(ApiResult<PageResult<PostgraduateTaskDto>>.Success(result));
     }
 
+    [RequireFeature("STUDENT_LEARNING")]
     [HttpGet("tasks/{id:guid}")]
     public async Task<ActionResult<ApiResult<PostgraduateTaskDto>>> GetTaskById(Guid id, CancellationToken cancellationToken)
     {
@@ -37,6 +40,7 @@ public class PostgraduateController(
         return Ok(ApiResult<PostgraduateTaskDto>.Success(result));
     }
 
+    [RequireFeature("STUDENT_EXAM")]
     [HttpGet("dashboard")]
     public async Task<ActionResult<ApiResult<ExamDashboardDto>>> GetDashboard(CancellationToken cancellationToken)
     {
@@ -74,14 +78,15 @@ public class PostgraduateController(
             .Concat(materialsResult.Items.Select(x => x.Subject))
             .Concat(recordsResult.Items.Select(x => x.Subject))
             .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
         var subjects = subjectNames.Select(name =>
         {
-            var subject = subjectsResult.Items.FirstOrDefault(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            var subject = subjectsResult.Items.FirstOrDefault(x => SubjectEquals(x.Name, name));
             var weeklyMinutes = recordsResult.Items
-                .Where(x => x.Subject.Equals(name, StringComparison.OrdinalIgnoreCase))
+                .Where(x => SubjectEquals(x.Subject, name))
                 .Sum(x => x.DurationMinutes);
             var targetHours = Math.Max(subject?.TargetHours ?? 0, 1);
             var progress = Math.Min(100, (int)Math.Round(weeklyMinutes / 60.0 / targetHours * 100));
@@ -94,8 +99,8 @@ public class PostgraduateController(
                 TargetHours = subject?.TargetHours ?? 0,
                 WeeklyHours = Math.Round(weeklyMinutes / 60.0, 1),
                 Progress = progress,
-                MistakeCount = mistakesResult.Items.Count(x => x.Subject.Equals(name, StringComparison.OrdinalIgnoreCase) && x.Status != 2),
-                MaterialCount = materialsResult.Items.Count(x => x.Subject.Equals(name, StringComparison.OrdinalIgnoreCase))
+                MistakeCount = mistakesResult.Items.Count(x => SubjectEquals(x.Subject, name) && x.Status != 2),
+                MaterialCount = materialsResult.Items.Count(x => SubjectEquals(x.Subject, name))
             };
         }).OrderByDescending(x => x.MistakeCount).ThenBy(x => x.Name).ToList();
 
@@ -118,7 +123,7 @@ public class PostgraduateController(
                 .Select(x => new StudyRecordDto
                 {
                     Id = x.Id.ToString(),
-                    Subject = x.Subject,
+                    Subject = NormalizeSubject(x.Subject),
                     Summary = x.Summary,
                     DurationMinutes = x.DurationMinutes,
                     RecordDate = x.RecordDate.ToString("yyyy-MM-dd"),
@@ -131,6 +136,7 @@ public class PostgraduateController(
         return Ok(ApiResult<ExamDashboardDto>.Success(dashboard));
     }
 
+    [RequireFeature("STUDENT_LEARNING")]
     [HttpPost("tasks")]
     public async Task<ActionResult<ApiResult<PostgraduateTaskDto>>> CreateTask(
         [FromBody] CreatePostgraduateTaskDto input,
@@ -144,6 +150,7 @@ public class PostgraduateController(
         return CreatedAtAction(nameof(GetTaskById), new { id = result.Id }, ApiResult<PostgraduateTaskDto>.Success(result, "创建成功"));
     }
 
+    [RequireFeature("STUDENT_LEARNING")]
     [HttpPut("tasks/{id:guid}")]
     public async Task<ActionResult<ApiResult<PostgraduateTaskDto>>> UpdateTask(
         Guid id,
@@ -157,6 +164,7 @@ public class PostgraduateController(
         return Ok(ApiResult<PostgraduateTaskDto>.Success(result, "更新成功"));
     }
 
+    [RequireFeature("STUDENT_LEARNING")]
     [HttpDelete("tasks/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteTask(Guid id, CancellationToken cancellationToken)
     {
@@ -167,6 +175,7 @@ public class PostgraduateController(
         return Ok(ApiResult.Success("删除成功"));
     }
 
+    [RequireFeature("STUDENT_MISTAKES")]
     [HttpGet("mistakes")]
     public async Task<ActionResult<ApiResult<PageResult<ExamMistakeDto>>>> GetMistakes(
         [FromQuery] ExamMistakeQueryDto query,
@@ -177,6 +186,7 @@ public class PostgraduateController(
         return Ok(ApiResult<PageResult<ExamMistakeDto>>.Success(result));
     }
 
+    [RequireFeature("STUDENT_MISTAKES")]
     [HttpGet("mistakes/{id:guid}")]
     public async Task<ActionResult<ApiResult<ExamMistakeDto>>> GetMistakeById(Guid id, CancellationToken cancellationToken)
     {
@@ -187,6 +197,7 @@ public class PostgraduateController(
         return Ok(ApiResult<ExamMistakeDto>.Success(result));
     }
 
+    [RequireFeature("STUDENT_MISTAKES")]
     [HttpPost("mistakes")]
     public async Task<ActionResult<ApiResult<ExamMistakeDto>>> CreateMistake(
         [FromBody] CreateExamMistakeDto input,
@@ -200,6 +211,7 @@ public class PostgraduateController(
         return CreatedAtAction(nameof(GetMistakeById), new { id = result.Id }, ApiResult<ExamMistakeDto>.Success(result, "创建成功"));
     }
 
+    [RequireFeature("STUDENT_MISTAKES")]
     [HttpPut("mistakes/{id:guid}")]
     public async Task<ActionResult<ApiResult<ExamMistakeDto>>> UpdateMistake(
         Guid id,
@@ -213,6 +225,7 @@ public class PostgraduateController(
         return Ok(ApiResult<ExamMistakeDto>.Success(result, "更新成功"));
     }
 
+    [RequireFeature("STUDENT_MISTAKES")]
     [HttpDelete("mistakes/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteMistake(Guid id, CancellationToken cancellationToken)
     {
@@ -223,6 +236,7 @@ public class PostgraduateController(
         return Ok(ApiResult.Success("删除成功"));
     }
 
+    [RequireFeature("STUDENT_MATERIALS")]
     [HttpGet("materials")]
     public async Task<ActionResult<ApiResult<PageResult<ExamMaterialDto>>>> GetMaterials(
         [FromQuery] ExamMaterialQueryDto query,
@@ -233,6 +247,7 @@ public class PostgraduateController(
         return Ok(ApiResult<PageResult<ExamMaterialDto>>.Success(result));
     }
 
+    [RequireFeature("STUDENT_MATERIALS")]
     [HttpGet("materials/{id:guid}")]
     public async Task<ActionResult<ApiResult<ExamMaterialDto>>> GetMaterialById(Guid id, CancellationToken cancellationToken)
     {
@@ -243,6 +258,7 @@ public class PostgraduateController(
         return Ok(ApiResult<ExamMaterialDto>.Success(result));
     }
 
+    [RequireFeature("STUDENT_MATERIALS")]
     [HttpPost("materials")]
     public async Task<ActionResult<ApiResult<ExamMaterialDto>>> CreateMaterial(
         [FromBody] CreateExamMaterialDto input,
@@ -256,6 +272,7 @@ public class PostgraduateController(
         return CreatedAtAction(nameof(GetMaterialById), new { id = result.Id }, ApiResult<ExamMaterialDto>.Success(result, "创建成功"));
     }
 
+    [RequireFeature("STUDENT_MATERIALS")]
     [HttpPut("materials/{id:guid}")]
     public async Task<ActionResult<ApiResult<ExamMaterialDto>>> UpdateMaterial(
         Guid id,
@@ -269,6 +286,7 @@ public class PostgraduateController(
         return Ok(ApiResult<ExamMaterialDto>.Success(result, "更新成功"));
     }
 
+    [RequireFeature("STUDENT_MATERIALS")]
     [HttpDelete("materials/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteMaterial(Guid id, CancellationToken cancellationToken)
     {
@@ -279,6 +297,7 @@ public class PostgraduateController(
         return Ok(ApiResult.Success("删除成功"));
     }
 
+    [RequireFeature("STUDENT_SUBJECTS")]
     [HttpGet("subjects")]
     public async Task<ActionResult<ApiResult<PageResult<StudentSubjectDto>>>> GetSubjects(
         [FromQuery] StudentSubjectQueryDto query,
@@ -289,6 +308,7 @@ public class PostgraduateController(
         return Ok(ApiResult<PageResult<StudentSubjectDto>>.Success(result));
     }
 
+    [RequireFeature("STUDENT_SUBJECTS")]
     [HttpGet("subjects/{id:guid}")]
     public async Task<ActionResult<ApiResult<StudentSubjectDto>>> GetSubjectById(Guid id, CancellationToken cancellationToken)
     {
@@ -299,6 +319,7 @@ public class PostgraduateController(
         return Ok(ApiResult<StudentSubjectDto>.Success(result));
     }
 
+    [RequireFeature("STUDENT_SUBJECTS")]
     [HttpPost("subjects")]
     public async Task<ActionResult<ApiResult<StudentSubjectDto>>> CreateSubject(
         [FromBody] CreateStudentSubjectDto input,
@@ -312,6 +333,7 @@ public class PostgraduateController(
         return CreatedAtAction(nameof(GetSubjectById), new { id = result.Id }, ApiResult<StudentSubjectDto>.Success(result, "创建成功"));
     }
 
+    [RequireFeature("STUDENT_SUBJECTS")]
     [HttpPut("subjects/{id:guid}")]
     public async Task<ActionResult<ApiResult<StudentSubjectDto>>> UpdateSubject(
         Guid id,
@@ -325,6 +347,7 @@ public class PostgraduateController(
         return Ok(ApiResult<StudentSubjectDto>.Success(result, "更新成功"));
     }
 
+    [RequireFeature("STUDENT_SUBJECTS")]
     [HttpDelete("subjects/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteSubject(Guid id, CancellationToken cancellationToken)
     {
@@ -335,6 +358,7 @@ public class PostgraduateController(
         return Ok(ApiResult.Success("删除成功"));
     }
 
+    [RequireFeature("STUDENT_RECORDS")]
     [HttpGet("records")]
     public async Task<ActionResult<ApiResult<PageResult<StudentStudyRecordDto>>>> GetRecords(
         [FromQuery] StudentStudyRecordQueryDto query,
@@ -345,6 +369,7 @@ public class PostgraduateController(
         return Ok(ApiResult<PageResult<StudentStudyRecordDto>>.Success(result));
     }
 
+    [RequireFeature("STUDENT_RECORDS")]
     [HttpGet("records/{id:guid}")]
     public async Task<ActionResult<ApiResult<StudentStudyRecordDto>>> GetRecordById(Guid id, CancellationToken cancellationToken)
     {
@@ -355,6 +380,7 @@ public class PostgraduateController(
         return Ok(ApiResult<StudentStudyRecordDto>.Success(result));
     }
 
+    [RequireFeature("STUDENT_RECORDS")]
     [HttpPost("records")]
     public async Task<ActionResult<ApiResult<StudentStudyRecordDto>>> CreateRecord(
         [FromBody] CreateStudentStudyRecordDto input,
@@ -368,6 +394,7 @@ public class PostgraduateController(
         return CreatedAtAction(nameof(GetRecordById), new { id = result.Id }, ApiResult<StudentStudyRecordDto>.Success(result, "创建成功"));
     }
 
+    [RequireFeature("STUDENT_RECORDS")]
     [HttpPut("records/{id:guid}")]
     public async Task<ActionResult<ApiResult<StudentStudyRecordDto>>> UpdateRecord(
         Guid id,
@@ -381,6 +408,7 @@ public class PostgraduateController(
         return Ok(ApiResult<StudentStudyRecordDto>.Success(result, "更新成功"));
     }
 
+    [RequireFeature("STUDENT_RECORDS")]
     [HttpDelete("records/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteRecord(Guid id, CancellationToken cancellationToken)
     {
@@ -389,5 +417,15 @@ public class PostgraduateController(
         if (!deleted)
             return NotFound(ApiResult.Fail("学习记录不存在"));
         return Ok(ApiResult.Success("删除成功"));
+    }
+
+    private static bool SubjectEquals(string? subject, string target)
+    {
+        return string.Equals(NormalizeSubject(subject), target, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizeSubject(string? subject)
+    {
+        return string.IsNullOrWhiteSpace(subject) ? "未归类" : subject.Trim();
     }
 }

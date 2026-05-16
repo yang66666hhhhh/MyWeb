@@ -906,7 +906,7 @@ public static class DbSeeder
             var planFeatures = new List<PlanFeature>();
 
             // Free: basic growth + work log
-            var freeFeatures = new[] { "GROWTH_DAILY_PLAN", "GROWTH_HABIT", "WORK_LOG", "WORK_TASK" };
+            var freeFeatures = DefaultFreeFeatureCodes;
             foreach (var code in freeFeatures)
             {
                 if (featureDict.TryGetValue(code, out var feature))
@@ -953,7 +953,145 @@ public static class DbSeeder
             logger?.LogInformation("[DbSeeder] PersonaFeatures seeded.");
         }
 
+        await EnsureFeatureDefinitionsAsync(context, DefaultFreeFeatureDefinitions, logger);
+        await EnsurePlanFeaturesAsync(context, "Free", DefaultFreeFeatureCodes, logger);
+        await EnsurePersonaFeaturesAsync(context, "Student", "STUDENT_", logger);
+
         logger?.LogInformation("[DbSeeder] Seed completed successfully!");
+    }
+
+    private static readonly string[] DefaultFreeFeatureCodes =
+    [
+        "GROWTH_DAILY_PLAN",
+        "GROWTH_HABIT",
+        "GROWTH_KNOWLEDGE",
+        "WORK_LOG",
+        "WORK_TASK",
+        "STUDENT_EXAM",
+        "STUDENT_LEARNING",
+        "STUDENT_MISTAKES",
+        "STUDENT_REVIEW",
+        "STUDENT_MATERIALS",
+        "STUDENT_RECORDS",
+        "STUDENT_SUBJECTS",
+    ];
+
+    private static readonly (string Code, string Name, string Category, string Description)[] DefaultFreeFeatureDefinitions =
+    [
+        ("GROWTH_DAILY_PLAN", "每日计划", "Growth", "每日计划管理"),
+        ("GROWTH_HABIT", "习惯打卡", "Growth", "习惯养成和打卡"),
+        ("GROWTH_KNOWLEDGE", "知识库", "Growth", "知识文章管理"),
+        ("WORK_LOG", "工作日志", "Work", "工作日志管理"),
+        ("WORK_TASK", "工作任务", "Work", "工作任务管理"),
+        ("STUDENT_EXAM", "考研备考", "Persona", "考研备考管理"),
+        ("STUDENT_LEARNING", "学习计划", "Persona", "学习计划制定"),
+        ("STUDENT_MISTAKES", "错题本", "Persona", "错题记录和复习"),
+        ("STUDENT_REVIEW", "复习日程", "Persona", "到期复习安排"),
+        ("STUDENT_MATERIALS", "学习资料", "Persona", "学习资料管理"),
+        ("STUDENT_RECORDS", "学习记录", "Persona", "学习过程记录"),
+        ("STUDENT_SUBJECTS", "科目目标", "Persona", "科目目标配置"),
+    ];
+
+    private static async Task EnsureFeatureDefinitionsAsync(
+        AppDbContext context,
+        IEnumerable<(string Code, string Name, string Category, string Description)> definitions,
+        ILogger? logger)
+    {
+        var existingCodes = await context.Features
+            .Select(x => x.Code)
+            .ToListAsync();
+
+        var existing = existingCodes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var missing = definitions
+            .Where(x => !existing.Contains(x.Code))
+            .Select(x => new Feature
+            {
+                Code = x.Code,
+                Name = x.Name,
+                Category = x.Category,
+                Description = x.Description,
+                IsEnabled = true
+            })
+            .ToList();
+
+        if (missing.Count == 0)
+        {
+            return;
+        }
+
+        context.Features.AddRange(missing);
+        await context.SaveChangesAsync();
+        logger?.LogInformation("[DbSeeder] Added {Count} missing feature definitions.", missing.Count);
+    }
+
+    private static async Task EnsurePlanFeaturesAsync(
+        AppDbContext context,
+        string planCode,
+        IEnumerable<string> featureCodes,
+        ILogger? logger)
+    {
+        var plan = await context.Plans.FirstOrDefaultAsync(x => x.Code == planCode);
+        if (plan is null)
+        {
+            return;
+        }
+
+        var features = await context.Features
+            .Where(x => featureCodes.Contains(x.Code))
+            .ToListAsync();
+
+        var featureIds = features.Select(x => x.Id).ToHashSet();
+        var existingFeatureIds = await context.PlanFeatures
+            .Where(x => x.PlanId == plan.Id && featureIds.Contains(x.FeatureId))
+            .Select(x => x.FeatureId)
+            .ToListAsync();
+
+        var existing = existingFeatureIds.ToHashSet();
+        var missing = features
+            .Where(x => !existing.Contains(x.Id))
+            .Select(x => new PlanFeature { PlanId = plan.Id, FeatureId = x.Id })
+            .ToList();
+
+        if (missing.Count == 0)
+        {
+            return;
+        }
+
+        context.PlanFeatures.AddRange(missing);
+        await context.SaveChangesAsync();
+        logger?.LogInformation("[DbSeeder] Added {Count} missing features to {PlanCode} plan.", missing.Count, planCode);
+    }
+
+    private static async Task EnsurePersonaFeaturesAsync(
+        AppDbContext context,
+        string personaCode,
+        string featurePrefix,
+        ILogger? logger)
+    {
+        var features = await context.Features
+            .Where(x => x.Code.StartsWith(featurePrefix))
+            .ToListAsync();
+
+        var featureIds = features.Select(x => x.Id).ToHashSet();
+        var existingFeatureIds = await context.PersonaFeatures
+            .Where(x => x.PersonaCode == personaCode && featureIds.Contains(x.FeatureId))
+            .Select(x => x.FeatureId)
+            .ToListAsync();
+
+        var existing = existingFeatureIds.ToHashSet();
+        var missing = features
+            .Where(x => !existing.Contains(x.Id))
+            .Select(x => new PersonaFeature { PersonaCode = personaCode, FeatureId = x.Id })
+            .ToList();
+
+        if (missing.Count == 0)
+        {
+            return;
+        }
+
+        context.PersonaFeatures.AddRange(missing);
+        await context.SaveChangesAsync();
+        logger?.LogInformation("[DbSeeder] Added {Count} missing persona features for {PersonaCode}.", missing.Count, personaCode);
     }
 
     private static async Task SeedUserExperienceDataAsync(AppDbContext context, ILogger? logger, DateTime now, DateOnly today)

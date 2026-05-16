@@ -46,7 +46,7 @@ public class RoleMenuService
         matched.AddRange(parentMenus);
 
         var tree = BuildTree(matched, null);
-        return MergeByPath(tree);
+        return PruneEmptyContainers(MergeByPath(tree));
     }
 
     public async Task<List<RoleMenu>> GetMenusForUserAsync(
@@ -144,6 +144,30 @@ public class RoleMenuService
             })
             .OrderBy(x => x.Sort)
             .ToList();
+    }
+
+    private static List<RoleMenu> PruneEmptyContainers(List<RoleMenu> treeNodes)
+    {
+        return treeNodes
+            .Select(menu =>
+            {
+                menu.Children = PruneEmptyContainers(menu.Children ?? []);
+                return menu;
+            })
+            .Where(menu => !IsEmptyContainer(menu))
+            .OrderBy(x => x.Sort)
+            .ToList();
+    }
+
+    private static bool IsEmptyContainer(RoleMenu menu)
+    {
+        var hasChildren = menu.Children is { Count: > 0 };
+        if (hasChildren)
+            return false;
+
+        return !menu.IsExternal &&
+            string.IsNullOrWhiteSpace(menu.Component) &&
+            string.IsNullOrWhiteSpace(menu.Redirect);
     }
 
     public async Task<List<RoleMenu>> GetAllAsync(CancellationToken ct = default)

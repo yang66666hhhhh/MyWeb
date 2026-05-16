@@ -51,7 +51,7 @@ public class UserAccessContextService(AppDbContext db) : IUserAccessContextServi
         var planFeatures = await db.PlanFeatures
             .AsNoTracking()
             .Where(x => x.Plan.Code == planCode && x.Feature.IsEnabled)
-            .Select(x => x.Feature.Code)
+            .Select(x => new FeatureGrant(x.Feature.Code, x.Feature.Category))
             .ToListAsync(cancellationToken);
 
         if (roleLevel >= 3)
@@ -59,7 +59,7 @@ public class UserAccessContextService(AppDbContext db) : IUserAccessContextServi
             planFeatures = await db.Features
                 .AsNoTracking()
                 .Where(x => x.IsEnabled)
-                .Select(x => x.Code)
+                .Select(x => new FeatureGrant(x.Code, x.Category))
                 .ToListAsync(cancellationToken);
         }
         else if (roleLevel >= 2 && planFeatures.Count == 0)
@@ -67,23 +67,16 @@ public class UserAccessContextService(AppDbContext db) : IUserAccessContextServi
             planFeatures = await db.PlanFeatures
                 .AsNoTracking()
                 .Where(x => x.Plan.Code == "Pro" && x.Feature.IsEnabled)
-                .Select(x => x.Feature.Code)
+                .Select(x => new FeatureGrant(x.Feature.Code, x.Feature.Category))
                 .ToListAsync(cancellationToken);
         }
 
         if (planFeatures.Count == 0 && planCode.Equals("Free", StringComparison.OrdinalIgnoreCase))
         {
-            planFeatures =
-            [
-                "GROWTH_DAILY_PLAN",
-                "GROWTH_HABIT",
-                "GROWTH_KNOWLEDGE",
-                "WORK_LOG",
-                "WORK_TASK",
-            ];
+            planFeatures = await LoadDefaultFreeFeaturesAsync(cancellationToken);
         }
 
-        var personaFeatures = await db.PersonaFeatures
+        var personaFeatureCodes = await db.PersonaFeatures
             .AsNoTracking()
             .Where(x => x.Feature.IsEnabled &&
                 db.UserPersonas.Any(up =>
@@ -93,14 +86,65 @@ public class UserAccessContextService(AppDbContext db) : IUserAccessContextServi
             .Select(x => x.Feature.Code)
             .ToListAsync(cancellationToken);
 
+        var effectiveFeatureCodes = ResolveEffectiveFeatureCodes(planFeatures, personaFeatureCodes);
+
         return new UserAccessContext(
             user.Id,
             roleCode,
             roleLevel,
             personaCodes.ToHashSet(StringComparer.OrdinalIgnoreCase),
             planCode,
-            planFeatures.Union(personaFeatures, StringComparer.OrdinalIgnoreCase)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase));
+            effectiveFeatureCodes);
+    }
+
+    private async Task<List<FeatureGrant>> LoadDefaultFreeFeaturesAsync(CancellationToken cancellationToken)
+    {
+        var fallbackCodes = new[]
+        {
+            "GROWTH_DAILY_PLAN",
+            "GROWTH_HABIT",
+            "GROWTH_KNOWLEDGE",
+            "WORK_LOG",
+            "WORK_TASK",
+            "STUDENT_EXAM",
+            "STUDENT_LEARNING",
+            "STUDENT_MISTAKES",
+            "STUDENT_REVIEW",
+            "STUDENT_MATERIALS",
+            "STUDENT_RECORDS",
+            "STUDENT_SUBJECTS",
+        };
+
+        var configuredFeatures = await db.Features
+            .AsNoTracking()
+            .Where(x => x.IsEnabled && fallbackCodes.Contains(x.Code))
+            .Select(x => new FeatureGrant(x.Code, x.Category))
+            .ToListAsync(cancellationToken);
+
+        var configuredCodes = configuredFeatures
+            .Select(x => x.Code)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        configuredFeatures.AddRange(fallbackCodes
+            .Where(code => !configuredCodes.Contains(code))
+            .Select(code => new FeatureGrant(code, GetDefaultFeatureCategory(code))));
+
+        return configuredFeatures;
+    }
+
+    private static HashSet<string> ResolveEffectiveFeatureCodes(
+        IEnumerable<FeatureGrant> planFeatures,
+        IEnumerable<string> personaFeatureCodes)
+    {
+        var personaFeatureSet = personaFeatureCodes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return planFeatures
+            .Where(feature =>
+            feature.Category.Equals("Persona", StringComparison.OrdinalIgnoreCase)
+                ? personaFeatureSet.Contains(feature.Code)
+                : true)
+            .Select(feature => feature.Code)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 
     private static string GetHighestRole(string roles)
@@ -123,4 +167,11 @@ public class UserAccessContextService(AppDbContext db) : IUserAccessContextServi
             _ => 1
         };
     }
+
+    private static string GetDefaultFeatureCategory(string code)
+    {
+        return code.StartsWith("STUDENT_", StringComparison.OrdinalIgnoreCase) ? "Persona" : string.Empty;
+    }
+
+    private sealed record FeatureGrant(string Code, string Category);
 }

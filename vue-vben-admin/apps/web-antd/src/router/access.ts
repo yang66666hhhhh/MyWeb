@@ -16,6 +16,12 @@ import { $t } from '#/locales';
 
 const forbiddenComponent = () => import('#/views/_core/fallback/forbidden.vue');
 
+function normalizeMenuIcon(icon?: string) {
+  // 后端菜单可能存有 lucide 图标名；Iconify 在未内置集合时会请求公网。
+  // 本地业务菜单优先保持可用性，避免离线环境出现 api.iconify.design 报错。
+  return icon?.startsWith('lucide:') ? undefined : icon;
+}
+
 function convertToRouteRecords(menus: RoleMenuItem[]): any[] {
   return menus
     .filter((menu) => menu && menu.path && typeof menu.path === 'string' && menu.path.length > 0)
@@ -27,7 +33,7 @@ function convertToRouteRecords(menus: RoleMenuItem[]): any[] {
       return {
         component: menu.component || undefined,
         meta: {
-          icon: menu.icon,
+          icon: normalizeMenuIcon(menu.icon),
           title: menu.name,
           badge: menu.badge,
           tag: menu.tag,

@@ -42,6 +42,21 @@ public class RoleMenuServiceTests : IDisposable
         };
         _context.RoleMenus.Add(memberGrowth);
 
+        var memberDashboard = new RoleMenu
+        {
+            Id = Guid.NewGuid(),
+            Name = "成长看板",
+            Path = "/growth/dashboard",
+            ParentId = memberGrowth.Id,
+            Component = "/views/growth/dashboard/index.vue",
+            MinRoleLevel = 1,
+            IsBaseMenu = true,
+            IsVisible = true,
+            IsEnabled = true,
+            Sort = 0
+        };
+        _context.RoleMenus.Add(memberDashboard);
+
         // Pro 扩展菜单
         var proGrowth = new RoleMenu
         {
@@ -49,6 +64,7 @@ public class RoleMenuServiceTests : IDisposable
             Name = "知识库",
             Path = "/growth/knowledge-base",
             ParentId = memberGrowth.Id,
+            Component = "/views/growth/knowledge-base/index.vue",
             MinRoleLevel = 2,
             IsBaseMenu = false,
             IsVisible = true,
@@ -64,6 +80,7 @@ public class RoleMenuServiceTests : IDisposable
             Name = "考研备考",
             Path = "/student/dashboard",
             ParentId = memberGrowth.Id,
+            Component = "/views/student/dashboard/index.vue",
             MinRoleLevel = 3,
             IsBaseMenu = false,
             IsVisible = true,
@@ -93,6 +110,7 @@ public class RoleMenuServiceTests : IDisposable
             Name = "代码仓库",
             Path = "/dev/code-repository",
             ParentId = devCenter.Id,
+            Component = "/views/dev/code-repository/index.vue",
             MinRoleLevel = 1,
             IsBaseMenu = false,
             PersonaTag = "Developer",
@@ -108,6 +126,7 @@ public class RoleMenuServiceTests : IDisposable
             Name = "流水线",
             Path = "/dev/pipelines",
             ParentId = devCenter.Id,
+            Component = "/views/dev/pipelines/index.vue",
             MinRoleLevel = 1,
             IsBaseMenu = false,
             PersonaTag = "Developer",
@@ -133,6 +152,22 @@ public class RoleMenuServiceTests : IDisposable
         };
         _context.RoleMenus.Add(designerCenter);
 
+        var designerAssets = new RoleMenu
+        {
+            Id = Guid.NewGuid(),
+            Name = "设计资产",
+            Path = "/design/assets",
+            ParentId = designerCenter.Id,
+            Component = "/views/design/assets/index.vue",
+            MinRoleLevel = 1,
+            IsBaseMenu = false,
+            PersonaTag = "Designer",
+            IsVisible = true,
+            IsEnabled = true,
+            Sort = 0
+        };
+        _context.RoleMenus.Add(designerAssets);
+
         // Teacher Persona 专属
         var teacherCenter = new RoleMenu
         {
@@ -147,6 +182,22 @@ public class RoleMenuServiceTests : IDisposable
             Sort = 50
         };
         _context.RoleMenus.Add(teacherCenter);
+
+        var teacherCourses = new RoleMenu
+        {
+            Id = Guid.NewGuid(),
+            Name = "课程管理",
+            Path = "/teacher/courses",
+            ParentId = teacherCenter.Id,
+            Component = "/views/teacher/courses/index.vue",
+            MinRoleLevel = 1,
+            IsBaseMenu = false,
+            PersonaTag = "Teacher",
+            IsVisible = true,
+            IsEnabled = true,
+            Sort = 0
+        };
+        _context.RoleMenus.Add(teacherCourses);
 
         var sharedBase = new RoleMenu
         {
@@ -167,6 +218,7 @@ public class RoleMenuServiceTests : IDisposable
             Name = "总览",
             Path = "/shared/overview",
             ParentId = sharedBase.Id,
+            Component = "/views/shared/overview/index.vue",
             MinRoleLevel = 1,
             IsBaseMenu = true,
             IsVisible = true,
@@ -195,6 +247,7 @@ public class RoleMenuServiceTests : IDisposable
             Name = "开发工具",
             Path = "/shared/dev-tools",
             ParentId = sharedDeveloper.Id,
+            Component = "/views/shared/dev-tools/index.vue",
             MinRoleLevel = 1,
             IsBaseMenu = false,
             PersonaTag = "Developer",
