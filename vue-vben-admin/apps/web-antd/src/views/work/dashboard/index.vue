@@ -1,15 +1,19 @@
 <script lang="ts" setup>
 import type { WorkStatisticsOverview } from '#/api/work';
 
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import { Card, Col, message, Row, Statistic } from 'ant-design-vue';
 
-import { getOverviewApi } from '#/api/work';
+import { getOverviewApi, getWorkDailyPlanPageApi, getWorkLogPageApi } from '#/api/work';
 
 const loading = ref(false);
+const router = useRouter();
+const accessStore = useAccessStore();
 const overview = ref<WorkStatisticsOverview>({
   missingDataCount: 0,
   pendingSupplementCount: 0,
@@ -21,10 +25,79 @@ const overview = ref<WorkStatisticsOverview>({
   totalProjects: 0,
 });
 
+const accessCodes = computed(() => new Set(accessStore.accessCodes));
+const canViewStatistics = computed(() => accessCodes.value.has('WORK_STATISTICS'));
+const canViewProjects = computed(() => accessCodes.value.has('WORK_PROJECT'));
+const canViewDevices = computed(() => accessCodes.value.has('WORK_DEVICE'));
+
+const quickEntries = computed(() => [
+  {
+    bg: 'bg-blue-100',
+    code: 'WORK_TASK',
+    description: '管理工作计划',
+    icon: '日',
+    path: '/work/daily-plans',
+    text: 'text-blue-600',
+    title: '每日计划',
+  },
+  {
+    bg: 'bg-green-100',
+    code: 'WORK_LOG',
+    description: '记录日常工作',
+    icon: '志',
+    path: '/work/work-log',
+    text: 'text-green-600',
+    title: '工作日志',
+  },
+  {
+    bg: 'bg-orange-100',
+    code: 'WORK_IMPORT',
+    description: 'Excel批量导入',
+    icon: '导',
+    path: '/work/import',
+    text: 'text-orange-600',
+    title: '工作导入',
+  },
+  {
+    bg: 'bg-purple-100',
+    code: 'WORK_PROJECT',
+    description: '管理工作项目',
+    icon: '项',
+    path: '/work/project',
+    text: 'text-purple-600',
+    title: '项目管理',
+  },
+].filter((item) => accessCodes.value.has(item.code)));
+
+function getToday() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 async function load() {
   loading.value = true;
   try {
-    overview.value = await getOverviewApi();
+    if (canViewStatistics.value) {
+      overview.value = await getOverviewApi();
+      return;
+    }
+
+    const today = getToday();
+    const [logs, todayLogs, todayPlans] = await Promise.all([
+      getWorkLogPageApi({ page: 1, pageSize: 100 }),
+      getWorkLogPageApi({ page: 1, pageSize: 100, workDate: today }),
+      getWorkDailyPlanPageApi({ page: 1, pageSize: 1, planDate: today }),
+    ]);
+
+    overview.value = {
+      missingDataCount: 0,
+      pendingSupplementCount: todayPlans.total,
+      todayHours: todayLogs.items.reduce((sum, item) => sum + Number(item.totalHours || 0), 0),
+      todayLogs: todayLogs.total,
+      totalDevices: 0,
+      totalHours: logs.items.reduce((sum, item) => sum + Number(item.totalHours || 0), 0),
+      totalLogs: logs.total,
+      totalProjects: 0,
+    };
   } catch {
     message.error('加载数据失败');
   } finally {
@@ -63,18 +136,18 @@ onMounted(() => {
         </Col>
       </Row>
 
-      <Row :gutter="[16, 16]">
-        <Col :lg="8" :md="12" :xs="24">
+      <Row v-if="canViewProjects || canViewDevices || canViewStatistics" :gutter="[16, 16]">
+        <Col v-if="canViewProjects" :lg="8" :md="12" :xs="24">
           <Card hoverable>
             <Statistic :loading="loading" suffix="个" title="项目总数" :value="overview.totalProjects" />
           </Card>
         </Col>
-        <Col :lg="8" :md="12" :xs="24">
+        <Col v-if="canViewDevices" :lg="8" :md="12" :xs="24">
           <Card hoverable>
             <Statistic :loading="loading" suffix="台" title="设备总数" :value="overview.totalDevices" />
           </Card>
         </Col>
-        <Col :lg="8" :md="24" :xs="24">
+        <Col v-if="canViewStatistics" :lg="8" :md="24" :xs="24">
           <Card hoverable>
             <Row :gutter="16">
               <Col :span="12">
@@ -90,54 +163,15 @@ onMounted(() => {
 
       <Card title="快捷入口">
         <Row :gutter="[12, 12]">
-          <Col :lg="6" :md="12" :xs="24">
-            <Card hoverable class="cursor-pointer transition-all hover:shadow-lg">
+          <Col v-for="entry in quickEntries" :key="entry.path" :lg="6" :md="12" :xs="24">
+            <Card hoverable class="cursor-pointer transition-all hover:shadow-lg" @click="router.push(entry.path)">
               <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-lg flex items-center justify-center text-xl bg-blue-100 text-blue-600">
-                  日
+                <div :class="[entry.bg, entry.text]" class="w-12 h-12 rounded-lg flex items-center justify-center text-xl">
+                  {{ entry.icon }}
                 </div>
                 <div>
-                  <div class="font-medium">每日计划</div>
-                  <div class="text-xs text-text-secondary">管理工作计划</div>
-                </div>
-              </div>
-            </Card>
-          </Col>
-          <Col :lg="6" :md="12" :xs="24">
-            <Card hoverable class="cursor-pointer transition-all hover:shadow-lg">
-              <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-lg flex items-center justify-center text-xl bg-green-100 text-green-600">
-                  志
-                </div>
-                <div>
-                  <div class="font-medium">工作日志</div>
-                  <div class="text-xs text-text-secondary">记录日常工作</div>
-                </div>
-              </div>
-            </Card>
-          </Col>
-          <Col :lg="6" :md="12" :xs="24">
-            <Card hoverable class="cursor-pointer transition-all hover:shadow-lg">
-              <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-lg flex items-center justify-center text-xl bg-orange-100 text-orange-600">
-                  导
-                </div>
-                <div>
-                  <div class="font-medium">工作导入</div>
-                  <div class="text-xs text-text-secondary">Excel批量导入</div>
-                </div>
-              </div>
-            </Card>
-          </Col>
-          <Col :lg="6" :md="12" :xs="24">
-            <Card hoverable class="cursor-pointer transition-all hover:shadow-lg">
-              <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-lg flex items-center justify-center text-xl bg-purple-100 text-purple-600">
-                  项
-                </div>
-                <div>
-                  <div class="font-medium">项目管理</div>
-                  <div class="text-xs text-text-secondary">管理工作项目</div>
+                  <div class="font-medium">{{ entry.title }}</div>
+                  <div class="text-xs text-text-secondary">{{ entry.description }}</div>
                 </div>
               </div>
             </Card>

@@ -115,11 +115,16 @@ public class UserAccessContextService(AppDbContext db) : IUserAccessContextServi
             "STUDENT_SUBJECTS",
         };
 
-        var configuredFeatures = await db.Features
+        var enabledFeatures = await db.Features
             .AsNoTracking()
-            .Where(x => x.IsEnabled && fallbackCodes.Contains(x.Code))
+            .Where(x => x.IsEnabled)
             .Select(x => new FeatureGrant(x.Code, x.Category))
             .ToListAsync(cancellationToken);
+
+        var fallbackCodeSet = fallbackCodes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var configuredFeatures = enabledFeatures
+            .Where(x => fallbackCodeSet.Contains(x.Code))
+            .ToList();
 
         var configuredCodes = configuredFeatures
             .Select(x => x.Code)

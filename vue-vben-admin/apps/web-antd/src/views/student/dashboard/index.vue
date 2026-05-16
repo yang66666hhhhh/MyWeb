@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -26,6 +27,7 @@ import {
 } from '#/api/student';
 
 const loading = ref(false);
+const accessStore = useAccessStore();
 const dashboard = ref<ExamDashboard>({
   materialCount: 0,
   mistakeCount: 0,
@@ -76,6 +78,16 @@ const taskColumns: TableColumnsType<PostgraduateTask> = [
   { title: '截止日期', dataIndex: 'dueDate', key: 'dueDate', width: 120 },
   { key: 'action', title: '操作', width: 90, fixed: 'right' },
 ];
+
+const canManageLearning = computed(() => accessStore.accessCodes.includes('STUDENT_LEARNING'));
+const canViewRecords = computed(() => accessStore.accessCodes.includes('STUDENT_RECORDS'));
+const canViewSubjects = computed(() => accessStore.accessCodes.includes('STUDENT_SUBJECTS'));
+
+const visibleTaskColumns = computed<TableColumnsType<PostgraduateTask>>(() =>
+  canManageLearning.value
+    ? taskColumns
+    : taskColumns.filter((column) => column.key !== 'action'),
+);
 
 async function fetchDashboard() {
   loading.value = true;
@@ -138,7 +150,7 @@ onMounted(() => {
             <Button :loading="loading" type="primary" @click="fetchDashboard">刷新</Button>
           </template>
           <Table
-            :columns="taskColumns"
+            :columns="visibleTaskColumns"
             :data-source="dashboard.todayTasks"
             :loading="loading"
             :pagination="false"
@@ -166,7 +178,7 @@ onMounted(() => {
               <template v-else-if="column.key === 'dueDate'">
                 <span>{{ text || '-' }}</span>
               </template>
-              <template v-else-if="column.key === 'action'">
+              <template v-else-if="column.key === 'action' && canManageLearning">
                 <Button size="small" type="link" @click="markTaskCompleted(toTask(record))">完成</Button>
               </template>
             </template>
@@ -175,7 +187,7 @@ onMounted(() => {
         </Card>
       </Col>
 
-      <Col :lg="10" :xs="24">
+      <Col v-if="canViewRecords" :lg="10" :xs="24">
         <Card title="最近学习记录">
           <div v-if="dashboard.recentRecords.length === 0 && !loading" class="py-8">
             <Empty description="暂无学习记录" />
@@ -201,7 +213,7 @@ onMounted(() => {
       </Col>
     </Row>
 
-    <Card title="科目进度">
+    <Card v-if="canViewSubjects" title="科目进度">
       <Row :gutter="[16, 16]">
         <Col v-for="subject in dashboard.subjects" :key="subject.id" :lg="8" :md="12" :xs="24">
           <div class="rounded border border-gray-200 p-3">

@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -46,6 +47,7 @@ interface RecordFormState {
 }
 
 const loading = ref(false);
+const accessStore = useAccessStore();
 const formOpen = ref(false);
 const editingId = ref<null | string>(null);
 const keyword = ref('');
@@ -77,8 +79,14 @@ const totalHours = computed(() => Math.round((totalMinutes.value / 60) * 10) / 1
 const subjectCount = computed(() => new Set(records.value.map((item) => item.subject).filter(Boolean)).size);
 const averageMinutes = computed(() => records.value.length === 0 ? 0 : Math.round(totalMinutes.value / records.value.length));
 const recordDateValue = computed(() => formState.value.recordDate ? dayjs(formState.value.recordDate) : undefined);
+const canViewSubjects = computed(() => accessStore.accessCodes.includes('STUDENT_SUBJECTS'));
 
 async function fetchSubjects() {
+  if (!canViewSubjects.value) {
+    subjectOptions.value = [];
+    return;
+  }
+
   const result = await getStudentSubjectPageApi({ isActive: true, page: 1, pageSize: 100 });
   subjectOptions.value = result.items.map((item) => ({ label: item.name, value: item.name }));
 }
@@ -208,6 +216,7 @@ onMounted(async () => {
             @press-enter="fetchRecords"
           />
           <Select
+            v-if="canViewSubjects"
             v-model:value="subject"
             :options="subjectOptions"
             allow-clear
@@ -276,11 +285,17 @@ onMounted(async () => {
           <Col :span="8">
             <Form.Item label="科目" required>
               <Select
+                v-if="canViewSubjects"
                 v-model:value="formState.subject"
                 :options="subjectOptions"
                 allow-clear
                 placeholder="选择科目"
                 show-search
+              />
+              <Input
+                v-else
+                v-model:value="formState.subject"
+                placeholder="输入科目"
               />
             </Form.Item>
           </Col>

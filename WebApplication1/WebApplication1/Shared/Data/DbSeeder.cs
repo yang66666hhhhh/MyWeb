@@ -1036,17 +1036,20 @@ public static class DbSeeder
             return;
         }
 
-        var features = await context.Features
-            .Where(x => featureCodes.Contains(x.Code))
-            .ToListAsync();
+        var featureCodeSet = featureCodes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var features = (await context.Features.ToListAsync())
+            .Where(x => featureCodeSet.Contains(x.Code))
+            .ToList();
 
         var featureIds = features.Select(x => x.Id).ToHashSet();
         var existingFeatureIds = await context.PlanFeatures
-            .Where(x => x.PlanId == plan.Id && featureIds.Contains(x.FeatureId))
+            .Where(x => x.PlanId == plan.Id)
             .Select(x => x.FeatureId)
             .ToListAsync();
 
-        var existing = existingFeatureIds.ToHashSet();
+        var existing = existingFeatureIds
+            .Where(featureIds.Contains)
+            .ToHashSet();
         var missing = features
             .Where(x => !existing.Contains(x.Id))
             .Select(x => new PlanFeature { PlanId = plan.Id, FeatureId = x.Id })
@@ -1068,17 +1071,19 @@ public static class DbSeeder
         string featurePrefix,
         ILogger? logger)
     {
-        var features = await context.Features
-            .Where(x => x.Code.StartsWith(featurePrefix))
-            .ToListAsync();
+        var features = (await context.Features.ToListAsync())
+            .Where(x => x.Code.StartsWith(featurePrefix, StringComparison.OrdinalIgnoreCase))
+            .ToList();
 
         var featureIds = features.Select(x => x.Id).ToHashSet();
         var existingFeatureIds = await context.PersonaFeatures
-            .Where(x => x.PersonaCode == personaCode && featureIds.Contains(x.FeatureId))
+            .Where(x => x.PersonaCode == personaCode)
             .Select(x => x.FeatureId)
             .ToListAsync();
 
-        var existing = existingFeatureIds.ToHashSet();
+        var existing = existingFeatureIds
+            .Where(featureIds.Contains)
+            .ToHashSet();
         var missing = features
             .Where(x => !existing.Contains(x.Id))
             .Select(x => new PersonaFeature { PersonaCode = personaCode, FeatureId = x.Id })

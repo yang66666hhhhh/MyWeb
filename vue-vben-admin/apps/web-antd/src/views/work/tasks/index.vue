@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -36,6 +37,7 @@ const props = withDefaults(
 );
 
 const router = useRouter();
+const accessStore = useAccessStore();
 const loading = ref(false);
 const formOpen = ref(false);
 const editingId = ref<null | string>(null);
@@ -81,16 +83,18 @@ const priorityMap: Record<number, { color: string; label: string }> = {
   4: { color: 'magenta', label: '紧急' },
 };
 
-const columns: any[] = [
+const canViewProjects = computed(() => accessStore.accessCodes.includes('WORK_PROJECT'));
+
+const columns = computed<any[]>(() => [
   { title: '任务标题', dataIndex: 'title', key: 'title', minWidth: 220 },
-  { title: '项目', dataIndex: 'projectName', key: 'projectName', width: 150 },
+  ...(canViewProjects.value ? [{ title: '项目', dataIndex: 'projectName', key: 'projectName', width: 150 }] : []),
   { title: '优先级', dataIndex: 'priority', key: 'priority', width: 80 },
   { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
   { title: '计划日期', dataIndex: 'planDate', key: 'planDate', width: 120 },
   { title: '截止日期', dataIndex: 'endTime', key: 'endTime', width: 120 },
   { title: '预计工时', dataIndex: 'estimatedHours', key: 'estimatedHours', width: 100 },
   { key: 'action', title: '操作', width: 200, fixed: 'right' },
-];
+]);
 
 const statusOptions = [
   { label: '全部状态', value: undefined },
@@ -133,6 +137,11 @@ const emptyProjectText = computed(() =>
 );
 
 async function fetchProjects() {
+  if (!canViewProjects.value) {
+    projects.value = [];
+    return;
+  }
+
   try {
     const res = await projectApi.getPage({ page: 1, pageSize: 100 });
     projects.value = res.items;
@@ -207,7 +216,7 @@ function openEdit(record: Record<string, any>) {
     description: task.description || '',
     taskType: task.type,
     source: task.source,
-    projectId: task.projectId,
+    projectId: canViewProjects.value ? task.projectId : undefined,
     priority: task.priority ? Number(task.priority) : 2,
     status: task.status ? Number(task.status) : undefined,
     startTime: task.startTime || '',
@@ -229,7 +238,7 @@ async function handleSave() {
       const data: UpdateTaskItemInput = {
         title: formState.title,
         description: formState.description,
-        projectId: formState.projectId,
+        projectId: canViewProjects.value ? formState.projectId : undefined,
         priority: formState.priority,
         status: formState.status as any,
         startTime: formState.startTime || undefined,
@@ -271,7 +280,7 @@ async function handleComplete(id: string) {
 }
 
 onMounted(() => {
-  fetchProjects();
+  void fetchProjects();
   fetchPage();
 });
 </script>
@@ -322,7 +331,7 @@ onMounted(() => {
             <template v-if="column.key === 'title'">
               <div>
                 <div class="font-medium">{{ record.title }}</div>
-                <div class="text-gray-400 text-xs">
+                <div v-if="canViewProjects" class="text-gray-400 text-xs">
                   {{ record.projectName || emptyProjectText }}
                 </div>
                 <div v-if="record.description" class="text-gray-400 text-xs">{{ record.description }}</div>
@@ -368,12 +377,12 @@ onMounted(() => {
         </Form.Item>
 
         <Row :gutter="16">
-          <Col :span="12">
+          <Col v-if="canViewProjects" :span="12">
             <Form.Item label="所属项目">
               <Select v-model:value="formState.projectId" :options="projects.map(p => ({ label: p.projectName, value: p.id }))" allow-clear placeholder="选择项目" style="width: 100%" />
             </Form.Item>
           </Col>
-          <Col :span="12">
+          <Col :span="canViewProjects ? 12 : 24">
             <Form.Item label="优先级">
               <Select v-model:value="formState.priority" :options="priorityOptions.filter(o => o.value !== undefined)" style="width: 100%" />
             </Form.Item>
