@@ -163,6 +163,8 @@ builder.Services.AddScoped<IKnowledgeArticleService, KnowledgeArticleService>();
 builder.Services.AddScoped<IPostgraduateTaskService, PostgraduateTaskService>();
 builder.Services.AddScoped<IExamMistakeService, ExamMistakeService>();
 builder.Services.AddScoped<IExamMaterialService, ExamMaterialService>();
+builder.Services.AddScoped<IStudentSubjectService, StudentSubjectService>();
+builder.Services.AddScoped<IStudentStudyRecordService, StudentStudyRecordService>();
 builder.Services.AddScoped<ITemplateService, TemplateService>();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IAiService, AiService>();

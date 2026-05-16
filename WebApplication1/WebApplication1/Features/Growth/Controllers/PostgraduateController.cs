@@ -13,7 +13,9 @@ namespace WebApplication1.Features.Growth.Controllers;
 public class PostgraduateController(
     IPostgraduateTaskService taskService,
     IExamMistakeService mistakeService,
-    IExamMaterialService materialService) : BaseApiController
+    IExamMaterialService materialService,
+    IStudentSubjectService subjectService,
+    IStudentStudyRecordService recordService) : BaseApiController
 {
     [HttpGet("tasks")]
     public async Task<ActionResult<ApiResult<PageResult<PostgraduateTaskDto>>>> GetTasks(
@@ -41,39 +43,89 @@ public class PostgraduateController(
         var userId = IsProOrAbove() ? null : GetCurrentUserId();
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var weekStart = today.AddDays(-(int)today.DayOfWeek);
+        var weekStart = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
 
         var taskQuery = new PostgraduateTaskQueryDto { Page = 1, PageSize = 100 };
         var tasksResult = await taskService.GetPageAsync(taskQuery, userId, cancellationToken);
 
-        var mistakeQuery = new ExamMistakeQueryDto { Page = 1, PageSize = 1 };
+        var mistakeQuery = new ExamMistakeQueryDto { Page = 1, PageSize = 100 };
         var mistakesResult = await mistakeService.GetPageAsync(mistakeQuery, userId, cancellationToken);
 
-        var materialQuery = new ExamMaterialQueryDto { Page = 1, PageSize = 1 };
+        var materialQuery = new ExamMaterialQueryDto { Page = 1, PageSize = 100 };
         var materialsResult = await materialService.GetPageAsync(materialQuery, userId, cancellationToken);
 
+        var subjectQuery = new StudentSubjectQueryDto { Page = 1, PageSize = 100, IsActive = true };
+        var subjectsResult = await subjectService.GetPageAsync(subjectQuery, userId, cancellationToken);
+
+        var recordQuery = new StudentStudyRecordQueryDto { Page = 1, PageSize = 100, StartDate = weekStart, EndDate = today };
+        var recordsResult = await recordService.GetPageAsync(recordQuery, userId, cancellationToken);
+
         var todayTasks = tasksResult.Items
-            .Where(t => t.DueDate.HasValue && t.DueDate.Value <= today && t.Status != 2)
-            .Take(5)
+            .Where(t => (!t.DueDate.HasValue || t.DueDate.Value <= today) && t.Status != 2)
+            .Take(8)
             .ToList();
 
-        var reviewTaskCount = tasksResult.Items.Count(t => t.Status == 1);
+        var dueReviews = mistakesResult.Items
+            .Where(x => x.Status != 2 && (!x.NextReviewDate.HasValue || x.NextReviewDate.Value <= today))
+            .ToList();
+
+        var subjectNames = subjectsResult.Items.Select(x => x.Name)
+            .Concat(mistakesResult.Items.Select(x => x.Subject))
+            .Concat(materialsResult.Items.Select(x => x.Subject))
+            .Concat(recordsResult.Items.Select(x => x.Subject))
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var subjects = subjectNames.Select(name =>
+        {
+            var subject = subjectsResult.Items.FirstOrDefault(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            var weeklyMinutes = recordsResult.Items
+                .Where(x => x.Subject.Equals(name, StringComparison.OrdinalIgnoreCase))
+                .Sum(x => x.DurationMinutes);
+            var targetHours = Math.Max(subject?.TargetHours ?? 0, 1);
+            var progress = Math.Min(100, (int)Math.Round(weeklyMinutes / 60.0 / targetHours * 100));
+
+            return new SubjectProgressDto
+            {
+                Id = (subject?.Id.ToString()) ?? name,
+                Name = name,
+                Color = subject?.Color ?? "blue",
+                TargetHours = subject?.TargetHours ?? 0,
+                WeeklyHours = Math.Round(weeklyMinutes / 60.0, 1),
+                Progress = progress,
+                MistakeCount = mistakesResult.Items.Count(x => x.Subject.Equals(name, StringComparison.OrdinalIgnoreCase) && x.Status != 2),
+                MaterialCount = materialsResult.Items.Count(x => x.Subject.Equals(name, StringComparison.OrdinalIgnoreCase))
+            };
+        }).OrderByDescending(x => x.MistakeCount).ThenBy(x => x.Name).ToList();
 
         var dashboard = new ExamDashboardDto
         {
             TodayTasks = todayTasks,
-            WeeklyHours = 0,
+            WeeklyHours = Math.Round(recordsResult.Items.Sum(x => x.DurationMinutes) / 60.0, 1),
             MistakeCount = mistakesResult.Total,
             MaterialCount = materialsResult.Total,
-            ReviewTaskCount = reviewTaskCount,
-            Subjects = new List<SubjectProgressDto>
-            {
-                new() { Id = "1", Name = "数据结构", Progress = 24, WeeklyHours = 5, TargetHours = 120, Color = "blue" },
-                new() { Id = "2", Name = "数学", Progress = 12, WeeklyHours = 4, TargetHours = 180, Color = "cyan" },
-                new() { Id = "3", Name = "英语", Progress = 18, WeeklyHours = 3, TargetHours = 90, Color = "green" },
-                new() { Id = "4", Name = "政治", Progress = 5, WeeklyHours = 1.5, TargetHours = 80, Color = "purple" }
-            },
-            RecentRecords = new List<StudyRecordDto>()
+            ReviewTaskCount = tasksResult.Items.Count(t => t.Status == 1),
+            PendingTaskCount = tasksResult.Items.Count(t => t.Status != 2),
+            TodayReviewCount = dueReviews.Count,
+            OverdueTaskCount = tasksResult.Items.Count(t => t.DueDate.HasValue && t.DueDate.Value < today && t.Status != 2),
+            SubjectCount = subjects.Count,
+            Subjects = subjects,
+            RecentRecords = recordsResult.Items
+                .OrderByDescending(x => x.RecordDate)
+                .ThenByDescending(x => x.CreatedAt)
+                .Take(10)
+                .Select(x => new StudyRecordDto
+                {
+                    Id = x.Id.ToString(),
+                    Subject = x.Subject,
+                    Summary = x.Summary,
+                    DurationMinutes = x.DurationMinutes,
+                    RecordDate = x.RecordDate.ToString("yyyy-MM-dd"),
+                    TaskTitle = x.TaskTitle,
+                    Remark = x.Remark
+                })
+                .ToList()
         };
 
         return Ok(ApiResult<ExamDashboardDto>.Success(dashboard));
@@ -224,6 +276,118 @@ public class PostgraduateController(
         var deleted = await materialService.DeleteAsync(id, userId, cancellationToken);
         if (!deleted)
             return NotFound(ApiResult.Fail("资料不存在"));
+        return Ok(ApiResult.Success("删除成功"));
+    }
+
+    [HttpGet("subjects")]
+    public async Task<ActionResult<ApiResult<PageResult<StudentSubjectDto>>>> GetSubjects(
+        [FromQuery] StudentSubjectQueryDto query,
+        CancellationToken cancellationToken)
+    {
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var result = await subjectService.GetPageAsync(query, userId, cancellationToken);
+        return Ok(ApiResult<PageResult<StudentSubjectDto>>.Success(result));
+    }
+
+    [HttpGet("subjects/{id:guid}")]
+    public async Task<ActionResult<ApiResult<StudentSubjectDto>>> GetSubjectById(Guid id, CancellationToken cancellationToken)
+    {
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var result = await subjectService.GetByIdAsync(id, userId, cancellationToken);
+        if (result is null)
+            return NotFound(ApiResult<StudentSubjectDto>.Fail("科目不存在", StatusCodes.Status404NotFound));
+        return Ok(ApiResult<StudentSubjectDto>.Success(result));
+    }
+
+    [HttpPost("subjects")]
+    public async Task<ActionResult<ApiResult<StudentSubjectDto>>> CreateSubject(
+        [FromBody] CreateStudentSubjectDto input,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+
+        var result = await subjectService.CreateAsync(input, userId.Value, cancellationToken);
+        return CreatedAtAction(nameof(GetSubjectById), new { id = result.Id }, ApiResult<StudentSubjectDto>.Success(result, "创建成功"));
+    }
+
+    [HttpPut("subjects/{id:guid}")]
+    public async Task<ActionResult<ApiResult<StudentSubjectDto>>> UpdateSubject(
+        Guid id,
+        [FromBody] UpdateStudentSubjectDto input,
+        CancellationToken cancellationToken)
+    {
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var result = await subjectService.UpdateAsync(id, input, userId, cancellationToken);
+        if (result is null)
+            return NotFound(ApiResult<StudentSubjectDto>.Fail("科目不存在", StatusCodes.Status404NotFound));
+        return Ok(ApiResult<StudentSubjectDto>.Success(result, "更新成功"));
+    }
+
+    [HttpDelete("subjects/{id:guid}")]
+    public async Task<ActionResult<ApiResult>> DeleteSubject(Guid id, CancellationToken cancellationToken)
+    {
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var deleted = await subjectService.DeleteAsync(id, userId, cancellationToken);
+        if (!deleted)
+            return NotFound(ApiResult.Fail("科目不存在"));
+        return Ok(ApiResult.Success("删除成功"));
+    }
+
+    [HttpGet("records")]
+    public async Task<ActionResult<ApiResult<PageResult<StudentStudyRecordDto>>>> GetRecords(
+        [FromQuery] StudentStudyRecordQueryDto query,
+        CancellationToken cancellationToken)
+    {
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var result = await recordService.GetPageAsync(query, userId, cancellationToken);
+        return Ok(ApiResult<PageResult<StudentStudyRecordDto>>.Success(result));
+    }
+
+    [HttpGet("records/{id:guid}")]
+    public async Task<ActionResult<ApiResult<StudentStudyRecordDto>>> GetRecordById(Guid id, CancellationToken cancellationToken)
+    {
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var result = await recordService.GetByIdAsync(id, userId, cancellationToken);
+        if (result is null)
+            return NotFound(ApiResult<StudentStudyRecordDto>.Fail("学习记录不存在", StatusCodes.Status404NotFound));
+        return Ok(ApiResult<StudentStudyRecordDto>.Success(result));
+    }
+
+    [HttpPost("records")]
+    public async Task<ActionResult<ApiResult<StudentStudyRecordDto>>> CreateRecord(
+        [FromBody] CreateStudentStudyRecordDto input,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+
+        var result = await recordService.CreateAsync(input, userId.Value, cancellationToken);
+        return CreatedAtAction(nameof(GetRecordById), new { id = result.Id }, ApiResult<StudentStudyRecordDto>.Success(result, "创建成功"));
+    }
+
+    [HttpPut("records/{id:guid}")]
+    public async Task<ActionResult<ApiResult<StudentStudyRecordDto>>> UpdateRecord(
+        Guid id,
+        [FromBody] UpdateStudentStudyRecordDto input,
+        CancellationToken cancellationToken)
+    {
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var result = await recordService.UpdateAsync(id, input, userId, cancellationToken);
+        if (result is null)
+            return NotFound(ApiResult<StudentStudyRecordDto>.Fail("学习记录不存在", StatusCodes.Status404NotFound));
+        return Ok(ApiResult<StudentStudyRecordDto>.Success(result, "更新成功"));
+    }
+
+    [HttpDelete("records/{id:guid}")]
+    public async Task<ActionResult<ApiResult>> DeleteRecord(Guid id, CancellationToken cancellationToken)
+    {
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var deleted = await recordService.DeleteAsync(id, userId, cancellationToken);
+        if (!deleted)
+            return NotFound(ApiResult.Fail("学习记录不存在"));
         return Ok(ApiResult.Success("删除成功"));
     }
 }

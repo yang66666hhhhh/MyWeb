@@ -25,6 +25,7 @@ import dayjs from 'dayjs';
 
 import {
   createPostgraduateTaskApi,
+  createStudyRecordApi,
   deletePostgraduateTaskApi,
   getPostgraduateTaskPageApi,
   type PostgraduateTask,
@@ -263,6 +264,14 @@ async function markCompleted(task: PostgraduateTask) {
       status: 2,
       title: task.title,
       type: task.type,
+    });
+    await createStudyRecordApi({
+      durationMinutes: 60,
+      recordDate: dayjs().format('YYYY-MM-DD'),
+      subject: '未分类',
+      summary: task.title,
+      taskId: task.id,
+      taskTitle: task.title,
     });
     message.success('任务已标记为完成');
     await fetchTasks();

@@ -172,6 +172,10 @@ public class ExamDashboardDto
     public int MistakeCount { get; set; }
     public int MaterialCount { get; set; }
     public int ReviewTaskCount { get; set; }
+    public int PendingTaskCount { get; set; }
+    public int TodayReviewCount { get; set; }
+    public int OverdueTaskCount { get; set; }
+    public int SubjectCount { get; set; }
     public List<SubjectProgressDto> Subjects { get; set; } = new();
     public List<StudyRecordDto> RecentRecords { get; set; } = new();
 }
@@ -184,6 +188,8 @@ public class SubjectProgressDto
     public double WeeklyHours { get; set; }
     public int TargetHours { get; set; }
     public string Color { get; set; } = "blue";
+    public int MistakeCount { get; set; }
+    public int MaterialCount { get; set; }
 }
 
 public class StudyRecordDto
@@ -193,4 +199,91 @@ public class StudyRecordDto
     public int DurationMinutes { get; set; }
     public string RecordDate { get; set; } = string.Empty;
     public string Summary { get; set; } = string.Empty;
+    public string? TaskTitle { get; set; }
+    public string? Remark { get; set; }
+}
+
+public class StudentSubjectDto
+{
+    public Guid Id { get; set; }
+    public Guid? UserId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string Color { get; set; } = "blue";
+    public int TargetHours { get; set; }
+    public int Sort { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+
+public class StudentSubjectQueryDto : PageQueryDto
+{
+    public string? Keyword { get; set; }
+    public bool? IsActive { get; set; }
+}
+
+public class CreateStudentSubjectDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string Color { get; set; } = "blue";
+    public int TargetHours { get; set; }
+    public int Sort { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
+public class UpdateStudentSubjectDto
+{
+    public string? Name { get; set; }
+    public string? Description { get; set; }
+    public string? Color { get; set; }
+    public int? TargetHours { get; set; }
+    public int? Sort { get; set; }
+    public bool? IsActive { get; set; }
+}
+
+public class StudentStudyRecordDto
+{
+    public Guid Id { get; set; }
+    public Guid? UserId { get; set; }
+    public string Subject { get; set; } = string.Empty;
+    public string Summary { get; set; } = string.Empty;
+    public DateOnly RecordDate { get; set; }
+    public int DurationMinutes { get; set; }
+    public string? TaskTitle { get; set; }
+    public Guid? TaskId { get; set; }
+    public string? Remark { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+
+public class StudentStudyRecordQueryDto : PageQueryDto
+{
+    public string? Keyword { get; set; }
+    public string? Subject { get; set; }
+    public DateOnly? StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
+}
+
+public class CreateStudentStudyRecordDto
+{
+    public string Subject { get; set; } = string.Empty;
+    public string Summary { get; set; } = string.Empty;
+    public DateOnly RecordDate { get; set; }
+    public int DurationMinutes { get; set; }
+    public string? TaskTitle { get; set; }
+    public Guid? TaskId { get; set; }
+    public string? Remark { get; set; }
+}
+
+public class UpdateStudentStudyRecordDto
+{
+    public string? Subject { get; set; }
+    public string? Summary { get; set; }
+    public DateOnly? RecordDate { get; set; }
+    public int? DurationMinutes { get; set; }
+    public string? TaskTitle { get; set; }
+    public Guid? TaskId { get; set; }
+    public string? Remark { get; set; }
 }

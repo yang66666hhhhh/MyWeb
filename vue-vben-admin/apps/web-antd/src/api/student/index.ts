@@ -33,6 +33,25 @@ export interface ExamMaterial extends BaseEntity {
   type: number;
 }
 
+export interface StudentSubject extends BaseEntity {
+  color: string;
+  description?: null | string;
+  isActive: boolean;
+  name: string;
+  sort: number;
+  targetHours: number;
+}
+
+export interface StudentStudyRecord extends BaseEntity {
+  durationMinutes: number;
+  recordDate: string;
+  remark?: null | string;
+  subject: string;
+  summary: string;
+  taskId?: null | string;
+  taskTitle?: null | string;
+}
+
 export interface PostgraduateTaskQuery extends PageQuery {
   keyword?: string;
   status?: number;
@@ -50,6 +69,18 @@ export interface ExamMaterialQuery extends PageQuery {
   type?: number;
 }
 
+export interface StudentSubjectQuery extends PageQuery {
+  isActive?: boolean;
+  keyword?: string;
+}
+
+export interface StudentStudyRecordQuery extends PageQuery {
+  endDate?: string;
+  keyword?: string;
+  startDate?: string;
+  subject?: string;
+}
+
 export type SavePostgraduateTaskInput = Omit<PostgraduateTask, 'createdAt' | 'id' | 'updatedAt'>;
 export interface SaveExamMistakeInput {
   question: string;
@@ -63,6 +94,8 @@ export interface SaveExamMistakeInput {
   nextReviewDate?: null | string;
 }
 export type SaveExamMaterialInput = Omit<ExamMaterial, 'createdAt' | 'id' | 'updatedAt'>;
+export type SaveStudentSubjectInput = Omit<StudentSubject, 'createdAt' | 'id' | 'updatedAt' | 'userId'>;
+export type SaveStudentStudyRecordInput = Omit<StudentStudyRecord, 'createdAt' | 'id' | 'updatedAt' | 'userId'>;
 
 export async function getPostgraduateTaskPageApi(params: PostgraduateTaskQuery) {
   return requestClient.get<PageResult<PostgraduateTask>>(`${studentBaseUrl}/tasks`, { params });
@@ -133,24 +166,64 @@ export interface ExamDashboard {
   weeklyHours: number;
   mistakeCount: number;
   materialCount: number;
+  overdueTaskCount: number;
+  pendingTaskCount: number;
   reviewTaskCount: number;
+  subjectCount: number;
   subjects: Array<{
     color: string;
     id: string;
     name: string;
+    materialCount: number;
+    mistakeCount: number;
     progress: number;
     targetHours: number;
     weeklyHours: number;
   }>;
+  todayReviewCount: number;
   recentRecords: Array<{
     durationMinutes: number;
     id: string;
     recordDate: string;
+    remark?: null | string;
     subject: string;
     summary: string;
+    taskTitle?: null | string;
   }>;
 }
 
 export async function getExamDashboardApi() {
   return requestClient.get<ExamDashboard>(`${studentBaseUrl}/dashboard`);
+}
+
+export async function getStudentSubjectPageApi(params: StudentSubjectQuery) {
+  return requestClient.get<PageResult<StudentSubject>>(`${studentBaseUrl}/subjects`, { params });
+}
+
+export async function createStudentSubjectApi(data: SaveStudentSubjectInput) {
+  return requestClient.post<StudentSubject>(`${studentBaseUrl}/subjects`, data);
+}
+
+export async function updateStudentSubjectApi(id: string, data: Partial<SaveStudentSubjectInput>) {
+  return requestClient.put<StudentSubject>(`${studentBaseUrl}/subjects/${id}`, data);
+}
+
+export async function deleteStudentSubjectApi(id: string) {
+  return requestClient.delete(`${studentBaseUrl}/subjects/${id}`);
+}
+
+export async function getStudyRecordPageApi(params: StudentStudyRecordQuery) {
+  return requestClient.get<PageResult<StudentStudyRecord>>(`${studentBaseUrl}/records`, { params });
+}
+
+export async function createStudyRecordApi(data: SaveStudentStudyRecordInput) {
+  return requestClient.post<StudentStudyRecord>(`${studentBaseUrl}/records`, data);
+}
+
+export async function updateStudyRecordApi(id: string, data: Partial<SaveStudentStudyRecordInput>) {
+  return requestClient.put<StudentStudyRecord>(`${studentBaseUrl}/records/${id}`, data);
+}
+
+export async function deleteStudyRecordApi(id: string) {
+  return requestClient.delete(`${studentBaseUrl}/records/${id}`);
 }

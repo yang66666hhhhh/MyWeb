@@ -29,3 +29,21 @@ public interface IExamMaterialService
     Task<ExamMaterialDto?> UpdateAsync(Guid id, UpdateExamMaterialDto input, Guid? userId = null, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default);
 }
+
+public interface IStudentSubjectService
+{
+    Task<PageResult<StudentSubjectDto>> GetPageAsync(StudentSubjectQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default);
+    Task<StudentSubjectDto?> GetByIdAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default);
+    Task<StudentSubjectDto> CreateAsync(CreateStudentSubjectDto input, Guid userId, CancellationToken cancellationToken = default);
+    Task<StudentSubjectDto?> UpdateAsync(Guid id, UpdateStudentSubjectDto input, Guid? userId = null, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default);
+}
+
+public interface IStudentStudyRecordService
+{
+    Task<PageResult<StudentStudyRecordDto>> GetPageAsync(StudentStudyRecordQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default);
+    Task<StudentStudyRecordDto?> GetByIdAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default);
+    Task<StudentStudyRecordDto> CreateAsync(CreateStudentStudyRecordDto input, Guid userId, CancellationToken cancellationToken = default);
+    Task<StudentStudyRecordDto?> UpdateAsync(Guid id, UpdateStudentStudyRecordDto input, Guid? userId = null, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default);
+}

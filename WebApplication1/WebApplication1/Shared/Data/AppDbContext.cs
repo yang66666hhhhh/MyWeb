@@ -51,6 +51,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<PostgraduateTask> PostgraduateTasks => Set<PostgraduateTask>();
     public DbSet<ExamMistake> ExamMistakes => Set<ExamMistake>();
     public DbSet<ExamMaterial> ExamMaterials => Set<ExamMaterial>();
+    public DbSet<StudentSubject> StudentSubjects => Set<StudentSubject>();
+    public DbSet<StudentStudyRecord> StudentStudyRecords => Set<StudentStudyRecord>();
 
     public DbSet<IndustryTemplate> IndustryTemplates => Set<IndustryTemplate>();
     public DbSet<TemplateField> TemplateFields => Set<TemplateField>();

@@ -376,3 +376,254 @@ public class ExamMaterialService(AppDbContext dbContext, ILogger<ExamMaterialSer
         UpdatedAt = material.UpdatedAt
     };
 }
+
+public class StudentSubjectService(AppDbContext dbContext, ILogger<StudentSubjectService> logger) : IStudentSubjectService
+{
+    public async Task<PageResult<StudentSubjectDto>> GetPageAsync(StudentSubjectQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
+    {
+        var page = Math.Max(query.Page, 1);
+        var pageSize = Math.Clamp(query.PageSize, 1, 100);
+
+        var subjects = dbContext.StudentSubjects.AsNoTracking();
+
+        if (userId.HasValue)
+        {
+            subjects = subjects.Where(x => x.UserId == userId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Keyword))
+        {
+            var keyword = query.Keyword.Trim();
+            subjects = subjects.Where(x => x.Name.Contains(keyword) || (x.Description != null && x.Description.Contains(keyword)));
+        }
+
+        if (query.IsActive.HasValue)
+        {
+            subjects = subjects.Where(x => x.IsActive == query.IsActive.Value);
+        }
+
+        var total = await subjects.CountAsync(cancellationToken);
+        var items = await subjects
+            .OrderBy(x => x.Sort)
+            .ThenBy(x => x.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return PageResult<StudentSubjectDto>.Create(items.Select(ToDto).ToList(), total, page, pageSize);
+    }
+
+    public async Task<StudentSubjectDto?> GetByIdAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default)
+    {
+        var subjects = dbContext.StudentSubjects.AsNoTracking().Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            subjects = subjects.Where(x => x.UserId == userId.Value);
+        }
+
+        var subject = await subjects.FirstOrDefaultAsync(cancellationToken);
+        return subject is null ? null : ToDto(subject);
+    }
+
+    public async Task<StudentSubjectDto> CreateAsync(CreateStudentSubjectDto input, Guid userId, CancellationToken cancellationToken = default)
+    {
+        var subject = new StudentSubject
+        {
+            UserId = userId,
+            Name = input.Name,
+            Description = input.Description,
+            Color = string.IsNullOrWhiteSpace(input.Color) ? "blue" : input.Color,
+            TargetHours = input.TargetHours,
+            Sort = input.Sort,
+            IsActive = input.IsActive
+        };
+
+        dbContext.StudentSubjects.Add(subject);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return ToDto(subject);
+    }
+
+    public async Task<StudentSubjectDto?> UpdateAsync(Guid id, UpdateStudentSubjectDto input, Guid? userId = null, CancellationToken cancellationToken = default)
+    {
+        var subjects = dbContext.StudentSubjects.Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            subjects = subjects.Where(x => x.UserId == userId.Value);
+        }
+
+        var subject = await subjects.FirstOrDefaultAsync(cancellationToken);
+        if (subject is null) return null;
+
+        if (input.Name is not null) subject.Name = input.Name;
+        if (input.Description is not null) subject.Description = input.Description;
+        if (input.Color is not null) subject.Color = string.IsNullOrWhiteSpace(input.Color) ? subject.Color : input.Color;
+        if (input.TargetHours.HasValue) subject.TargetHours = input.TargetHours.Value;
+        if (input.Sort.HasValue) subject.Sort = input.Sort.Value;
+        if (input.IsActive.HasValue) subject.IsActive = input.IsActive.Value;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return ToDto(subject);
+    }
+
+    public async Task<bool> DeleteAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default)
+    {
+        var subjects = dbContext.StudentSubjects.Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            subjects = subjects.Where(x => x.UserId == userId.Value);
+        }
+
+        var subject = await subjects.FirstOrDefaultAsync(cancellationToken);
+        if (subject is null) return false;
+
+        dbContext.StudentSubjects.Remove(subject);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    private static StudentSubjectDto ToDto(StudentSubject subject) => new()
+    {
+        Id = subject.Id,
+        UserId = subject.UserId,
+        Name = subject.Name,
+        Description = subject.Description,
+        Color = subject.Color,
+        TargetHours = subject.TargetHours,
+        Sort = subject.Sort,
+        IsActive = subject.IsActive,
+        CreatedAt = subject.CreatedAt,
+        UpdatedAt = subject.UpdatedAt
+    };
+}
+
+public class StudentStudyRecordService(AppDbContext dbContext, ILogger<StudentStudyRecordService> logger) : IStudentStudyRecordService
+{
+    public async Task<PageResult<StudentStudyRecordDto>> GetPageAsync(StudentStudyRecordQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
+    {
+        var page = Math.Max(query.Page, 1);
+        var pageSize = Math.Clamp(query.PageSize, 1, 100);
+
+        var records = dbContext.StudentStudyRecords.AsNoTracking();
+
+        if (userId.HasValue)
+        {
+            records = records.Where(x => x.UserId == userId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Keyword))
+        {
+            var keyword = query.Keyword.Trim();
+            records = records.Where(x => x.Summary.Contains(keyword) || (x.Remark != null && x.Remark.Contains(keyword)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Subject))
+        {
+            records = records.Where(x => x.Subject == query.Subject);
+        }
+
+        if (query.StartDate.HasValue)
+        {
+            records = records.Where(x => x.RecordDate >= query.StartDate.Value);
+        }
+
+        if (query.EndDate.HasValue)
+        {
+            records = records.Where(x => x.RecordDate <= query.EndDate.Value);
+        }
+
+        var total = await records.CountAsync(cancellationToken);
+        var items = await records
+            .OrderByDescending(x => x.RecordDate)
+            .ThenByDescending(x => x.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return PageResult<StudentStudyRecordDto>.Create(items.Select(ToDto).ToList(), total, page, pageSize);
+    }
+
+    public async Task<StudentStudyRecordDto?> GetByIdAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default)
+    {
+        var records = dbContext.StudentStudyRecords.AsNoTracking().Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            records = records.Where(x => x.UserId == userId.Value);
+        }
+
+        var record = await records.FirstOrDefaultAsync(cancellationToken);
+        return record is null ? null : ToDto(record);
+    }
+
+    public async Task<StudentStudyRecordDto> CreateAsync(CreateStudentStudyRecordDto input, Guid userId, CancellationToken cancellationToken = default)
+    {
+        var record = new StudentStudyRecord
+        {
+            UserId = userId,
+            Subject = input.Subject,
+            Summary = input.Summary,
+            RecordDate = input.RecordDate,
+            DurationMinutes = input.DurationMinutes,
+            TaskTitle = input.TaskTitle,
+            TaskId = input.TaskId,
+            Remark = input.Remark
+        };
+
+        dbContext.StudentStudyRecords.Add(record);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return ToDto(record);
+    }
+
+    public async Task<StudentStudyRecordDto?> UpdateAsync(Guid id, UpdateStudentStudyRecordDto input, Guid? userId = null, CancellationToken cancellationToken = default)
+    {
+        var records = dbContext.StudentStudyRecords.Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            records = records.Where(x => x.UserId == userId.Value);
+        }
+
+        var record = await records.FirstOrDefaultAsync(cancellationToken);
+        if (record is null) return null;
+
+        if (input.Subject is not null) record.Subject = input.Subject;
+        if (input.Summary is not null) record.Summary = input.Summary;
+        if (input.RecordDate.HasValue) record.RecordDate = input.RecordDate.Value;
+        if (input.DurationMinutes.HasValue) record.DurationMinutes = input.DurationMinutes.Value;
+        if (input.TaskTitle is not null) record.TaskTitle = input.TaskTitle;
+        if (input.TaskId.HasValue) record.TaskId = input.TaskId;
+        if (input.Remark is not null) record.Remark = input.Remark;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return ToDto(record);
+    }
+
+    public async Task<bool> DeleteAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default)
+    {
+        var records = dbContext.StudentStudyRecords.Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            records = records.Where(x => x.UserId == userId.Value);
+        }
+
+        var record = await records.FirstOrDefaultAsync(cancellationToken);
+        if (record is null) return false;
+
+        dbContext.StudentStudyRecords.Remove(record);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    private static StudentStudyRecordDto ToDto(StudentStudyRecord record) => new()
+    {
+        Id = record.Id,
+        UserId = record.UserId,
+        Subject = record.Subject,
+        Summary = record.Summary,
+        RecordDate = record.RecordDate,
+        DurationMinutes = record.DurationMinutes,
+        TaskTitle = record.TaskTitle,
+        TaskId = record.TaskId,
+        Remark = record.Remark,
+        CreatedAt = record.CreatedAt,
+        UpdatedAt = record.UpdatedAt
+    };
+}

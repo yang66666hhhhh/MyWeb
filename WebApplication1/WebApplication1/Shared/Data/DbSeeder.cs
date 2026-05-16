@@ -4,6 +4,7 @@ using WebApplication1.Shared.Enums;
 using WebApplication1.Features.Auth.Entities;
 using WebApplication1.Features.Auth.Entities.Subscription;
 using WebApplication1.Features.Work.Entities;
+using WebApplication1.Features.Growth.Entities;
 using WebApplication1.Features.Admin.Entities;
 using WebApplication1.Features.DailyPlans;
 using WebApplication1.Features.Tasks;
@@ -292,6 +293,23 @@ public static class DbSeeder
         logger?.LogInformation("[DbSeeder] Syncing RoleMenus...");
         await SyncRoleMenusAsync(context, now);
         logger?.LogInformation("[DbSeeder] RoleMenus synced.");
+
+        if (!await context.StudentSubjects.AnyAsync())
+        {
+            logger?.LogInformation("[DbSeeder] Seeding StudentSubjects...");
+            var subjects = new List<StudentSubject>
+            {
+                new() { Id = Guid.NewGuid(), Name = "数据结构", Description = "算法与数据结构核心专题", Color = "blue", TargetHours = 120, Sort = 0, IsActive = true, CreatedAt = now },
+                new() { Id = Guid.NewGuid(), Name = "操作系统", Description = "进程、内存、文件系统与 I/O", Color = "cyan", TargetHours = 100, Sort = 1, IsActive = true, CreatedAt = now },
+                new() { Id = Guid.NewGuid(), Name = "计算机网络", Description = "协议栈、路由、传输层与应用层", Color = "green", TargetHours = 90, Sort = 2, IsActive = true, CreatedAt = now },
+                new() { Id = Guid.NewGuid(), Name = "数学", Description = "高数、线代与概率统计", Color = "purple", TargetHours = 180, Sort = 3, IsActive = true, CreatedAt = now },
+                new() { Id = Guid.NewGuid(), Name = "英语", Description = "阅读、翻译、写作与词汇", Color = "orange", TargetHours = 120, Sort = 4, IsActive = true, CreatedAt = now },
+                new() { Id = Guid.NewGuid(), Name = "政治", Description = "选择题、分析题与时政复习", Color = "red", TargetHours = 80, Sort = 5, IsActive = true, CreatedAt = now },
+            };
+            context.StudentSubjects.AddRange(subjects);
+            await context.SaveChangesAsync();
+            logger?.LogInformation("[DbSeeder] StudentSubjects seeded.");
+        }
 
         // WorkTaskTypes - 任务类型
         if (!await context.WorkTaskTypes.AnyAsync())
@@ -780,6 +798,8 @@ public static class DbSeeder
                 new() { Code = "STUDENT_MISTAKES", Name = "错题本", Category = "Persona", Description = "错题记录和复习" },
                 new() { Code = "STUDENT_REVIEW", Name = "复习日程", Category = "Persona", Description = "到期复习安排" },
                 new() { Code = "STUDENT_MATERIALS", Name = "学习资料", Category = "Persona", Description = "学习资料管理" },
+                new() { Code = "STUDENT_RECORDS", Name = "学习记录", Category = "Persona", Description = "学习过程记录" },
+                new() { Code = "STUDENT_SUBJECTS", Name = "科目目标", Category = "Persona", Description = "科目目标配置" },
                 new() { Code = "STUDENT_EXAM", Name = "考研备考", Category = "Persona", Description = "考研备考管理" },
             };
             context.Features.AddRange(features);
@@ -961,6 +981,8 @@ public static class DbSeeder
         C(student, "复习日程", "/student/review", "lucide:alarm-clock-check", "/views/student/review/index.vue", 2, 1, false, "Student", null, "STUDENT_REVIEW");
         C(student, "错题本", "/student/mistakes", "lucide:notebook-pen", "/views/student/mistakes/index.vue", 3, 1, false, "Student", null, "STUDENT_MISTAKES");
         C(student, "学习资料", "/student/materials", "lucide:library", "/views/student/materials/index.vue", 4, 1, false, "Student", null, "STUDENT_MATERIALS");
+        C(student, "学习记录", "/student/records", "lucide:history", "/views/student/records/index.vue", 5, 1, false, "Student", null, "STUDENT_RECORDS");
+        C(student, "科目目标", "/student/subjects", "lucide:target", "/views/student/subjects/index.vue", 6, 1, false, "Student", null, "STUDENT_SUBJECTS");
 
         // ===== 平台管理 =====
         var platform = L("平台管理", "/system", "lucide:settings", null, 90, 2, true, null, "System");

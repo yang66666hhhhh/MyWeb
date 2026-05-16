@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
@@ -17,31 +17,28 @@ import {
   Tag,
   message,
 } from 'ant-design-vue';
-import dayjs from 'dayjs';
 
 import {
-  getMaterialPageApi,
-  getMistakePageApi,
-  getPostgraduateTaskPageApi,
-  type ExamMaterial,
-  type ExamMistake,
+  getExamDashboardApi,
+  type ExamDashboard,
   type PostgraduateTask,
   updatePostgraduateTaskApi,
 } from '#/api/student';
 
-interface SubjectInsight {
-  materialCount: number;
-  mistakeCount: number;
-  name: string;
-  pendingTaskCount: number;
-  reviewCount: number;
-  score: number;
-}
-
 const loading = ref(false);
-const tasks = ref<PostgraduateTask[]>([]);
-const mistakes = ref<ExamMistake[]>([]);
-const materials = ref<ExamMaterial[]>([]);
+const dashboard = ref<ExamDashboard>({
+  materialCount: 0,
+  mistakeCount: 0,
+  overdueTaskCount: 0,
+  pendingTaskCount: 0,
+  recentRecords: [],
+  reviewTaskCount: 0,
+  subjectCount: 0,
+  subjects: [],
+  todayReviewCount: 0,
+  todayTasks: [],
+  weeklyHours: 0,
+});
 
 const statusLabels: Record<number, string> = {
   0: '待开始',
@@ -80,91 +77,15 @@ const taskColumns: TableColumnsType<PostgraduateTask> = [
   { key: 'action', title: '操作', width: 90, fixed: 'right' },
 ];
 
-const totalTaskCount = computed(() => tasks.value.length);
-const pendingTaskCount = computed(() => tasks.value.filter((item) => item.status !== 2).length);
-const dueReviewCount = computed(() =>
-  mistakes.value.filter((item) =>
-    item.status !== 2 &&
-    (!item.nextReviewDate || dayjs(item.nextReviewDate).isSame(dayjs(), 'day') || dayjs(item.nextReviewDate).isBefore(dayjs(), 'day')),
-  ).length,
-);
-const materialCount = computed(() => materials.value.length);
-const completionRate = computed(() => {
-  if (tasks.value.length === 0) {
-    return 0;
-  }
-  return Math.round((tasks.value.filter((item) => item.status === 2).length / tasks.value.length) * 100);
-});
-
-const todayTasks = computed(() =>
-  tasks.value
-    .filter((item) =>
-      item.status !== 2 &&
-      (!item.dueDate || dayjs(item.dueDate).isSame(dayjs(), 'day') || dayjs(item.dueDate).isBefore(dayjs(), 'day')),
-    )
-    .slice(0, 8),
-);
-
-const reviewMistakes = computed(() =>
-  mistakes.value
-    .filter((item) =>
-      item.status !== 2 &&
-      (!item.nextReviewDate || dayjs(item.nextReviewDate).isSame(dayjs(), 'day') || dayjs(item.nextReviewDate).isBefore(dayjs(), 'day')),
-    )
-    .slice(0, 6),
-);
-
-const subjectInsights = computed<SubjectInsight[]>(() => {
-  const names = new Set<string>();
-  for (const item of mistakes.value) names.add(item.subject);
-  for (const item of materials.value) names.add(item.subject);
-
-  return [...names]
-    .filter(Boolean)
-    .map((name) => {
-      const mistakeCount = mistakes.value.filter((item) => item.subject === name && item.status !== 2).length;
-      const reviewCount = mistakes.value.filter((item) => item.subject === name && item.status !== 2 && item.nextReviewDate && !dayjs(item.nextReviewDate).isAfter(dayjs(), 'day')).length;
-      const materialCount = materials.value.filter((item) => item.subject === name).length;
-      const pendingTaskCount = tasks.value.filter((item) => item.status !== 2 && [item.title, item.description].some((text) => text?.includes(name))).length;
-      const score = Math.min(100, materialCount * 12 + Math.max(0, 40 - mistakeCount * 6) + Math.max(0, 20 - reviewCount * 5));
-      return { materialCount, mistakeCount, name, pendingTaskCount, reviewCount, score };
-    })
-    .sort((a, b) => a.score - b.score);
-});
-
-async function fetchAll() {
+async function fetchDashboard() {
   loading.value = true;
   try {
-    const [taskItems, mistakeItems, materialItems] = await Promise.all([
-      fetchAllPages(getPostgraduateTaskPageApi),
-      fetchAllPages(getMistakePageApi),
-      fetchAllPages(getMaterialPageApi),
-    ]);
-    tasks.value = taskItems;
-    mistakes.value = mistakeItems;
-    materials.value = materialItems;
+    dashboard.value = await getExamDashboardApi();
   } catch {
     message.error('加载学习总览失败');
   } finally {
     loading.value = false;
   }
-}
-
-async function fetchAllPages<T>(
-  loader: (params: { page: number; pageSize: number }) => Promise<{ items: T[]; total: number }>,
-) {
-  const items: T[] = [];
-  let page = 1;
-  const pageSize = 100;
-  while (true) {
-    const result = await loader({ page, pageSize });
-    items.push(...result.items);
-    if (items.length >= result.total || result.items.length < pageSize) {
-      break;
-    }
-    page += 1;
-  }
-  return items;
 }
 
 function toTask(record: Record<string, any>) {
@@ -182,31 +103,31 @@ async function markTaskCompleted(task: PostgraduateTask) {
       type: task.type,
     });
     message.success('任务已完成');
-    await fetchAll();
+    await fetchDashboard();
   } catch {
     message.error('更新任务失败');
   }
 }
 
 onMounted(() => {
-  void fetchAll();
+  void fetchDashboard();
 });
 </script>
 
 <template>
-  <Page description="聚合计划、错题、资料和复习压力" title="学习总览">
+  <Page description="聚合计划、记录、错题、资料和科目进度" title="学习总览">
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="待办任务" :value="pendingTaskCount" /></Card>
+        <Card><Statistic title="待办任务" :value="dashboard.pendingTaskCount" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="到期复习" :value="dueReviewCount" /></Card>
+        <Card><Statistic title="今日复习" :value="dashboard.todayReviewCount" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="学习资料" :value="materialCount" /></Card>
+        <Card><Statistic title="本周学习" :value="dashboard.weeklyHours" suffix="h" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="任务完成率" :value="completionRate" suffix="%" /></Card>
+        <Card><Statistic title="覆盖科目" :value="dashboard.subjectCount" /></Card>
       </Col>
     </Row>
 
@@ -214,11 +135,11 @@ onMounted(() => {
       <Col :lg="14" :xs="24">
         <Card title="今日重点">
           <template #extra>
-            <Button :loading="loading" type="primary" @click="fetchAll">刷新</Button>
+            <Button :loading="loading" type="primary" @click="fetchDashboard">刷新</Button>
           </template>
           <Table
             :columns="taskColumns"
-            :data-source="todayTasks"
+            :data-source="dashboard.todayTasks"
             :loading="loading"
             :pagination="false"
             :scroll="{ x: 860 }"
@@ -250,60 +171,54 @@ onMounted(() => {
               </template>
             </template>
           </Table>
-          <Empty v-if="todayTasks.length === 0 && !loading" description="今天没有到期任务" />
+          <Empty v-if="dashboard.todayTasks.length === 0 && !loading" description="今天没有到期任务" />
         </Card>
       </Col>
 
       <Col :lg="10" :xs="24">
-        <Card title="到期错题">
-          <div v-if="reviewMistakes.length === 0 && !loading" class="py-8">
-            <Empty description="暂无到期复习" />
+        <Card title="最近学习记录">
+          <div v-if="dashboard.recentRecords.length === 0 && !loading" class="py-8">
+            <Empty description="暂无学习记录" />
           </div>
           <div v-else class="space-y-3">
             <div
-              v-for="mistake in reviewMistakes"
-              :key="mistake.id"
+              v-for="record in dashboard.recentRecords"
+              :key="record.id"
               class="rounded border border-gray-200 p-3"
             >
               <div class="mb-2 flex items-center justify-between gap-2">
                 <Space :size="4" wrap>
-                  <Tag color="blue">{{ mistake.subject }}</Tag>
-                  <Tag v-if="mistake.nextReviewDate" color="orange">{{ mistake.nextReviewDate }}</Tag>
-                  <Tag v-else>未排期</Tag>
+                  <Tag color="blue">{{ record.subject }}</Tag>
+                  <Tag>{{ record.recordDate }}</Tag>
                 </Space>
-                <span class="text-text-secondary text-xs">{{ mistake.reviewCount }} 次</span>
+                <span class="text-text-secondary text-xs">{{ record.durationMinutes }} 分钟</span>
               </div>
-              <div class="line-clamp-2 text-sm">{{ mistake.question }}</div>
+              <div class="font-medium">{{ record.summary }}</div>
+              <div v-if="record.taskTitle" class="text-text-secondary mt-1 text-xs">{{ record.taskTitle }}</div>
             </div>
           </div>
         </Card>
       </Col>
     </Row>
 
-    <Card title="科目状态">
+    <Card title="科目进度">
       <Row :gutter="[16, 16]">
-        <Col v-for="subject in subjectInsights" :key="subject.name" :lg="8" :md="12" :xs="24">
+        <Col v-for="subject in dashboard.subjects" :key="subject.id" :lg="8" :md="12" :xs="24">
           <div class="rounded border border-gray-200 p-3">
             <div class="mb-2 flex items-center justify-between">
-              <div class="font-medium">{{ subject.name }}</div>
-              <Tag :color="subject.score >= 70 ? 'green' : subject.score >= 45 ? 'orange' : 'red'">
-                {{ subject.score }} 分
-              </Tag>
+              <Tag :color="subject.color || 'blue'">{{ subject.name }}</Tag>
+              <span class="text-sm">{{ subject.progress }}%</span>
             </div>
-            <Progress :percent="subject.score" :show-info="false" />
+            <Progress :percent="subject.progress" :show-info="false" />
             <div class="text-text-secondary mt-3 grid grid-cols-3 gap-2 text-xs">
+              <span>本周 {{ subject.weeklyHours }}h</span>
               <span>错题 {{ subject.mistakeCount }}</span>
-              <span>复习 {{ subject.reviewCount }}</span>
               <span>资料 {{ subject.materialCount }}</span>
             </div>
           </div>
         </Col>
       </Row>
-      <Empty v-if="subjectInsights.length === 0 && !loading" description="暂无科目数据" />
+      <Empty v-if="dashboard.subjects.length === 0 && !loading" description="暂无科目数据" />
     </Card>
-
-    <div class="text-text-secondary mt-3 text-xs">
-      当前共 {{ totalTaskCount }} 个学习任务，科目状态根据资料覆盖、未掌握错题和到期复习综合计算。
-    </div>
   </Page>
 </template>

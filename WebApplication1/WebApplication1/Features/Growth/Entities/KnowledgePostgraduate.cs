@@ -112,3 +112,39 @@ public enum ExamMaterialType
     Formula = 2,
     Template = 3
 }
+
+public class StudentSubject : EntityBase
+{
+    public Guid? UserId { get; set; }
+
+    public string Name { get; set; } = string.Empty;
+
+    public string? Description { get; set; }
+
+    public string Color { get; set; } = "blue";
+
+    public int TargetHours { get; set; }
+
+    public int Sort { get; set; }
+
+    public bool IsActive { get; set; } = true;
+}
+
+public class StudentStudyRecord : EntityBase
+{
+    public Guid? UserId { get; set; }
+
+    public string Subject { get; set; } = string.Empty;
+
+    public string Summary { get; set; } = string.Empty;
+
+    public DateOnly RecordDate { get; set; }
+
+    public int DurationMinutes { get; set; }
+
+    public string? TaskTitle { get; set; }
+
+    public Guid? TaskId { get; set; }
+
+    public string? Remark { get; set; }
+}
