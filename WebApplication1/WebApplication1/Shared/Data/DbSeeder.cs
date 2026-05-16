@@ -528,10 +528,10 @@ public static class DbSeeder
         }
 
         // DailyPlans - 个人每日计划
-        if (!await context.DailyPlans.AnyAsync())
+        var vbenDailyPlanUser = await context.Users.FirstAsync(u => u.Username == "vben");
+        if (!await context.DailyPlans.AnyAsync(x => x.UserId == vbenDailyPlanUser.Id))
         {
             logger?.LogInformation("[DbSeeder] Seeding DailyPlans...");
-            var user = await context.Users.FirstAsync(u => u.Username == "vben");
             var plans = new List<DailyPlan>();
 
             // 今天和明天的计划
@@ -545,6 +545,7 @@ public static class DbSeeder
             {
                 plans.Add(new DailyPlan
                 {
+                    UserId = vbenDailyPlanUser.Id,
                     PlanDate = today,
                     Title = title,
                     Remark = remark,
@@ -566,6 +567,7 @@ public static class DbSeeder
             {
                 plans.Add(new DailyPlan
                 {
+                    UserId = vbenDailyPlanUser.Id,
                     PlanDate = today.AddDays(1),
                     Title = title,
                     Remark = remark,
@@ -580,6 +582,7 @@ public static class DbSeeder
             {
                 plans.Add(new DailyPlan
                 {
+                    UserId = vbenDailyPlanUser.Id,
                     PlanDate = today.AddDays(day),
                     Title = $"已完成任务 - {Math.Abs(day)}天前",
                     Remark = "已完成的工作内容",
@@ -812,6 +815,8 @@ public static class DbSeeder
             logger?.LogInformation("[DbSeeder] WorkLogTemplates seeded.");
         }
 
+        await SeedUserExperienceDataAsync(context, logger, now, today);
+
         // Features
         if (!await context.Features.AnyAsync())
         {
@@ -949,6 +954,355 @@ public static class DbSeeder
         }
 
         logger?.LogInformation("[DbSeeder] Seed completed successfully!");
+    }
+
+    private static async Task SeedUserExperienceDataAsync(AppDbContext context, ILogger? logger, DateTime now, DateOnly today)
+    {
+        var users = await context.Users
+            .Where(u => u.Username == "admin" || u.Username == "jack" || u.Username == "lisa" || u.Username == "tom")
+            .ToDictionaryAsync(u => u.Username);
+
+        foreach (var user in users.Values)
+        {
+            if (!await context.DailyPlans.AnyAsync(x => x.UserId == user.Id))
+            {
+                logger?.LogInformation("[DbSeeder] Seeding daily plans for {Username}...", user.Username);
+                context.DailyPlans.AddRange(CreateUserDailyPlans(user, now, today));
+                await context.SaveChangesAsync();
+            }
+
+            if (!await context.Tasks.AnyAsync(x => x.UserId == user.Id))
+            {
+                logger?.LogInformation("[DbSeeder] Seeding tasks for {Username}...", user.Username);
+                context.Tasks.AddRange(CreateUserTasks(user, now, today));
+                await context.SaveChangesAsync();
+            }
+
+            if (!await context.Habits.AnyAsync(x => x.UserId == user.Id))
+            {
+                logger?.LogInformation("[DbSeeder] Seeding habits for {Username}...", user.Username);
+                var habits = CreateUserHabits(user, now, today);
+                context.Habits.AddRange(habits);
+                await context.SaveChangesAsync();
+
+                context.HabitCheckIns.AddRange(CreateHabitCheckIns(habits, today));
+                await context.SaveChangesAsync();
+            }
+
+            if (!await context.GrowthProjects.AnyAsync(x => x.UserId == user.Id))
+            {
+                logger?.LogInformation("[DbSeeder] Seeding growth projects for {Username}...", user.Username);
+                context.GrowthProjects.AddRange(CreateUserGrowthProjects(user, now, today));
+                await context.SaveChangesAsync();
+            }
+
+            if (!await context.KnowledgeArticles.AnyAsync(x => x.UserId == user.Id))
+            {
+                logger?.LogInformation("[DbSeeder] Seeding knowledge articles for {Username}...", user.Username);
+                context.KnowledgeArticles.AddRange(CreateUserKnowledgeArticles(user, now));
+                await context.SaveChangesAsync();
+            }
+        }
+
+        if (users.TryGetValue("jack", out var jack))
+        {
+            var project = await context.WorkProjects.OrderBy(x => x.Sort).FirstOrDefaultAsync();
+            if (project is not null && !await context.WorkDailyPlans.AnyAsync(x => x.UserId == jack.Id))
+            {
+                logger?.LogInformation("[DbSeeder] Seeding work daily plans for jack...");
+                context.WorkDailyPlans.AddRange(CreateJackWorkDailyPlans(jack, project.Id, now, today));
+                await context.SaveChangesAsync();
+            }
+
+            if (project is not null && !await context.WorkLogs.AnyAsync(x => x.UserId == jack.Id))
+            {
+                logger?.LogInformation("[DbSeeder] Seeding work logs for jack...");
+                context.WorkLogs.AddRange(CreateJackWorkLogs(jack, project.Id, now, today));
+                await context.SaveChangesAsync();
+            }
+        }
+    }
+
+    private static IEnumerable<DailyPlan> CreateUserDailyPlans(AppUser user, DateTime now, DateOnly today)
+    {
+        return user.Username switch
+        {
+            "admin" =>
+            [
+                NewDailyPlan(user.Id, today, "检查平台菜单权限", "确认角色菜单、功能订阅和身份菜单显示一致。", 4, DailyPlanStatus.InProgress, "优先处理普通用户看不到数据的问题。", now.AddHours(-6)),
+                NewDailyPlan(user.Id, today, "整理演示账号体验清单", "给每个种子账号补齐首屏可见数据。", 3, DailyPlanStatus.Pending, "避免新账号登录后页面空白。", now.AddHours(-4)),
+                NewDailyPlan(user.Id, today.AddDays(1), "复盘订阅功能边界", "核对 Free、Pro、Team 的功能权限。", 2, DailyPlanStatus.Pending, null, now.AddHours(-2)),
+                NewDailyPlan(user.Id, today.AddDays(-1), "完成运营指标检查", "检查用户数、菜单数和近期任务数据。", 3, DailyPlanStatus.Completed, "数据正常。", now.AddDays(-1), now.AddDays(-1).AddHours(5)),
+            ],
+            "jack" =>
+            [
+                NewDailyPlan(user.Id, today, "完成 DailyPlans 用户隔离", "实体、接口、服务和种子数据都按 UserId 处理。", 4, DailyPlanStatus.InProgress, "重点补迁移和测试。", now.AddHours(-5)),
+                NewDailyPlan(user.Id, today, "跑后端测试", "确认 DailyPlanService 和 DbSeeder 编译通过。", 3, DailyPlanStatus.Pending, null, now.AddHours(-3)),
+                NewDailyPlan(user.Id, today.AddDays(1), "补一轮前端回归", "检查每日计划列表是否只显示当前用户数据。", 2, DailyPlanStatus.Pending, null, now.AddHours(-1)),
+                NewDailyPlan(user.Id, today.AddDays(-1), "完成学生中心种子数据", "Lisa 账号学习中心已经有任务、错题、资料和记录。", 3, DailyPlanStatus.Completed, "已验证。", now.AddDays(-1), now.AddDays(-1).AddHours(4)),
+            ],
+            "lisa" =>
+            [
+                NewDailyPlan(user.Id, today, "完成英语阅读精读", "精读 2 篇真题阅读并整理长难句。", 3, DailyPlanStatus.Pending, "和学生中心任务保持一致。", now.AddHours(-4)),
+                NewDailyPlan(user.Id, today, "复习数据结构图论错题", "重点看 Dijkstra 和拓扑排序。", 4, DailyPlanStatus.InProgress, "今天必须复盘。", now.AddHours(-3)),
+                NewDailyPlan(user.Id, today.AddDays(1), "线代相似对角化练习", "做 10 道判断题并记录错因。", 3, DailyPlanStatus.Pending, null, now.AddHours(-1)),
+                NewDailyPlan(user.Id, today.AddDays(-1), "完成操作系统调度小测", "核对平均等待时间和周转时间。", 3, DailyPlanStatus.Completed, "计算公式已掌握。", now.AddDays(-1), now.AddDays(-1).AddHours(3)),
+            ],
+            "tom" =>
+            [
+                NewDailyPlan(user.Id, today, "整理今晚待办", "保留三个最重要的小任务。", 2, DailyPlanStatus.Pending, null, now.AddHours(-3)),
+                NewDailyPlan(user.Id, today, "完成轻量运动", "散步或拉伸 30 分钟。", 2, DailyPlanStatus.InProgress, "保持节奏。", now.AddHours(-2)),
+                NewDailyPlan(user.Id, today.AddDays(1), "周末学习安排", "预留两个学习时间块。", 3, DailyPlanStatus.Pending, null, now.AddHours(-1)),
+                NewDailyPlan(user.Id, today.AddDays(-1), "检查个人资料", "确认头像、身份和标签配置。", 1, DailyPlanStatus.Completed, "已确认。", now.AddDays(-1), now.AddDays(-1).AddHours(2)),
+            ],
+            _ => []
+        };
+    }
+
+    private static DailyPlan NewDailyPlan(
+        Guid userId,
+        DateOnly planDate,
+        string title,
+        string? description,
+        int priority,
+        DailyPlanStatus status,
+        string? remark,
+        DateTime createdAt,
+        DateTime? completedAt = null)
+    {
+        return new DailyPlan
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            PlanDate = planDate,
+            Title = title,
+            Description = description,
+            Priority = priority,
+            Status = status,
+            Remark = remark,
+            CompletedAt = completedAt,
+            CreatedAt = createdAt
+        };
+    }
+
+    private static IEnumerable<TaskItem> CreateUserTasks(AppUser user, DateTime now, DateOnly today)
+    {
+        return user.Username switch
+        {
+            "admin" =>
+            [
+                NewTask(user.Id, today, "复核本周功能权限配置", "确认专业版菜单、功能点和订阅状态展示一致。", TaskPriority.High, TaskType.Work, TaskSource.Work, TaskItemStatus.InProgress, now.AddHours(-6), "09:30", "11:00", 1.5m),
+                NewTask(user.Id, today, "整理平台体验优化清单", "把空状态、种子数据、页面引导整理成下轮迭代项。", TaskPriority.Medium, TaskType.Work, TaskSource.Work, TaskItemStatus.Pending, now.AddHours(-4), "14:00", "15:30", 1.5m),
+                NewTask(user.Id, today.AddDays(1), "检查 AI 助手示例提示词", "为规划器和日报生成准备更贴近日常工作的提示词。", TaskPriority.Medium, TaskType.Personal, TaskSource.Growth, TaskItemStatus.Pending, now.AddHours(-2), null, null, 1m),
+                NewTask(user.Id, today.AddDays(-1), "完成订阅套餐说明校对", "核对 Free/Pro/Team 的功能边界。", TaskPriority.High, TaskType.Work, TaskSource.Work, TaskItemStatus.Completed, now.AddDays(-1), null, null, 2m, now.AddDays(-1).AddHours(4)),
+            ],
+            "jack" =>
+            [
+                NewTask(user.Id, today, "修复工作日志筛选交互", "统一日期范围和项目筛选的默认值。", TaskPriority.Urgent, TaskType.Work, TaskSource.Work, TaskItemStatus.InProgress, now.AddHours(-7), "10:00", "12:00", 2m),
+                NewTask(user.Id, today, "补充学生中心接口测试", "覆盖 dashboard、tasks、mistakes、materials 的新路由。", TaskPriority.High, TaskType.Work, TaskSource.Work, TaskItemStatus.Pending, now.AddHours(-5), "15:00", "17:00", 2m),
+                NewTask(user.Id, today.AddDays(1), "重构前端 API 命名", "把 postgraduate 旧命名收敛到 student 域。", TaskPriority.Medium, TaskType.Work, TaskSource.Work, TaskItemStatus.Pending, now.AddHours(-2), null, null, 1.5m),
+                NewTask(user.Id, today.AddDays(-2), "完成菜单权限联调", "验证 Student persona 菜单按后端配置生成。", TaskPriority.High, TaskType.Work, TaskSource.Work, TaskItemStatus.Completed, now.AddDays(-2), null, null, 2m, now.AddDays(-2).AddHours(5)),
+            ],
+            "tom" =>
+            [
+                NewTask(user.Id, today, "整理个人待办清单", "把近期任务拆成今天、明天和本周三类。", TaskPriority.Medium, TaskType.Personal, TaskSource.Growth, TaskItemStatus.Pending, now.AddHours(-3), "20:00", "20:30", 0.5m),
+                NewTask(user.Id, today, "阅读产品体验笔记", "关注空状态、引导文案和默认数据。", TaskPriority.Low, TaskType.Personal, TaskSource.Growth, TaskItemStatus.InProgress, now.AddHours(-2), null, null, 1m),
+                NewTask(user.Id, today.AddDays(1), "整理周末学习计划", "预留两段连续时间处理技术债。", TaskPriority.Medium, TaskType.Personal, TaskSource.Growth, TaskItemStatus.Pending, now.AddHours(-1), null, null, 1m),
+                NewTask(user.Id, today.AddDays(-1), "完成账号资料检查", "确认昵称、头像和身份配置。", TaskPriority.Low, TaskType.Personal, TaskSource.Growth, TaskItemStatus.Completed, now.AddDays(-1), null, null, 0.5m, now.AddDays(-1).AddHours(3)),
+            ],
+            _ => []
+        };
+    }
+
+    private static TaskItem NewTask(
+        Guid userId,
+        DateOnly planDate,
+        string title,
+        string? description,
+        TaskPriority priority,
+        TaskType type,
+        TaskSource source,
+        TaskItemStatus status,
+        DateTime createdAt,
+        string? startTime,
+        string? endTime,
+        decimal estimatedHours,
+        DateTime? completedAt = null)
+    {
+        return new TaskItem
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            PlanDate = planDate,
+            Title = title,
+            Description = description,
+            Remark = description,
+            Priority = priority,
+            Type = type,
+            Source = source,
+            Status = status,
+            StartTime = startTime,
+            EndTime = endTime,
+            EstimatedHours = estimatedHours,
+            ActualHours = completedAt.HasValue ? estimatedHours : null,
+            CompletedAt = completedAt,
+            CreatedAt = createdAt
+        };
+    }
+
+    private static List<Habit> CreateUserHabits(AppUser user, DateTime now, DateOnly today)
+    {
+        var specs = user.Username switch
+        {
+            "admin" => new[]
+            {
+                ("晨间复盘", "工作", "每天用 10 分钟检查平台运营指标。", "每天", 6, 18),
+                ("阅读产品案例", "学习", "保持对管理后台和 SaaS 产品体验的输入。", "每周 5 次", 3, 12),
+            },
+            "jack" => new[]
+            {
+                ("代码 Review", "工作", "每天至少 Review 一个关键改动。", "每天", 8, 24),
+                ("技术笔记", "学习", "记录当天踩坑、调试结论和设计取舍。", "每周 5 次", 4, 16),
+            },
+            "tom" => new[]
+            {
+                ("晚间整理", "生活", "睡前整理明天最重要的三件事。", "每天", 2, 9),
+                ("轻量运动", "健康", "保持基础活动量。", "每周 4 次", 1, 8),
+            },
+            _ => []
+        };
+
+        return specs.Select((x, index) => new Habit
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            Name = x.Item1,
+            HabitType = x.Item2,
+            Description = x.Item3,
+            TargetFrequency = x.Item4,
+            Status = 1,
+            CurrentStreak = x.Item5,
+            LongestStreak = Math.Max(x.Item5, x.Item6),
+            TotalCheckIns = x.Item6,
+            LastCheckInDate = today.AddDays(index == 0 ? 0 : -1),
+            CreatedAt = now.AddDays(-x.Item6)
+        }).ToList();
+    }
+
+    private static IEnumerable<HabitCheckIn> CreateHabitCheckIns(IEnumerable<Habit> habits, DateOnly today)
+    {
+        foreach (var habit in habits)
+        {
+            var days = Math.Min(habit.TotalCheckIns, 10);
+            for (var i = 0; i < days; i++)
+            {
+                yield return new HabitCheckIn
+                {
+                    Id = Guid.NewGuid(),
+                    HabitId = habit.Id,
+                    CheckInDate = today.AddDays(-i),
+                    Remark = i == 0 ? "今天已完成" : "保持节奏"
+                };
+            }
+        }
+    }
+
+    private static IEnumerable<GrowthProject> CreateUserGrowthProjects(AppUser user, DateTime now, DateOnly today)
+    {
+        return user.Username switch
+        {
+            "admin" =>
+            [
+                NewGrowthProject(user.Id, "平台体验治理", "梳理空状态、演示数据、权限体验和关键流程闭环。", today.AddDays(-20), today.AddDays(20), 62, 9, GrowthProjectStatus.InProgress, GrowthProjectType.Work, now.AddDays(-20)),
+                NewGrowthProject(user.Id, "管理后台运营手册", "沉淀账号、套餐、菜单和功能点维护流程。", today.AddDays(-10), today.AddDays(30), 35, 6, GrowthProjectStatus.InProgress, GrowthProjectType.Work, now.AddDays(-10)),
+            ],
+            "jack" =>
+            [
+                NewGrowthProject(user.Id, "前后端契约治理", "统一 DTO、API 类型和页面提交链路。", today.AddDays(-15), today.AddDays(15), 70, 12, GrowthProjectStatus.InProgress, GrowthProjectType.Work, now.AddDays(-15)),
+                NewGrowthProject(user.Id, "TypeScript 质量提升", "补齐核心页面 typecheck 和可复用类型。", today.AddDays(-8), today.AddDays(25), 45, 7, GrowthProjectStatus.InProgress, GrowthProjectType.Study, now.AddDays(-8)),
+            ],
+            "tom" =>
+            [
+                NewGrowthProject(user.Id, "个人效率系统搭建", "用任务、习惯和知识库管理日常学习工作。", today.AddDays(-7), today.AddDays(21), 28, 5, GrowthProjectStatus.InProgress, GrowthProjectType.Personal, now.AddDays(-7)),
+            ],
+            _ => []
+        };
+    }
+
+    private static GrowthProject NewGrowthProject(Guid userId, string name, string description, DateOnly startDate, DateOnly endDate, int progress, int taskCount, GrowthProjectStatus status, GrowthProjectType type, DateTime createdAt)
+    {
+        return new GrowthProject
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Name = name,
+            Description = description,
+            StartDate = startDate,
+            EndDate = endDate,
+            Progress = progress,
+            TaskCount = taskCount,
+            Status = status,
+            Type = type,
+            CreatedAt = createdAt
+        };
+    }
+
+    private static IEnumerable<KnowledgeArticle> CreateUserKnowledgeArticles(AppUser user, DateTime now)
+    {
+        return user.Username switch
+        {
+            "admin" =>
+            [
+                NewArticle(user.Id, "菜单权限排查清单", "系统管理", "菜单,权限,排查", "1. 确认角色等级\n2. 确认 FeatureCode\n3. 确认用户身份标签\n4. 刷新前端菜单缓存", 18, now.AddDays(-6)),
+                NewArticle(user.Id, "演示账号体验标准", "产品体验", "种子数据,空状态,体验", "每个种子账号至少要有可见任务、习惯、知识内容和一条正在进行的主线。", 12, now.AddDays(-3)),
+            ],
+            "jack" =>
+            [
+                NewArticle(user.Id, "DatePicker 统一策略", "前端", "Vue,DatePicker,dayjs", "表单内部使用 dayjs 绑定，提交前统一格式化为 yyyy-MM-dd，列表展示只消费字符串。", 24, now.AddDays(-5)),
+                NewArticle(user.Id, "学生中心接口迁移记录", "后端", "路由,student,契约", "学生域统一走 /api/student/...，postgraduate 仅作为专项看板语义保留。", 20, now.AddDays(-2)),
+            ],
+            "tom" =>
+            [
+                NewArticle(user.Id, "我的任务系统使用方式", "个人成长", "任务,习惯,复盘", "每天只保留 3 个关键任务，晚上用习惯打卡和知识库记录复盘。", 5, now.AddDays(-1)),
+            ],
+            _ => []
+        };
+    }
+
+    private static KnowledgeArticle NewArticle(Guid userId, string title, string category, string tags, string content, int viewCount, DateTime createdAt)
+    {
+        return new KnowledgeArticle
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Title = title,
+            Category = category,
+            Tags = tags,
+            Content = content,
+            ViewCount = viewCount,
+            IsPublished = true,
+            CreatedAt = createdAt
+        };
+    }
+
+    private static IEnumerable<WorkDailyPlan> CreateJackWorkDailyPlans(AppUser user, Guid projectId, DateTime now, DateOnly today)
+    {
+        return
+        [
+            new() { Id = Guid.NewGuid(), UserId = user.Id, ProjectId = projectId, PlanDate = today, Title = "学生中心 dashboard 联调", Content = "验证任务、错题、资料、学习记录聚合数据。", Priority = WorkDailyPlanPriority.High, Status = WorkDailyPlanStatus.InProgress, StartTime = "10:00", EndTime = "12:00", EstimatedHours = 2, CreatedAt = now.AddHours(-5) },
+            new() { Id = Guid.NewGuid(), UserId = user.Id, ProjectId = projectId, PlanDate = today, Title = "补齐种子账号体验数据", Content = "给不同角色账号补可见样例数据。", Priority = WorkDailyPlanPriority.Medium, Status = WorkDailyPlanStatus.Pending, StartTime = "15:00", EndTime = "16:30", EstimatedHours = 1.5m, CreatedAt = now.AddHours(-4) },
+            new() { Id = Guid.NewGuid(), UserId = user.Id, ProjectId = projectId, PlanDate = today.AddDays(-1), Title = "路由规范化回归", Content = "确认学生域接口全部走 /api/student。", Priority = WorkDailyPlanPriority.High, Status = WorkDailyPlanStatus.Completed, EstimatedHours = 2, ActualHours = 2, CreatedAt = now.AddDays(-1), UpdatedAt = now.AddDays(-1).AddHours(4) },
+        ];
+    }
+
+    private static IEnumerable<WorkLog> CreateJackWorkLogs(AppUser user, Guid projectId, DateTime now, DateOnly today)
+    {
+        return
+        [
+            new() { Id = Guid.NewGuid(), UserId = user.Id, ProjectId = projectId, WorkDate = today, WeekDay = today.DayOfWeek.ToString(), Title = "学生中心真实数据联调", OriginalContent = "完成 dashboard、learning、review 三个页面的数据联调，检查空状态和权限过滤。", Summary = "学生中心核心页面已有真实数据支撑。", TotalHours = 3.5m, Status = WorkLogStatus.Normal, SourceType = WorkLogSourceType.Manual, PersonaCode = "Developer", CreatedAt = now.AddHours(-2) },
+            new() { Id = Guid.NewGuid(), UserId = user.Id, ProjectId = projectId, WorkDate = today.AddDays(-1), WeekDay = today.AddDays(-1).DayOfWeek.ToString(), Title = "API 路由规范化", OriginalContent = "将学生模块接口收敛到 /api/student，并调整前端 API 调用。", Summary = "完成旧 postgraduate 路由替换和回归验证。", TotalHours = 4m, Status = WorkLogStatus.Normal, SourceType = WorkLogSourceType.Manual, PersonaCode = "Developer", CreatedAt = now.AddDays(-1).AddHours(5) },
+            new() { Id = Guid.NewGuid(), UserId = user.Id, ProjectId = projectId, WorkDate = today.AddDays(-2), WeekDay = today.AddDays(-2).DayOfWeek.ToString(), Title = "前端类型检查修复", OriginalContent = "处理学生模块新增页面的 API 类型和枚举映射。", Summary = "typecheck 通过，页面类型更稳定。", TotalHours = 2.5m, Status = WorkLogStatus.Normal, SourceType = WorkLogSourceType.Manual, PersonaCode = "Developer", CreatedAt = now.AddDays(-2).AddHours(6) },
+        ];
     }
 
     private static async Task SyncRoleMenusAsync(AppDbContext context, DateTime now)

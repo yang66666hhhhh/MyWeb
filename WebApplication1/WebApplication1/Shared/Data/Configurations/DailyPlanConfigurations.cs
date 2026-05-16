@@ -23,6 +23,7 @@ public class DailyPlanConfiguration : IEntityTypeConfiguration<DailyPlan>
         entity.Property(x => x.Status).HasConversion<int>().HasDefaultValue(DailyPlanStatus.Pending);
         entity.Property(x => x.Remark).HasMaxLength(1000);
         entity.Property(x => x.CreatedAt).HasColumnType("datetime");
+        entity.HasIndex(x => x.UserId);
         entity.HasIndex(x => x.PlanDate);
         entity.HasIndex(x => x.Status);
     }

@@ -6,6 +6,8 @@ public class DailyPlanDto
 {
     public Guid Id { get; set; }
 
+    public Guid? UserId { get; set; }
+
     public DateOnly PlanDate { get; set; }
 
     public string Title { get; set; } = string.Empty;

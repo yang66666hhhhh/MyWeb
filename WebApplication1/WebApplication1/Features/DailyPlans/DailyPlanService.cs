@@ -8,12 +8,17 @@ namespace WebApplication1.Features.DailyPlans;
 
 public class DailyPlanService(AppDbContext dbContext, ILogger<DailyPlanService> logger) : IDailyPlanService
 {
-    public async Task<PageResult<DailyPlanDto>> GetPageAsync(DailyPlanQueryDto query, CancellationToken cancellationToken = default)
+    public async Task<PageResult<DailyPlanDto>> GetPageAsync(DailyPlanQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         var page = Math.Max(query.Page, 1);
         var pageSize = Math.Clamp(query.PageSize, 1, 100);
 
         var plans = dbContext.DailyPlans.AsNoTracking();
+
+        if (userId.HasValue)
+        {
+            plans = plans.Where(x => x.UserId == userId.Value);
+        }
 
         if (query.StartDate.HasValue)
         {
@@ -51,20 +56,28 @@ public class DailyPlanService(AppDbContext dbContext, ILogger<DailyPlanService> 
         return PageResult<DailyPlanDto>.Create(items.Select(ToDto).ToList(), total, page, pageSize);
     }
 
-    public async Task<DailyPlanDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<DailyPlanDto?> GetByIdAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        var plan = await dbContext.DailyPlans
+        var plans = dbContext.DailyPlans
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+            .Where(x => x.Id == id);
+
+        if (userId.HasValue)
+        {
+            plans = plans.Where(x => x.UserId == userId.Value);
+        }
+
+        var plan = await plans.FirstOrDefaultAsync(cancellationToken);
 
         return plan is null ? null : ToDto(plan);
     }
 
-    public async Task<DailyPlanDto> CreateAsync(CreateDailyPlanDto input, CancellationToken cancellationToken = default)
+    public async Task<DailyPlanDto> CreateAsync(CreateDailyPlanDto input, Guid userId, CancellationToken cancellationToken = default)
     {
         var now = DateTime.UtcNow;
         var plan = new DailyPlan
         {
+            UserId = userId,
             PlanDate = input.PlanDate,
             Title = input.Title.Trim(),
             Description = input.Description?.Trim(),
@@ -81,9 +94,15 @@ public class DailyPlanService(AppDbContext dbContext, ILogger<DailyPlanService> 
         return ToDto(plan);
     }
 
-    public async Task<DailyPlanDto?> UpdateAsync(Guid id, UpdateDailyPlanDto input, CancellationToken cancellationToken = default)
+    public async Task<DailyPlanDto?> UpdateAsync(Guid id, UpdateDailyPlanDto input, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        var plan = await dbContext.DailyPlans.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var plans = dbContext.DailyPlans.Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            plans = plans.Where(x => x.UserId == userId.Value);
+        }
+
+        var plan = await plans.FirstOrDefaultAsync(cancellationToken);
         if (plan is null)
         {
             return null;
@@ -112,9 +131,15 @@ public class DailyPlanService(AppDbContext dbContext, ILogger<DailyPlanService> 
         return ToDto(plan);
     }
 
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        var plan = await dbContext.DailyPlans.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var plans = dbContext.DailyPlans.Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            plans = plans.Where(x => x.UserId == userId.Value);
+        }
+
+        var plan = await plans.FirstOrDefaultAsync(cancellationToken);
         if (plan is null)
         {
             return false;
@@ -126,9 +151,15 @@ public class DailyPlanService(AppDbContext dbContext, ILogger<DailyPlanService> 
         return true;
     }
 
-    public async Task<DailyPlanDto?> CompleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<DailyPlanDto?> CompleteAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        var plan = await dbContext.DailyPlans.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var plans = dbContext.DailyPlans.Where(x => x.Id == id);
+        if (userId.HasValue)
+        {
+            plans = plans.Where(x => x.UserId == userId.Value);
+        }
+
+        var plan = await plans.FirstOrDefaultAsync(cancellationToken);
         if (plan is null)
         {
             return null;
@@ -148,6 +179,7 @@ public class DailyPlanService(AppDbContext dbContext, ILogger<DailyPlanService> 
         return new DailyPlanDto
         {
             Id = plan.Id,
+            UserId = plan.UserId,
             PlanDate = plan.PlanDate,
             Title = plan.Title,
             Description = plan.Description,

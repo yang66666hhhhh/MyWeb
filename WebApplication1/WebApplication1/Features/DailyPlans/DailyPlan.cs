@@ -5,6 +5,8 @@ namespace WebApplication1.Features.DailyPlans;
 
 public class DailyPlan : EntityBase
 {
+    public Guid? UserId { get; set; }
+
     public DateOnly PlanDate { get; set; }
 
     public string Title { get; set; } = string.Empty;

@@ -11,6 +11,8 @@ public class DailyPlanServiceTests : IDisposable
 {
     private readonly AppDbContext _context;
     private readonly DailyPlanService _service;
+    private readonly Guid _userId = Guid.NewGuid();
+    private readonly Guid _otherUserId = Guid.NewGuid();
 
     public DailyPlanServiceTests()
     {
@@ -39,10 +41,11 @@ public class DailyPlanServiceTests : IDisposable
             Priority = 2
         };
 
-        var result = await _service.CreateAsync(input);
+        var result = await _service.CreateAsync(input, _userId);
 
         Assert.NotNull(result);
         Assert.Equal("Test Plan", result.Title);
+        Assert.Equal(_userId, result.UserId);
         Assert.NotEqual(Guid.Empty, result.Id);
     }
 
@@ -51,13 +54,14 @@ public class DailyPlanServiceTests : IDisposable
     {
         var plan = new DailyPlan
         {
+            UserId = _userId,
             Title = "Existing Plan",
             PlanDate = DateOnly.FromDateTime(DateTime.Today)
         };
         _context.DailyPlans.Add(plan);
         await _context.SaveChangesAsync();
 
-        var result = await _service.GetByIdAsync(plan.Id);
+        var result = await _service.GetByIdAsync(plan.Id, _userId);
 
         Assert.NotNull(result);
         Assert.Equal("Existing Plan", result.Title);
@@ -78,14 +82,21 @@ public class DailyPlanServiceTests : IDisposable
         {
             _context.DailyPlans.Add(new DailyPlan
             {
+                UserId = _userId,
                 Title = $"Plan {i}",
                 PlanDate = DateOnly.FromDateTime(DateTime.Today.AddDays(i))
             });
         }
+        _context.DailyPlans.Add(new DailyPlan
+        {
+            UserId = _otherUserId,
+            Title = "Other User Plan",
+            PlanDate = DateOnly.FromDateTime(DateTime.Today)
+        });
         await _context.SaveChangesAsync();
 
         var query = new DailyPlanQueryDto { Page = 1, PageSize = 10 };
-        var result = await _service.GetPageAsync(query);
+        var result = await _service.GetPageAsync(query, _userId);
 
         Assert.Equal(15, result.Total);
         Assert.Equal(10, result.Items.Count);
@@ -95,9 +106,10 @@ public class DailyPlanServiceTests : IDisposable
     public async Task GetPageAsync_ShouldFilterByDateRange()
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
-        _context.DailyPlans.Add(new DailyPlan { Title = "Today Plan", PlanDate = today });
-        _context.DailyPlans.Add(new DailyPlan { Title = "Tomorrow Plan", PlanDate = today.AddDays(1) });
-        _context.DailyPlans.Add(new DailyPlan { Title = "Yesterday Plan", PlanDate = today.AddDays(-1) });
+        _context.DailyPlans.Add(new DailyPlan { UserId = _userId, Title = "Today Plan", PlanDate = today });
+        _context.DailyPlans.Add(new DailyPlan { UserId = _userId, Title = "Tomorrow Plan", PlanDate = today.AddDays(1) });
+        _context.DailyPlans.Add(new DailyPlan { UserId = _userId, Title = "Yesterday Plan", PlanDate = today.AddDays(-1) });
+        _context.DailyPlans.Add(new DailyPlan { UserId = _otherUserId, Title = "Other Tomorrow Plan", PlanDate = today.AddDays(1) });
         await _context.SaveChangesAsync();
 
         var query = new DailyPlanQueryDto
@@ -107,7 +119,7 @@ public class DailyPlanServiceTests : IDisposable
             StartDate = today,
             EndDate = today.AddDays(1)
         };
-        var result = await _service.GetPageAsync(query);
+        var result = await _service.GetPageAsync(query, _userId);
 
         Assert.Equal(2, result.Total);
     }
@@ -117,6 +129,7 @@ public class DailyPlanServiceTests : IDisposable
     {
         var plan = new DailyPlan
         {
+            UserId = _userId,
             Title = "Original Title",
             PlanDate = DateOnly.FromDateTime(DateTime.Today)
         };
@@ -129,7 +142,7 @@ public class DailyPlanServiceTests : IDisposable
             Description = "Updated Description"
         };
 
-        var result = await _service.UpdateAsync(plan.Id, input);
+        var result = await _service.UpdateAsync(plan.Id, input, _userId);
 
         Assert.NotNull(result);
         Assert.Equal("Updated Title", result.Title);
@@ -141,6 +154,7 @@ public class DailyPlanServiceTests : IDisposable
     {
         var plan = new DailyPlan
         {
+            UserId = _userId,
             Title = "Plan to Complete",
             PlanDate = DateOnly.FromDateTime(DateTime.Today),
             Status = DailyPlanStatus.Pending
@@ -148,7 +162,7 @@ public class DailyPlanServiceTests : IDisposable
         _context.DailyPlans.Add(plan);
         await _context.SaveChangesAsync();
 
-        var result = await _service.CompleteAsync(plan.Id);
+        var result = await _service.CompleteAsync(plan.Id, _userId);
 
         Assert.NotNull(result);
         Assert.Equal(DailyPlanStatus.Completed, result.Status);
@@ -159,13 +173,14 @@ public class DailyPlanServiceTests : IDisposable
     {
         var plan = new DailyPlan
         {
+            UserId = _userId,
             Title = "Plan to Delete",
             PlanDate = DateOnly.FromDateTime(DateTime.Today)
         };
         _context.DailyPlans.Add(plan);
         await _context.SaveChangesAsync();
 
-        var success = await _service.DeleteAsync(plan.Id);
+        var success = await _service.DeleteAsync(plan.Id, _userId);
 
         Assert.True(success);
         var deleted = await _context.DailyPlans.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Id == plan.Id);
@@ -176,8 +191,25 @@ public class DailyPlanServiceTests : IDisposable
     [Fact]
     public async Task DeleteAsync_ShouldReturnFalse_WhenNotExists()
     {
-        var success = await _service.DeleteAsync(Guid.NewGuid());
+        var success = await _service.DeleteAsync(Guid.NewGuid(), _userId);
 
         Assert.False(success);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ShouldReturnNull_WhenUserDoesNotOwnPlan()
+    {
+        var plan = new DailyPlan
+        {
+            UserId = _otherUserId,
+            Title = "Other User Plan",
+            PlanDate = DateOnly.FromDateTime(DateTime.Today)
+        };
+        _context.DailyPlans.Add(plan);
+        await _context.SaveChangesAsync();
+
+        var result = await _service.GetByIdAsync(plan.Id, _userId);
+
+        Assert.Null(result);
     }
 }

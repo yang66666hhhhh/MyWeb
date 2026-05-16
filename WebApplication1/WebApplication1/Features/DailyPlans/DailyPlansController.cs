@@ -8,21 +8,23 @@ namespace WebApplication1.Features.DailyPlans;
 [Authorize]
 [Route("api/growth/daily-plans")]
 [Tags("Daily Plans")]
-public class DailyPlansController(IDailyPlanService dailyPlanService) : ControllerBase
+public class DailyPlansController(IDailyPlanService dailyPlanService) : BaseApiController
 {
     [HttpGet]
     public async Task<ActionResult<ApiResult<PageResult<DailyPlanDto>>>> GetPage(
         [FromQuery] DailyPlanQueryDto query,
         CancellationToken cancellationToken)
     {
-        var result = await dailyPlanService.GetPageAsync(query, cancellationToken);
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var result = await dailyPlanService.GetPageAsync(query, userId, cancellationToken);
         return Ok(ApiResult<PageResult<DailyPlanDto>>.Success(result));
     }
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ApiResult<DailyPlanDto>>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await dailyPlanService.GetByIdAsync(id, cancellationToken);
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var result = await dailyPlanService.GetByIdAsync(id, userId, cancellationToken);
         if (result is null)
         {
             return NotFound(ApiResult.Fail("每日计划不存在", StatusCodes.Status404NotFound));
@@ -36,7 +38,13 @@ public class DailyPlansController(IDailyPlanService dailyPlanService) : Controll
         [FromBody] CreateDailyPlanDto input,
         CancellationToken cancellationToken)
     {
-        var result = await dailyPlanService.CreateAsync(input, cancellationToken);
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+        {
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        }
+
+        var result = await dailyPlanService.CreateAsync(input, userId.Value, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResult<DailyPlanDto>.Success(result, "创建成功"));
     }
 
@@ -46,7 +54,8 @@ public class DailyPlansController(IDailyPlanService dailyPlanService) : Controll
         [FromBody] UpdateDailyPlanDto input,
         CancellationToken cancellationToken)
     {
-        var result = await dailyPlanService.UpdateAsync(id, input, cancellationToken);
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var result = await dailyPlanService.UpdateAsync(id, input, userId, cancellationToken);
         if (result is null)
         {
             return NotFound(ApiResult.Fail("每日计划不存在", StatusCodes.Status404NotFound));
@@ -58,7 +67,8 @@ public class DailyPlansController(IDailyPlanService dailyPlanService) : Controll
     [HttpPatch("{id:guid}/complete")]
     public async Task<ActionResult<ApiResult<DailyPlanDto>>> Complete(Guid id, CancellationToken cancellationToken)
     {
-        var result = await dailyPlanService.CompleteAsync(id, cancellationToken);
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var result = await dailyPlanService.CompleteAsync(id, userId, cancellationToken);
         if (result is null)
         {
             return NotFound(ApiResult.Fail("每日计划不存在", StatusCodes.Status404NotFound));
@@ -70,7 +80,8 @@ public class DailyPlansController(IDailyPlanService dailyPlanService) : Controll
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<ApiResult>> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var deleted = await dailyPlanService.DeleteAsync(id, cancellationToken);
+        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var deleted = await dailyPlanService.DeleteAsync(id, userId, cancellationToken);
         if (!deleted)
         {
             return NotFound(ApiResult.Fail("每日计划不存在", StatusCodes.Status404NotFound));
