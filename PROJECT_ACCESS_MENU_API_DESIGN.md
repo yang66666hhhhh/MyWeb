@@ -7,18 +7,19 @@
 本项目是一个个人成长 + 工作管理 + 多职业平台。当前运行时主链路已经接近目标形态：
 
 - 前端 `vue-vben-admin/apps/web-antd/src/preferences.ts` 使用 `accessMode: 'backend'`。
-- 前端路由由 `/api/role-menus/mine` 动态返回，`router/access.ts` 将后端菜单转换为 Vue Router records。
+- 前端路由由 `/api/system/role-menus/mine` 动态返回，`router/access.ts` 将后端菜单转换为 Vue Router records。
 - 后端运行时菜单主表是 `RoleMenus`，核心字段包括 `MinRoleLevel`、`PersonaTag`、`FeatureCode`、`Component`、`Path`。
 - 后端功能点主表是 `Features`，订阅映射是 `PlanFeatures`，Persona 功能映射是 `PersonaFeatures`。
-- 用户实际功能集已经按 `PlanFeatures ∪ PersonaFeatures` 计算。
+- 用户实际功能集已经统一由 `UserAccessContextService` 计算：普通功能来自有效套餐；`Category = Persona` 的功能必须同时满足“套餐包含该功能”和“用户拥有对应 Persona”。Owner 拥有全部启用功能。
+- 菜单过滤已经校验当前节点及所有父级链：角色等级、Persona、FeatureCode、启用/可见状态都必须通过。
+- 前端动态路由生成前会重置旧动态路由，避免切换账号后保留上一个用户的 Pro 路由。
 
-但当前仍存在几个需要统一的分叉：
+当前需要继续遵守的实现约束：
 
-- `RoleMenuController`、`FeatureService`、`RequireFeatureAttribute`、`SubscriptionController` 都各自实现了一遍“用户功能集”查询逻辑。
-- 项目里同时存在 `RoleMenus` 和旧的 `MenuItems/MenuTags/PersonaMenuItems` 两套菜单模型；前端也仍有“菜单标签”页面在使用旧模型。
-- `RoleMenus` 管理接口没有限制 Owner，当前只要求登录。
-- 只有少量 API 使用了 Feature 权限，菜单 FeatureCode 与 API RequireFeature 尚未形成强约束。
-- 前端 `RoleMenuItem` 类型仍保留 `bindingType/bindingValue`，与当前后端 `RoleMenus` 模型不一致。
+- 页面可进入不代表页面内部所有接口都可调用。页面内部的统计卡、下拉数据、快捷入口、操作按钮必须按 `accessCodes` 做功能码降级。
+- 基础页不能无条件请求 Pro 接口。例如 `/work/dashboard` 不能让 Member 请求 `/api/work/statistics/overview`，`/work/tasks` 不能让没有 `WORK_PROJECT` 的用户请求 `/api/work/projects`。
+- 学生页同理。例如 `/student/records` 不能让没有 `STUDENT_SUBJECTS` 的用户请求 `/api/student/subjects`。
+- Seeder 面向 MySQL Provider 时，避免在 EF 查询里使用动态集合 `Contains` 或动态参数 `StartsWith`，这类匹配应先取小集合再在内存中过滤。
 
 ## 2. 统一权限模型
 
@@ -49,7 +50,10 @@ UserContext =
   RoleLevel
   PersonaCodes
   PlanCode
-  FeatureCodes = ActivePlanFeatures ∪ UserPersonaFeatures
+  FeatureCodes =
+    NonPersonaPlanFeatures
+    ∪ (PersonaPlanFeatures ∩ ActiveUserPersonaFeatures)
+    ∪ AllEnabledFeatures when RoleLevel >= Owner
 ```
 
 菜单可见：
@@ -304,17 +308,24 @@ bindingValue
 
 ### 6.3 前端按钮权限
 
-短期：
+页面内部权限规则：
 
-- 页面通过菜单控制可见性。
-- 按钮只做基础 UI 状态控制。
+- 菜单控制“页面能不能进入”。
+- `accessCodes` 控制“页面内部哪些接口、区块、下拉、按钮能不能出现”。
+- 页面加载时禁止无条件请求当前用户没有 FeatureCode 的接口。
+- 用户没有权限的辅助数据应降级为隐藏、普通输入或空状态，而不是弹 403。
 
-中期：
+已落地示例：
+
+- `/work/dashboard`：Member 不请求 `WORK_STATISTICS`，不显示项目、设备、导入等 Pro 快捷入口。
+- `/work/tasks`：没有 `WORK_PROJECT` 时不请求项目列表，不显示项目列和所属项目字段。
+- `/student/records`：没有 `STUDENT_SUBJECTS` 时不请求科目列表，科目字段降级为文本输入。
+- `/student/dashboard`：按 `STUDENT_LEARNING`、`STUDENT_RECORDS`、`STUDENT_SUBJECTS` 控制操作列、最近记录和科目进度区。
+
+后续按钮级权限：
 
 - `/api/auth/codes` 返回按钮权限码。
 - 按钮用 `v-access` 或 store 判断。
-
-长期：
 
 - `MenuActions + RolePermissions + FeatureCode` 合并生成 `accessCodes`。
 
@@ -337,16 +348,9 @@ flowchart TD
 
 ### P0：权限计算重复
 
-重复位置：
+状态：已收敛到 `UserAccessContextService`，`FeatureService` 与 `RequireFeatureAttribute` 复用统一上下文。
 
-- `FeatureService`
-- `RequireFeatureAttribute`
-- `RoleMenuController`
-- `SubscriptionController`
-
-影响：后续改订阅过期、Team 计划、Persona 逻辑时容易漏改。
-
-处理：新增 `IUserAccessContextService`，统一复用。
+后续注意：新增 Feature、Plan、Persona 规则必须先改上下文服务和测试，不要在 Controller 里重复拼 SQL。
 
 ### P0：菜单表分叉
 
@@ -363,6 +367,17 @@ flowchart TD
 影响：用户可能绕过菜单直接访问 API。
 
 处理：按模块补 RequiredFeature。
+
+### P1：页面内部 Feature 降级需要持续补齐
+
+现象：用户能进入基础页，但页面内部请求了高级功能接口，导致 403 红色提示。
+
+处理原则：
+
+1. 页面加载前读取 `useAccessStore().accessCodes`。
+2. 没有对应 FeatureCode 时不要请求接口。
+3. 隐藏关联列、统计卡、快捷入口和操作按钮。
+4. 表单依赖高级字典时降级为普通输入或隐藏字段。
 
 ### P1：前端菜单类型落后
 
@@ -414,4 +429,3 @@ flowchart TD
 - `PROJECT_DOCUMENTATION.md`：项目总览、模块、账号、启动方式。
 - `PROJECT_ACCESS_MENU_API_DESIGN.md`：权限、菜单、API 统一设计。
 - 后续可新增 `PROJECT_API_FEATURE_MATRIX.md`：每个菜单、页面、API、FeatureCode 的矩阵表。
-
