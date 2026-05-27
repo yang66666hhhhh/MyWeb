@@ -1,6 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Moq;
 using WebApplication1.Shared.Data;
 using WebApplication1.Features.DailyPlans;
 using WebApplication1.Shared.Enums;
@@ -21,8 +19,7 @@ public class DailyPlanServiceTests : IDisposable
             .Options;
 
         _context = new AppDbContext(options);
-        var loggerMock = new Mock<ILogger<DailyPlanService>>();
-        _service = new DailyPlanService(_context, loggerMock.Object);
+        _service = new DailyPlanService(_context);
     }
 
     public void Dispose()

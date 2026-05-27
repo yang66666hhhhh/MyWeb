@@ -1,6 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Moq;
 using WebApplication1.Shared.Data;
 using WebApplication1.Features.Tasks;
 using WebApplication1.Shared.Enums;
@@ -19,8 +17,7 @@ public class TaskItemServiceTests : IDisposable
             .Options;
 
         _context = new AppDbContext(options);
-        var loggerMock = new Mock<ILogger<TaskItemService>>();
-        _service = new TaskItemService(_context, loggerMock.Object);
+        _service = new TaskItemService(_context);
     }
 
     public void Dispose()

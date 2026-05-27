@@ -1,6 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Moq;
 using WebApplication1.Shared.Data;
 using WebApplication1.Features.Growth.Services;
 using WebApplication1.Features.Growth.Dtos;
@@ -20,8 +18,7 @@ public class KnowledgeArticleServiceTests : IDisposable
             .Options;
 
         _context = new AppDbContext(options);
-        var loggerMock = new Mock<ILogger<KnowledgeArticleService>>();
-        _service = new KnowledgeArticleService(_context, loggerMock.Object);
+        _service = new KnowledgeArticleService(_context);
     }
 
     public void Dispose()
