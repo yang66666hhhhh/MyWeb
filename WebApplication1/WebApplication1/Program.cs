@@ -37,6 +37,26 @@ var builder = WebApplication.CreateBuilder(args);
 
 const string CorsPolicyName = "VueVbenAdmin";
 
+// 响应压缩
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
+    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
+    options.MimeTypes = Microsoft.AspNetCore.ResponseCompression.ResponseCompressionDefaults.MimeTypes.Concat(
+        new[] { "application/json", "text/json", "text/plain", "text/html", "text/css", "text/javascript", "application/javascript" });
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = System.IO.Compression.CompressionLevel.Fastest;
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProviderOptions>(options =>
+{
+    options.Level = System.IO.Compression.CompressionLevel.SmallestSize;
+});
+
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.AddSingleton<ILocalizationService, LocalizationService>();
 builder.Services.AddHttpContextAccessor();
@@ -200,7 +220,21 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
         ?? Environment.GetEnvironmentVariable("DB_CONNECTION")
         ?? throw new InvalidOperationException("DefaultConnection is not configured.");
-    options.UseMySQL(connectionString);
+    options.UseMySQL(connectionString, mysqlOptions =>
+    {
+        mysqlOptions.CommandTimeout(30);
+        mysqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(5),
+            errorNumbersToAdd: null);
+    });
+    
+    // 开发环境启用详细错误信息
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableSensitiveDataLogging();
+        options.EnableDetailedErrors();
+    }
 });
 
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"]
@@ -292,6 +326,9 @@ builder.Services.AddHealthChecks()
         tags: ["system", "app"]);
 
 var app = builder.Build();
+
+// 响应压缩中间件（必须在其他中间件之前）
+app.UseResponseCompression();
 
 var supportedCultures = new[] { "zh-CN", "en-US" };
 var localizationOptions = new RequestLocalizationOptions()
