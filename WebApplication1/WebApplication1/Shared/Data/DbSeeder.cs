@@ -818,7 +818,266 @@ public static class DbSeeder
                 CreatedAt = now
             };
 
-            context.WorkLogTemplates.AddRange(eapTemplate, devTemplate, teacherTemplate);
+            var salesTemplate = new WorkLogTemplate
+            {
+                PersonaCode = "Sales",
+                Name = "销售工作日志",
+                Description = "销售人员专用日志模板",
+                FieldDefinitions = @"{
+                    ""fields"": [
+                        {
+                            ""key"": ""customerName"",
+                            ""label"": ""客户名称"",
+                            ""type"": ""text"",
+                            ""required"": true,
+                            ""placeholder"": ""请输入客户名称""
+                        },
+                        {
+                            ""key"": ""contactMethod"",
+                            ""label"": ""联系方式"",
+                            ""type"": ""select"",
+                            ""options"": [""电话"", ""微信"", ""邮件"", ""拜访"", ""视频会议""],
+                            ""required"": true
+                        },
+                        {
+                            ""key"": ""opportunityStage"",
+                            ""label"": ""商机阶段"",
+                            ""type"": ""select"",
+                            ""options"": [""初步接触"", ""需求确认"", ""方案报价"", ""商务谈判"", ""签约成交"", ""售后维护""],
+                            ""required"": true
+                        },
+                        {
+                            ""key"": ""expectedAmount"",
+                            ""label"": ""预计金额"",
+                            ""type"": ""number"",
+                            ""placeholder"": ""请输入预计金额""
+                        },
+                        {
+                            ""key"": ""followUpContent"",
+                            ""label"": ""跟进内容"",
+                            ""type"": ""textarea"",
+                            ""required"": true,
+                            ""placeholder"": ""请描述本次跟进内容""
+                        },
+                        {
+                            ""key"": ""nextAction"",
+                            ""label"": ""下一步计划"",
+                            ""type"": ""textarea"",
+                            ""placeholder"": ""请描述下一步跟进计划""
+                        }
+                    ]
+                }",
+                IsActive = true,
+                Sort = 4,
+                CreatedAt = now
+            };
+
+            var designerTemplate = new WorkLogTemplate
+            {
+                PersonaCode = "Designer",
+                Name = "设计工作日志",
+                Description = "设计师专用日志模板",
+                FieldDefinitions = @"{
+                    ""fields"": [
+                        {
+                            ""key"": ""designType"",
+                            ""label"": ""设计类型"",
+                            ""type"": ""select"",
+                            ""options"": [""UI设计"", ""UX设计"", ""平面设计"", ""品牌设计"", ""插画设计"", ""其他""],
+                            ""required"": true
+                        },
+                        {
+                            ""key"": ""projectName"",
+                            ""label"": ""项目名称"",
+                            ""type"": ""text"",
+                            ""required"": true
+                        },
+                        {
+                            ""key"": ""designPhase"",
+                            ""label"": ""设计阶段"",
+                            ""type"": ""select"",
+                            ""options"": [""需求分析"", ""概念设计"", ""视觉设计"", ""原型制作"", ""设计评审"", ""交付上线""],
+                            ""required"": true
+                        },
+                        {
+                            ""key"": ""deliverables"",
+                            ""label"": ""交付物"",
+                            ""type"": ""textarea"",
+                            ""placeholder"": ""请列出本次交付的设计文件""
+                        },
+                        {
+                            ""key"": ""feedback"",
+                            ""label"": ""反馈记录"",
+                            ""type"": ""textarea"",
+                            ""placeholder"": ""请记录客户或团队的反馈""
+                        },
+                        {
+                            ""key"": ""toolsUsed"",
+                            ""label"": ""使用工具"",
+                            ""type"": ""multi-select"",
+                            ""options"": [""Figma"", ""Sketch"", ""Adobe XD"", ""Photoshop"", ""Illustrator"", ""其他""]
+                        }
+                    ]
+                }",
+                IsActive = true,
+                Sort = 5,
+                CreatedAt = now
+            };
+
+            var studentTemplate = new WorkLogTemplate
+            {
+                PersonaCode = "Student",
+                Name = "学习/实习日志",
+                Description = "学生专用日志模板（实习、兼职等）",
+                FieldDefinitions = @"{
+                    ""fields"": [
+                        {
+                            ""key"": ""logType"",
+                            ""label"": ""日志类型"",
+                            ""type"": ""select"",
+                            ""options"": [""实习"", ""兼职"", ""项目实践"", ""竞赛"", ""其他""],
+                            ""required"": true
+                        },
+                        {
+                            ""key"": ""organization"",
+                            ""label"": ""单位/组织"",
+                            ""type"": ""text"",
+                            ""required"": true,
+                            ""placeholder"": ""请输入实习/工作单位""
+                        },
+                        {
+                            ""key"": ""workContent"",
+                            ""label"": ""工作内容"",
+                            ""type"": ""textarea"",
+                            ""required"": true,
+                            ""placeholder"": ""请描述今日工作内容""
+                        },
+                        {
+                            ""key"": ""learningGains"",
+                            ""label"": ""学习收获"",
+                            ""type"": ""textarea"",
+                            ""placeholder"": ""请描述今日学习收获""
+                        },
+                        {
+                            ""key"": ""problemsEncountered"",
+                            ""label"": ""遇到问题"",
+                            ""type"": ""textarea"",
+                            ""placeholder"": ""请记录遇到的问题""
+                        },
+                        {
+                            ""key"": ""mentorFeedback"",
+                            ""label"": ""导师反馈"",
+                            ""type"": ""textarea"",
+                            ""placeholder"": ""请记录导师的指导和反馈""
+                        }
+                    ]
+                }",
+                IsActive = true,
+                Sort = 6,
+                CreatedAt = now
+            };
+
+            var freelancerTemplate = new WorkLogTemplate
+            {
+                PersonaCode = "Freelancer",
+                Name = "自由工作日志",
+                Description = "自由职业者专用日志模板",
+                FieldDefinitions = @"{
+                    ""fields"": [
+                        {
+                            ""key"": ""clientName"",
+                            ""label"": ""客户名称"",
+                            ""type"": ""text"",
+                            ""required"": true,
+                            ""placeholder"": ""请输入客户名称""
+                        },
+                        {
+                            ""key"": ""projectType"",
+                            ""label"": ""项目类型"",
+                            ""type"": ""select"",
+                            ""options"": [""网站开发"", ""APP开发"", ""设计外包"", ""文案撰写"", ""咨询顾问"", ""其他""],
+                            ""required"": true
+                        },
+                        {
+                            ""key"": ""workContent"",
+                            ""label"": ""工作内容"",
+                            ""type"": ""textarea"",
+                            ""required"": true,
+                            ""placeholder"": ""请描述今日工作内容""
+                        },
+                        {
+                            ""key"": ""hoursWorked"",
+                            ""label"": ""工作时长"",
+                            ""type"": ""number"",
+                            ""required"": true,
+                            ""placeholder"": ""请输入工作时长（小时）""
+                        },
+                        {
+                            ""key"": ""income"",
+                            ""label"": ""收入"",
+                            ""type"": ""number"",
+                            ""placeholder"": ""请输入今日收入""
+                        },
+                        {
+                            ""key"": ""invoiceStatus"",
+                            ""label"": ""开票状态"",
+                            ""type"": ""select"",
+                            ""options"": [""未开票"", ""已开票"", ""已收款""]
+                        }
+                    ]
+                }",
+                IsActive = true,
+                Sort = 7,
+                CreatedAt = now
+            };
+
+            var generalTemplate = new WorkLogTemplate
+            {
+                PersonaCode = "General",
+                Name = "通用工作日志",
+                Description = "通用工作日志模板，适用于所有职业",
+                FieldDefinitions = @"{
+                    ""fields"": [
+                        {
+                            ""key"": ""workType"",
+                            ""label"": ""工作类型"",
+                            ""type"": ""select"",
+                            ""options"": [""日常工作"", ""项目工作"", ""会议"", ""培训"", ""其他""],
+                            ""required"": true
+                        },
+                        {
+                            ""key"": ""workContent"",
+                            ""label"": ""工作内容"",
+                            ""type"": ""textarea"",
+                            ""required"": true,
+                            ""placeholder"": ""请描述今日工作内容""
+                        },
+                        {
+                            ""key"": ""workResult"",
+                            ""label"": ""工作成果"",
+                            ""type"": ""textarea"",
+                            ""placeholder"": ""请描述今日工作成果""
+                        },
+                        {
+                            ""key"": ""problemsEncountered"",
+                            ""label"": ""遇到问题"",
+                            ""type"": ""textarea"",
+                            ""placeholder"": ""请记录遇到的问题""
+                        },
+                        {
+                            ""key"": ""tomorrowPlan"",
+                            ""label"": ""明日计划"",
+                            ""type"": ""textarea"",
+                            ""placeholder"": ""请描述明日工作计划""
+                        }
+                    ]
+                }",
+                IsActive = true,
+                Sort = 99,
+                CreatedAt = now
+            };
+
+            context.WorkLogTemplates.AddRange(eapTemplate, devTemplate, teacherTemplate, salesTemplate, designerTemplate, studentTemplate, freelancerTemplate, generalTemplate);
             await context.SaveChangesAsync();
             logger?.LogInformation("[DbSeeder] WorkLogTemplates seeded.");
         }
