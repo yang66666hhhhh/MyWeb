@@ -9,8 +9,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using WebApplication1.Shared.Audit;
 using WebApplication1.Shared.Data;
 using WebApplication1.Shared.Middleware;
+using WebApplication1.Shared.Security;
 using WebApplication1.Features.Auth;
 using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Features.DailyPlans;
@@ -188,6 +190,11 @@ builder.Services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServe
     options.Limits.MaxRequestBodySize = 10 * 1024 * 1024;
 });
 
+// 注册安全和监控服务
+builder.Services.Configure<RateLimitOptions>(builder.Configuration.GetSection(RateLimitOptions.SectionName));
+builder.Services.AddSingleton<IEncryptionService, EncryptionService>();
+builder.Services.AddScoped<IAuditService, AuditService>();
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -341,6 +348,14 @@ app.UseExceptionHandler(appError =>
 app.UseHttpsRedirection();
 
 app.UseCors(CorsPolicyName);
+
+// 安全中间件
+app.UseMiddleware<XssProtectionMiddleware>();
+app.UseMiddleware<SqlInjectionMiddleware>();
+
+// 监控中间件
+app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseMiddleware<PerformanceMonitoringMiddleware>();
 
 app.UseMiddleware<RateLimitingMiddleware>();
 
