@@ -17,7 +17,7 @@ public class GrowthProjectsController(IGrowthProjectService projectService) : Ba
         [FromQuery] GrowthProjectQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var userId = GetUserIdForQuery();
         var result = await projectService.GetPageAsync(query, userId, cancellationToken);
         return Ok(ApiResult<PageResult<GrowthProjectDto>>.Success(result));
     }

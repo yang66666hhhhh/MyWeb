@@ -15,7 +15,7 @@ public class DailyPlansController(IDailyPlanService dailyPlanService) : BaseApiC
         [FromQuery] DailyPlanQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var userId = GetUserIdForQuery();
         var result = await dailyPlanService.GetPageAsync(query, userId, cancellationToken);
         return Ok(ApiResult<PageResult<DailyPlanDto>>.Success(result));
     }
@@ -23,7 +23,7 @@ public class DailyPlansController(IDailyPlanService dailyPlanService) : BaseApiC
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ApiResult<DailyPlanDto>>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var userId = GetUserIdForQuery();
         var result = await dailyPlanService.GetByIdAsync(id, userId, cancellationToken);
         if (result is null)
         {
@@ -54,7 +54,7 @@ public class DailyPlansController(IDailyPlanService dailyPlanService) : BaseApiC
         [FromBody] UpdateDailyPlanDto input,
         CancellationToken cancellationToken)
     {
-        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var userId = GetUserIdForQuery();
         var result = await dailyPlanService.UpdateAsync(id, input, userId, cancellationToken);
         if (result is null)
         {
@@ -67,7 +67,7 @@ public class DailyPlansController(IDailyPlanService dailyPlanService) : BaseApiC
     [HttpPatch("{id:guid}/complete")]
     public async Task<ActionResult<ApiResult<DailyPlanDto>>> Complete(Guid id, CancellationToken cancellationToken)
     {
-        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var userId = GetUserIdForQuery();
         var result = await dailyPlanService.CompleteAsync(id, userId, cancellationToken);
         if (result is null)
         {
@@ -80,7 +80,7 @@ public class DailyPlansController(IDailyPlanService dailyPlanService) : BaseApiC
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<ApiResult>> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var userId = GetUserIdForQuery();
         var deleted = await dailyPlanService.DeleteAsync(id, userId, cancellationToken);
         if (!deleted)
         {

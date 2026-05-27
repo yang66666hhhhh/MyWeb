@@ -17,7 +17,7 @@ public class HabitsController(IHabitService habitService) : BaseApiController
         [FromQuery] HabitQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var userId = GetUserIdForQuery();
         var result = await habitService.GetPageAsync(query, userId, cancellationToken);
         return Ok(ApiResult<PageResult<HabitDto>>.Success(result));
     }

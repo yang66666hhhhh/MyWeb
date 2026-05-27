@@ -15,7 +15,7 @@ public class AssetsController(IAssetService assetService) : BaseApiController
     [HttpGet("summary")]
     public async Task<ActionResult<ApiResult<AssetSummaryDto>>> GetSummary(CancellationToken cancellationToken)
     {
-        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var userId = GetUserIdForQuery();
         var result = await assetService.GetSummaryAsync(userId, cancellationToken);
         return Ok(ApiResult<AssetSummaryDto>.Success(result));
     }
@@ -25,7 +25,7 @@ public class AssetsController(IAssetService assetService) : BaseApiController
         [FromQuery] AssetQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var userId = GetUserIdForQuery();
         var result = await assetService.GetIncomePageAsync(query, userId, cancellationToken);
         return Ok(ApiResult<PageResult<IncomeDto>>.Success(result));
     }
@@ -97,7 +97,7 @@ public class AssetsController(IAssetService assetService) : BaseApiController
         [FromQuery] AssetQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var userId = GetUserIdForQuery();
         var result = await assetService.GetExpensePageAsync(query, userId, cancellationToken);
         return Ok(ApiResult<PageResult<ExpenseDto>>.Success(result));
     }
@@ -169,7 +169,7 @@ public class AssetsController(IAssetService assetService) : BaseApiController
         [FromQuery] AssetQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var userId = GetUserIdForQuery();
         var result = await assetService.GetBudgetPageAsync(query, userId, cancellationToken);
         return Ok(ApiResult<PageResult<BudgetDto>>.Success(result));
     }
@@ -241,7 +241,7 @@ public class AssetsController(IAssetService assetService) : BaseApiController
         [FromQuery] AssetQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var userId = GetUserIdForQuery();
         var result = await assetService.GetInvestmentPageAsync(query, userId, cancellationToken);
         return Ok(ApiResult<PageResult<InvestmentDto>>.Success(result));
     }

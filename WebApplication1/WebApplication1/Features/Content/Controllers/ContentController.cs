@@ -17,7 +17,7 @@ public class ContentController(IContentService contentService) : BaseApiControll
         [FromQuery] ContentQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var userId = GetUserIdForQuery();
         var result = await contentService.GetArticlePageAsync(query, userId, cancellationToken);
         return Ok(ApiResult<PageResult<ArticleDto>>.Success(result));
     }
@@ -89,7 +89,7 @@ public class ContentController(IContentService contentService) : BaseApiControll
         [FromQuery] ContentQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var userId = GetUserIdForQuery();
         var result = await contentService.GetMediaItemPageAsync(query, userId, cancellationToken);
         return Ok(ApiResult<PageResult<MediaItemDto>>.Success(result));
     }
@@ -161,7 +161,7 @@ public class ContentController(IContentService contentService) : BaseApiControll
         [FromQuery] ContentQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var userId = GetUserIdForQuery();
         var result = await contentService.GetPublishingCalendarPageAsync(query, userId, cancellationToken);
         return Ok(ApiResult<PageResult<PublishingCalendarDto>>.Success(result));
     }

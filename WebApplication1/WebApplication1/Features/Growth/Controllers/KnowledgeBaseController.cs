@@ -17,7 +17,7 @@ public class KnowledgeBaseController(IKnowledgeArticleService articleService) : 
         [FromQuery] KnowledgeArticleQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = IsProOrAbove() ? null : GetCurrentUserId();
+        var userId = GetUserIdForQuery();
         var result = await articleService.GetPageAsync(query, userId, cancellationToken);
         return Ok(ApiResult<PageResult<KnowledgeArticleDto>>.Success(result));
     }
