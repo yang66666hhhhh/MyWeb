@@ -28,11 +28,16 @@ using WebApplication1.Features.Assets.Services.Interfaces;
 using WebApplication1.Features.Content.Services;
 using WebApplication1.Features.Content.Services.Interfaces;
 using WebApplication1.Shared.HealthChecks;
+using WebApplication1.Shared.Localization;
 using WebApplication1.Shared.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 const string CorsPolicyName = "VueVbenAdmin";
+
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+builder.Services.AddSingleton<ILocalizationService, LocalizationService>();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddControllers(options =>
 {
@@ -268,6 +273,14 @@ builder.Services.AddHealthChecks()
         tags: ["system", "app"]);
 
 var app = builder.Build();
+
+var supportedCultures = new[] { "zh-CN", "en-US" };
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture("zh-CN")
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+
+app.UseRequestLocalization(localizationOptions);
 
 if (app.Environment.IsDevelopment())
 {
