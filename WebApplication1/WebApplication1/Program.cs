@@ -26,6 +26,7 @@ using WebApplication1.Features.Assets.Services;
 using WebApplication1.Features.Assets.Services.Interfaces;
 using WebApplication1.Features.Content.Services;
 using WebApplication1.Features.Content.Services.Interfaces;
+using WebApplication1.Shared.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -178,6 +179,8 @@ builder.Services.AddScoped<IStudentSubjectService, StudentSubjectService>();
 builder.Services.AddScoped<IStudentStudyRecordService, StudentStudyRecordService>();
 builder.Services.AddScoped<ITemplateService, TemplateService>();
 builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
 builder.Services.AddScoped<IAiService, AiService>();
 builder.Services.AddScoped<IPersonaService, PersonaService>();
 builder.Services.AddScoped<RoleMenuService>();

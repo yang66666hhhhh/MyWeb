@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Shared.Data;
 using WebApplication1.Shared.Enums;
+using WebApplication1.Shared.Services;
 
 namespace WebApplication1.Features.Analytics;
 
@@ -13,10 +14,15 @@ public interface IAnalyticsService
     Task<List<TaskPriorityDistributionDto>> GetTaskPriorityDistributionAsync(Guid userId, CancellationToken ct = default);
 }
 
-public class AnalyticsService(AppDbContext context) : IAnalyticsService
+public class AnalyticsService(AppDbContext context, ICacheService cacheService) : IAnalyticsService
 {
     public async Task<DashboardOverviewDto> GetDashboardOverviewAsync(Guid userId, CancellationToken ct = default)
     {
+        var cacheKey = $"analytics:dashboard:{userId}";
+        var cached = await cacheService.GetAsync<DashboardOverviewDto>(cacheKey);
+        if (cached != null)
+            return cached;
+
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         var tasks = context.Tasks.AsNoTracking().Where(x => x.UserId == userId);
@@ -48,7 +54,7 @@ public class AnalyticsService(AppDbContext context) : IAnalyticsService
             ? Math.Round((decimal)taskStats.Completed / taskStats.Total * 100, 1)
             : 0;
 
-        return new DashboardOverviewDto
+        var result = new DashboardOverviewDto
         {
             TotalTasks = taskStats?.Total ?? 0,
             CompletedTasks = taskStats?.Completed ?? 0,
@@ -60,10 +66,18 @@ public class AnalyticsService(AppDbContext context) : IAnalyticsService
             TodayCompletedTasks = taskStats?.TodayCompleted ?? 0,
             TodayWorkHours = (int)(workStats?.TodayHours ?? 0)
         };
+
+        await cacheService.SetAsync(cacheKey, result, TimeSpan.FromMinutes(5));
+        return result;
     }
 
     public async Task<List<TaskTrendDto>> GetTaskTrendsAsync(Guid userId, DateOnly startDate, DateOnly endDate, CancellationToken ct = default)
     {
+        var cacheKey = $"analytics:trends:{userId}:{startDate}:{endDate}";
+        var cached = await cacheService.GetAsync<List<TaskTrendDto>>(cacheKey);
+        if (cached != null)
+            return cached;
+
         var tasks = await context.Tasks
             .AsNoTracking()
             .Where(x => x.UserId == userId && x.PlanDate >= startDate && x.PlanDate <= endDate)
@@ -82,11 +96,17 @@ public class AnalyticsService(AppDbContext context) : IAnalyticsService
             t.CompletionRate = t.Created > 0 ? Math.Round((decimal)t.Completed / t.Created * 100, 1) : 0;
         }
 
+        await cacheService.SetAsync(cacheKey, tasks, TimeSpan.FromMinutes(10));
         return tasks;
     }
 
     public async Task<List<TaskDistributionDto>> GetTaskDistributionByTypeAsync(Guid userId, CancellationToken ct = default)
     {
+        var cacheKey = $"analytics:distribution:type:{userId}";
+        var cached = await cacheService.GetAsync<List<TaskDistributionDto>>(cacheKey);
+        if (cached != null)
+            return cached;
+
         var total = await context.Tasks.CountAsync(x => x.UserId == userId, ct);
 
         var distribution = await context.Tasks
@@ -105,11 +125,17 @@ public class AnalyticsService(AppDbContext context) : IAnalyticsService
             d.Percentage = total > 0 ? Math.Round((decimal)d.Count / total * 100, 1) : 0;
         }
 
+        await cacheService.SetAsync(cacheKey, distribution, TimeSpan.FromMinutes(10));
         return distribution;
     }
 
     public async Task<List<WorkVsGrowthDto>> GetWorkVsGrowthAsync(Guid userId, CancellationToken ct = default)
     {
+        var cacheKey = $"analytics:workVsGrowth:{userId}";
+        var cached = await cacheService.GetAsync<List<WorkVsGrowthDto>>(cacheKey);
+        if (cached != null)
+            return cached;
+
         var taskStats = await context.Tasks
             .AsNoTracking()
             .Where(x => x.UserId == userId)
@@ -121,11 +147,17 @@ public class AnalyticsService(AppDbContext context) : IAnalyticsService
             })
             .ToListAsync(ct);
 
+        await cacheService.SetAsync(cacheKey, taskStats, TimeSpan.FromMinutes(10));
         return taskStats;
     }
 
     public async Task<List<TaskPriorityDistributionDto>> GetTaskPriorityDistributionAsync(Guid userId, CancellationToken ct = default)
     {
+        var cacheKey = $"analytics:priority:{userId}";
+        var cached = await cacheService.GetAsync<List<TaskPriorityDistributionDto>>(cacheKey);
+        if (cached != null)
+            return cached;
+
         var total = await context.Tasks.CountAsync(x => x.UserId == userId, ct);
 
         var distribution = await context.Tasks
@@ -145,6 +177,7 @@ public class AnalyticsService(AppDbContext context) : IAnalyticsService
             d.Percentage = total > 0 ? Math.Round((decimal)d.Count / total * 100, 1) : 0;
         }
 
+        await cacheService.SetAsync(cacheKey, distribution, TimeSpan.FromMinutes(10));
         return distribution;
     }
 }
