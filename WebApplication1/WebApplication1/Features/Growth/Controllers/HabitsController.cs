@@ -64,6 +64,8 @@ public class HabitsController(IHabitService habitService) : BaseApiController
             return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改此习惯"));
 
         var result = await habitService.UpdateAsync(id, input, cancellationToken);
+        if (result is null)
+            return NotFound(ApiResult.Fail("习惯不存在"));
         return Ok(ApiResult<HabitDto>.Success(result, "更新成功"));
     }
 
@@ -97,6 +99,8 @@ public class HabitsController(IHabitService habitService) : BaseApiController
             return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限打卡"));
 
         var result = await habitService.CheckInAsync(id, input, cancellationToken);
+        if (result is null)
+            return NotFound(ApiResult.Fail("习惯不存在"));
         return Ok(ApiResult<HabitDto>.Success(result, "打卡成功"));
     }
 
@@ -118,6 +122,8 @@ public class HabitsController(IHabitService habitService) : BaseApiController
             return BadRequest(ApiResult.Fail("状态值不能为空"));
 
         var result = await habitService.UpdateStatusAsync(id, input.Status.Value, cancellationToken);
+        if (result is null)
+            return NotFound(ApiResult.Fail("习惯不存在"));
         return Ok(ApiResult<HabitDto>.Success(result, "状态更新成功"));
     }
 }

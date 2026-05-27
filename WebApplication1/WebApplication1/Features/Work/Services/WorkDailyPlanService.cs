@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using WebApplication1.Shared.Common;
 using WebApplication1.Shared.Data;
 using WebApplication1.Shared.Enums;
@@ -9,7 +8,7 @@ using WebApplication1.Features.Work.Services.Interfaces;
 
 namespace WebApplication1.Features.Work.Services;
 
-public class WorkDailyPlanService(AppDbContext dbContext, ILogger<WorkDailyPlanService> logger) : IWorkDailyPlanService
+public class WorkDailyPlanService(AppDbContext dbContext) : IWorkDailyPlanService
 {
     public async Task<PageResult<WorkDailyPlanDto>> GetPageAsync(WorkDailyPlanQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
     {

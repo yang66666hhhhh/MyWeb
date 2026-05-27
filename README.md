@@ -78,7 +78,7 @@ $env:OPENAI_API_KEY="sk-..."
 终端 1，启动后端：
 
 ```powershell
-dotnet run --project WebApplication1\WebApplication1\WebApplication1.csproj
+rtk dotnet run --project WebApplication1\WebApplication1\WebApplication1.csproj
 ```
 
 默认地址：
@@ -102,9 +102,8 @@ http://localhost:5062/swagger
 终端 2，启动前端：
 
 ```powershell
-cd vue-vben-admin
-pnpm install
-pnpm -F @vben/web-antd run dev
+rtk pwsh -Command "Set-Location vue-vben-admin; pnpm install"
+rtk pwsh -Command "Set-Location vue-vben-admin; pnpm -F @vben/web-antd run dev"
 ```
 
 默认地址：
@@ -124,31 +123,50 @@ http://localhost:5062/api
 后端测试：
 
 ```powershell
-dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.csproj --no-restore
+rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.csproj --no-restore
 ```
 
 前端类型检查：
 
 ```powershell
-cd vue-vben-admin
-pnpm -F @vben/web-antd run typecheck
+rtk pwsh -Command "Set-Location vue-vben-admin; pnpm -F @vben/web-antd run typecheck"
 ```
 
 前端构建：
 
 ```powershell
-cd vue-vben-admin
-pnpm -F @vben/web-antd run build
+rtk pwsh -Command "Set-Location vue-vben-admin; pnpm -F @vben/web-antd run build"
 ```
 
 提交前建议完整跑：
 
 ```powershell
-dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.csproj --no-restore
-cd vue-vben-admin
-pnpm -F @vben/web-antd run typecheck
-pnpm -F @vben/web-antd run build
+rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.csproj --no-restore
+rtk pwsh -Command "Set-Location vue-vben-admin; pnpm -F @vben/web-antd run typecheck"
+rtk pwsh -Command "Set-Location vue-vben-admin; pnpm -F @vben/web-antd run build"
 ```
+
+## 权限与菜单
+
+运行时菜单以后端 `RoleMenus` 为准，前端使用 backend access mode 从 `/api/system/role-menus/mine` 获取菜单并生成动态路由。
+
+权限判断分三层：
+
+- `Role`：Member / Pro / Owner，决定最低等级门槛。
+- `Plan + FeatureCode`：决定具体功能是否可用。
+- `Persona`：决定学生、开发、实施等场景是否出现。
+
+有效功能码由后端 `UserAccessContextService` 统一计算：
+
+```text
+非 Persona 类功能：来自当前有效套餐
+Persona 类功能：套餐包含该功能，并且用户拥有对应 Persona
+Owner：拥有全部启用功能
+```
+
+前端页面内部也必须按 `accessCodes` 降级。基础页面不能无条件请求 Pro 接口；没有权限的统计卡、下拉、快捷入口和操作按钮应隐藏或降级为普通输入，避免用户看到 403 红色提示。
+
+学生模块统一使用 `/api/student/...`，不再使用旧的 postgraduate 路由。
 
 ## CI
 
@@ -184,15 +202,15 @@ ClosedXML 0.102.2 -> DocumentFormat.OpenXml 2.16.0 -> System.IO.Packaging 6.0.0
 本地检查命令：
 
 ```powershell
-dotnet list WebApplication1\WebApplication1\WebApplication1.csproj package --vulnerable --include-transitive
-dotnet list WebApplication1\WebApplication1\WebApplication1.csproj package --outdated
+rtk dotnet list WebApplication1\WebApplication1\WebApplication1.csproj package --vulnerable --include-transitive
+rtk dotnet list WebApplication1\WebApplication1\WebApplication1.csproj package --outdated
 ```
 
 项目已将 `ClosedXML` 升级到 `0.105.0`。后续升级依赖或修改 Excel 导入导出后，重新跑：
 
 ```powershell
-dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.csproj --no-restore
-dotnet list WebApplication1\WebApplication1\WebApplication1.csproj package --vulnerable --include-transitive
+rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.csproj --no-restore
+rtk dotnet list WebApplication1\WebApplication1\WebApplication1.csproj package --vulnerable --include-transitive
 ```
 
 ## 部署注意

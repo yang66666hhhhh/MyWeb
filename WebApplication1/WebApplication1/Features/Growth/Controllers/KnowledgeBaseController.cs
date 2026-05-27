@@ -66,6 +66,8 @@ public class KnowledgeBaseController(IKnowledgeArticleService articleService) : 
             return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改此文章"));
 
         var result = await articleService.UpdateAsync(id, input, cancellationToken);
+        if (result is null)
+            return NotFound(ApiResult.Fail("文章不存在"));
         return Ok(ApiResult<KnowledgeArticleDto>.Success(result, "更新成功"));
     }
 

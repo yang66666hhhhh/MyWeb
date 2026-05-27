@@ -147,8 +147,11 @@ public class WorkLogService : IWorkLogService
 
         if (entity is null) return null;
 
-        if (input.WorkDate.HasValue) entity.WorkDate = input.WorkDate.Value;
-        if (!string.IsNullOrEmpty(input.WorkDate.ToString())) entity.WeekDay = input.WorkDate.Value.DayOfWeek.ToString();
+        if (input.WorkDate.HasValue)
+        {
+            entity.WorkDate = input.WorkDate.Value;
+            entity.WeekDay = input.WorkDate.Value.DayOfWeek.ToString();
+        }
         if (input.ProjectId.HasValue) entity.ProjectId = input.ProjectId.Value;
         if (input.Title is not null) entity.Title = input.Title;
         if (input.OriginalContent is not null) entity.OriginalContent = input.OriginalContent;

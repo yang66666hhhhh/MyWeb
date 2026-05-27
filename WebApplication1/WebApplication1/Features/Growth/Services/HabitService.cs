@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using WebApplication1.Features.Growth.Dtos;
 using WebApplication1.Features.Growth.Entities;
 using WebApplication1.Features.Growth.Services.Interfaces;
@@ -8,7 +7,7 @@ using WebApplication1.Shared.Data;
 
 namespace WebApplication1.Features.Growth.Services;
 
-public class HabitService(AppDbContext dbContext, ILogger<HabitService> logger) : IHabitService
+public class HabitService(AppDbContext dbContext) : IHabitService
 {
     public async Task<PageResult<HabitDto>> GetPageAsync(HabitQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
     {

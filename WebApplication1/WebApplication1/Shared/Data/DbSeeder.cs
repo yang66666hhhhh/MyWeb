@@ -426,7 +426,9 @@ public static class DbSeeder
         if (!await context.WorkDevices.AnyAsync())
         {
             logger?.LogInformation("[DbSeeder] Seeding WorkDevices...");
-            var projectDict = await context.WorkProjects.ToDictionaryAsync(p => p.ProjectCode);
+            var projectDict = await context.WorkProjects
+                .Where(p => p.ProjectCode != null)
+                .ToDictionaryAsync(p => p.ProjectCode!);
             var devices = new List<WorkDevice>
             {
                 new() { ProjectId = projectDict["PROJ001"].Id, DeviceName = "A线体", DeviceCode = "DEVICE_A", DeviceType = WorkDeviceType.ProductionLine, Description = "A产品生产线", Status = WorkDeviceStatus.Active, CreatedAt = now },
@@ -450,9 +452,15 @@ public static class DbSeeder
         if (!await context.WorkLogs.AnyAsync())
         {
             logger?.LogInformation("[DbSeeder] Seeding WorkLogs...");
-            var projectDict = await context.WorkProjects.ToDictionaryAsync(p => p.ProjectCode);
-            var deviceDict = await context.WorkDevices.ToDictionaryAsync(d => d.DeviceCode);
-            var taskTypeDict = await context.WorkTaskTypes.ToDictionaryAsync(t => t.TypeCode);
+            var projectDict = await context.WorkProjects
+                .Where(p => p.ProjectCode != null)
+                .ToDictionaryAsync(p => p.ProjectCode!);
+            var deviceDict = await context.WorkDevices
+                .Where(d => d.DeviceCode != null)
+                .ToDictionaryAsync(d => d.DeviceCode!);
+            var taskTypeDict = await context.WorkTaskTypes
+                .Where(t => t.TypeCode != null)
+                .ToDictionaryAsync(t => t.TypeCode!);
             var user = await context.Users.FirstAsync(u => u.Username == "vben");
 
             var logs = new List<WorkLog>();

@@ -3,7 +3,6 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using WebApplication1.Features.Auth.Entities;
 using WebApplication1.Shared.Data;
@@ -12,8 +11,7 @@ namespace WebApplication1.Features.Auth;
 
 public class AuthService(
     IConfiguration configuration,
-    AppDbContext context,
-    ILogger<AuthService> logger) : IAuthService
+    AppDbContext context) : IAuthService
 {
     public async Task<string> CreateAccessTokenAsync(string username)
     {

@@ -62,7 +62,9 @@ public class UserTypeController(AppDbContext db) : ControllerBase
             await db.SaveChangesAsync();
         }
 
-        var tags = await db.Tags.Where(t => input.TagIds.Contains(t.Id)).Select(t => t.Name).ToListAsync();
+        var tags = input.TagIds != null 
+            ? await db.Tags.Where(t => input.TagIds.Contains(t.Id)).Select(t => t.Name).ToListAsync()
+            : new List<string>();
         return Ok(ApiResult<UserTypeDto>.Success(new UserTypeDto
         {
             Id = userType.Id,
@@ -105,7 +107,9 @@ public class UserTypeController(AppDbContext db) : ControllerBase
         }
         await db.SaveChangesAsync();
 
-        var tags = await db.Tags.Where(t => input.TagIds.Contains(t.Id)).Select(t => t.Name).ToListAsync();
+        var tags = input.TagIds != null 
+            ? await db.Tags.Where(t => input.TagIds.Contains(t.Id)).Select(t => t.Name).ToListAsync()
+            : new List<string>();
         return Ok(ApiResult<UserTypeDto>.Success(new UserTypeDto
         {
             Id = userType.Id,

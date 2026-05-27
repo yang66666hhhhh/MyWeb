@@ -64,6 +64,8 @@ public class GrowthProjectsController(IGrowthProjectService projectService) : Ba
             return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改此项目"));
 
         var result = await projectService.UpdateAsync(id, input, cancellationToken);
+        if (result is null)
+            return NotFound(ApiResult.Fail("项目不存在"));
         return Ok(ApiResult<GrowthProjectDto>.Success(result, "更新成功"));
     }
 

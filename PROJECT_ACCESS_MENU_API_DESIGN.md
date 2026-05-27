@@ -175,7 +175,10 @@ public sealed record UserAccessContext(
 - 获取用户最高 Role。
 - 获取用户 PersonaCodes。
 - 获取有效订阅 PlanCode，默认 Free。
-- 计算 `FeatureCodes = PlanFeatures ∪ PersonaFeatures`。
+- 计算有效 FeatureCodes：
+  - 非 Persona 类功能：来自当前有效套餐。
+  - Persona 类功能：必须同时存在于当前有效套餐和用户启用 Persona 的 `PersonaFeatures`。
+  - Owner：拥有全部启用功能。
 - 可加入短缓存，例如 1-5 分钟，用户订阅、Persona、Feature 管理变更时清理。
 
 替换范围：
@@ -334,7 +337,7 @@ bindingValue
 ```mermaid
 flowchart TD
     A["User login"] --> B["JWT contains UserId and Roles"]
-    B --> C["Frontend calls /api/role-menus/mine"]
+    B --> C["Frontend calls /api/system/role-menus/mine"]
     C --> D["UserAccessContextService builds access context"]
     D --> E["RoleMenuService filters RoleMenus"]
     E --> F["Frontend generates backend routes"]
@@ -389,20 +392,20 @@ flowchart TD
 
 ### P1：RoleMenus 管理接口权限过宽
 
-`/api/role-menus` 当前只要求 `[Authorize]`。
+`/api/system/role-menus` 管理接口应只允许 Owner 使用。
 
 影响：普通登录用户可能访问菜单管理 API。
 
-处理：管理接口加 `[Authorize(Roles = "owner")]`，`/mine` 保持登录可用。
+处理：管理接口加 Owner 权限，`/mine` 保持登录可用。
 
 ## 9. 落地顺序
 
 ### 阶段 1：统一运行时权限核心
 
-1. 新增 `UserAccessContext` 和 `IUserAccessContextService`。
-2. 替换 `FeatureService`、`RequireFeatureAttribute`、`RoleMenuController`、`SubscriptionController` 的重复逻辑。
-3. `RoleMenuService` 改为接收上下文。
-4. 给 `/api/role-menus` 管理接口加 Owner 权限，保留 `/mine` 只需登录。
+1. 已新增 `UserAccessContext` 和 `IUserAccessContextService`。
+2. 已让 `FeatureService`、`RequireFeatureAttribute`、`RoleMenuController` 复用统一上下文。
+3. 已让 `RoleMenuService` 接收上下文，并校验父级链。
+4. 待确认 `/api/system/role-menus` 管理接口 Owner 限制，`/mine` 保持登录可用。
 
 ### 阶段 2：菜单模型收敛
 

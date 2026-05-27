@@ -93,7 +93,9 @@ public class MenuAdminController(AppDbContext db) : ControllerBase
             await db.SaveChangesAsync();
         }
 
-        var tags = await db.Tags.Where(t => input.TagIds.Contains(t.Id)).Select(t => t.Name).ToListAsync();
+        var tags = input.TagIds != null 
+            ? await db.Tags.Where(t => input.TagIds.Contains(t.Id)).Select(t => t.Name).ToListAsync()
+            : new List<string>();
         return Ok(ApiResult<MenuItemDto>.Success(new MenuItemDto
         {
             Id = menuItem.Id,
@@ -137,7 +139,9 @@ public class MenuAdminController(AppDbContext db) : ControllerBase
         }
         await db.SaveChangesAsync();
 
-        var tags = await db.Tags.Where(t => input.TagIds.Contains(t.Id)).Select(t => t.Name).ToListAsync();
+        var tags = input.TagIds != null 
+            ? await db.Tags.Where(t => input.TagIds.Contains(t.Id)).Select(t => t.Name).ToListAsync()
+            : new List<string>();
         return Ok(ApiResult<MenuItemDto>.Success(new MenuItemDto
         {
             Id = menuItem.Id,

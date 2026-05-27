@@ -68,14 +68,20 @@
 
 ### 2.4 权限公式
 
-```
-可见菜单 = RoleLevel >= MinRoleLevel
+```text
+可见菜单 = 当前菜单和所有父级菜单都满足：
+         RoleLevel >= MinRoleLevel
          && IsEnabled && IsVisible
          && (PersonaTag == null || User.Personas.Contains(PersonaTag))
          && (FeatureCode == null || User.AvailableFeatures.Contains(FeatureCode))
 
-可用功能 = PlanFeatures ∪ PersonaFeatures
+可用功能 =
+  非 Persona 类套餐功能
+  ∪ (Persona 类套餐功能 ∩ 用户启用 Persona 功能)
+  ∪ Owner 全部启用功能
 ```
+
+前端页面内部也必须按 `accessCodes` 降级：用户没有对应 FeatureCode 时，不请求该接口，不显示对应统计卡、下拉、快捷入口和操作按钮。
 
 ---
 
@@ -193,9 +199,13 @@
 │   └── 客户管理 (/implementation/customers)
 │
 ├── 学生中心 (/student) [Persona=Student]
+│   ├── 学习总览 (/student/dashboard)
 │   ├── 学习计划 (/student/learning)
+│   ├── 复习日程 (/student/review)
 │   ├── 错题本 (/student/mistakes)
-│   └── 考研备考 (/student/postgraduate)
+│   ├── 学习资料 (/student/materials)
+│   ├── 学习记录 (/student/records)
+│   └── 科目目标 (/student/subjects)
 │
 ├── 实验中心 (/labs) [Pro]
 │   ├── AI实验室 (/labs/ai-lab)
@@ -333,11 +343,12 @@
 - **Habits** / **HabitCheckIns** - 习惯打卡
 - **GrowthProjects** - 成长项目
 - **KnowledgeArticles** - 知识库
-- **PostgraduateTasks** / **ExamMistakes** / **ExamMaterials** - 考研相关
+- **PostgraduateTasks** / **ExamMistakes** / **ExamMaterials** - 学生学习任务、错题和资料
+- **StudentSubjects** / **StudentStudyRecords** - 学生科目目标和学习记录
 
 ### 4.5 其他核心表
 
-- **Tasks** - 统一任务系统（个人+工作，通过 Type/Source 区分）
+- **Tasks** - 通用任务系统（个人+工作，通过 Type/Source 区分）
 - **WorkProjects** - 工作项目
 - **WorkDevices** - 工作设备
 - **WorkTaskTypes** - 任务类型
@@ -348,7 +359,7 @@
 - **RoleMenus** - 角色菜单
 - **MenuActions** / **RolePermissions** - 按钮级权限
 
-> 注意：原 DailyPlans 表已废弃，功能合并到 Tasks 表
+> 注意：DailyPlans 已恢复为按用户隔离的个人每日计划表；WorkDailyPlans 用于工作计划；Tasks 用于通用任务。
 
 ---
 
@@ -363,7 +374,7 @@
 | POST | `/refresh` | 刷新令牌 |
 | POST | `/logout` | 用户登出 |
 
-### 5.2 菜单接口 `/api/role-menus`
+### 5.2 菜单接口 `/api/system/role-menus`
 
 | 方法 | 端点 | 描述 |
 |---|---|---|
@@ -426,7 +437,7 @@
 | `/api/growth/projects` | 成长项目 |
 | `/api/growth/knowledge-base` | 知识库 |
 
-### 5.9 统一任务 `/api/tasks`
+### 5.9 工作任务 `/api/growth/tasks`
 
 | 方法 | 端点 | 描述 |
 |---|---|---|
@@ -438,7 +449,18 @@
 | POST | `/{id}/complete` | 完成任务 |
 | POST | `/convert-to-log` | 转为工作日志 |
 
-### 5.10 AI模块 `/api/ai`
+### 5.10 学生中心 `/api/student`
+
+| 前缀 | 描述 |
+|---|---|
+| `/dashboard` | 学习总览聚合 |
+| `/tasks` | 学习计划 |
+| `/mistakes` | 错题本 |
+| `/materials` | 学习资料 |
+| `/subjects` | 科目目标 |
+| `/records` | 学习记录 |
+
+### 5.11 AI模块 `/api/ai`
 
 | 方法 | 端点 | 描述 |
 |---|---|---|
@@ -448,7 +470,7 @@
 | GET | `/reports` | AI报告列表 |
 | POST | `/reports` | 创建AI报告 |
 
-### 5.11 个人日程 `/api/daily-plans`
+### 5.12 个人日程 `/api/daily-plans`
 
 | 方法 | 端点 | 描述 |
 |---|---|---|
@@ -457,7 +479,7 @@
 | PUT | `/{id}` | 更新日程 |
 | DELETE | `/{id}` | 删除日程 |
 
-### 5.12 Persona管理 `/api/persona-types`
+### 5.13 Persona管理 `/api/persona-types`
 
 | 方法 | 端点 | 描述 |
 |---|---|---|
@@ -494,7 +516,7 @@
 | design | /design | 2 |
 | teacher | /teacher | 2 |
 | implementation | /implementation | 2 |
-| student | /student | 3 |
+| student | /student | 7 |
 | labs | /labs | 4 |
 | _core | /auth, /profile, /fallback | 14 |
 | other | /external-links, /about, /demos | 3 |
@@ -509,8 +531,9 @@ api/
 ├── system/     (user.ts, persona.ts, menu-tag.ts)
 ├── work/       (workLog.ts, project.ts, device.ts, taskType.ts, dailyPlan.ts,
 │                import.ts, statistics.ts, template.ts, logTemplate.ts, types.ts, index.ts)
-├── growth/     (habit.ts, daily-plan.ts, knowledge-base.ts, postgraduate.ts,
+├── growth/     (habit.ts, daily-plan.ts, knowledge-base.ts,
 │                project.ts, task.ts, index.ts, types.ts)
+├── student/    (index.ts)
 ├── ai/         (index.ts)
 ├── analytics.ts
 └── request.ts
@@ -538,8 +561,7 @@ api/
 ### 8.1 后端启动
 
 ```bash
-cd WebApplication1
-dotnet run
+rtk dotnet run --project WebApplication1\WebApplication1\WebApplication1.csproj
 ```
 
 后端运行在 `http://localhost:5062`
@@ -547,8 +569,7 @@ dotnet run
 ### 8.2 前端启动
 
 ```bash
-cd vue-vben-admin
-pnpm run dev:antd
+rtk pwsh -Command "Set-Location vue-vben-admin; pnpm -F @vben/web-antd run dev"
 ```
 
 前端运行在 `http://localhost:5666`
@@ -556,9 +577,8 @@ pnpm run dev:antd
 ### 8.3 数据库重置
 
 ```bash
-cd WebApplication1
-dotnet ef database drop --force
-dotnet ef database update
+rtk dotnet ef database drop --force
+rtk dotnet ef database update
 ```
 
 ### 8.4 测试账号
@@ -575,7 +595,7 @@ dotnet ef database update
 1. **模块边界清晰**：个人成长管生活/习惯/学习，工作中心管项目/任务/工作
 2. **角色递进**：Member → Pro → Owner 逐级解锁
 3. **Persona多对多**：一个用户可拥有多个职业身份
-4. **Feature权限**：Plan功能 ∪ Persona功能 = 用户可用功能
+4. **Feature权限**：非 Persona 功能来自套餐；Persona 功能必须套餐和身份同时满足；Owner 拥有全部启用功能
 5. **动态日志模板**：不同Persona有不同的日志字段（JSON扩展）
 6. **菜单分类**：MenuCategory 字段组织菜单
 7. **按钮级权限**：MenuActions + RolePermissions
@@ -610,7 +630,7 @@ public async Task<bool> HasFeatureAsync(Guid userId, string featureCode)
 
 public async Task<HashSet<string>> GetUserFeaturesAsync(Guid userId)
 {
-    // PlanFeatures ∪ PersonaFeatures
+    // Reuse UserAccessContextService.FeatureCodes
 }
 ```
 
@@ -651,9 +671,8 @@ public async Task<HashSet<string>> GetUserFeaturesAsync(Guid userId)
 ## 13. 数据库迁移
 
 ```bash
-cd WebApplication1
-dotnet ef database drop --force  # 首次或重置
-dotnet ef database update
+rtk dotnet ef database drop --force  # 首次或重置
+rtk dotnet ef database update
 ```
 
 ---
@@ -661,8 +680,7 @@ dotnet ef database update
 ## 14. 测试
 
 ```bash
-cd WebApplication1
-dotnet test
+rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.csproj --no-restore
 ```
 
 当前测试覆盖：TaskItemService, KnowledgeArticleService, DailyPlanService, WorkProjectService, RoleMenuService

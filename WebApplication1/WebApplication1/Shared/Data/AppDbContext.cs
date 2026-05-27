@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Ai.Entities;
 using WebApplication1.Features.Admin.Entities;
+using WebApplication1.Features.Assets.Entities;
 using WebApplication1.Features.Auth.Entities;
 using WebApplication1.Features.Auth.Entities.Subscription;
+using WebApplication1.Features.Content.Entities;
 using WebApplication1.Features.DailyPlans;
 using WebApplication1.Features.Growth.Entities;
 using WebApplication1.Features.Tasks;

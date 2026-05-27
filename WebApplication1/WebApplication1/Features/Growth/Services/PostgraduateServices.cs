@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using WebApplication1.Features.Growth.Dtos;
 using WebApplication1.Features.Growth.Entities;
 using WebApplication1.Features.Growth.Services.Interfaces;
@@ -8,7 +7,7 @@ using WebApplication1.Shared.Data;
 
 namespace WebApplication1.Features.Growth.Services;
 
-public class PostgraduateTaskService(AppDbContext dbContext, ILogger<PostgraduateTaskService> logger) : IPostgraduateTaskService
+public class PostgraduateTaskService(AppDbContext dbContext) : IPostgraduateTaskService
 {
     public async Task<PageResult<PostgraduateTaskDto>> GetPageAsync(PostgraduateTaskQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
     {
@@ -132,7 +131,7 @@ public class PostgraduateTaskService(AppDbContext dbContext, ILogger<Postgraduat
     };
 }
 
-public class ExamMistakeService(AppDbContext dbContext, ILogger<ExamMistakeService> logger) : IExamMistakeService
+public class ExamMistakeService(AppDbContext dbContext) : IExamMistakeService
 {
     public async Task<PageResult<ExamMistakeDto>> GetPageAsync(ExamMistakeQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
     {
@@ -256,7 +255,7 @@ public class ExamMistakeService(AppDbContext dbContext, ILogger<ExamMistakeServi
     };
 }
 
-public class ExamMaterialService(AppDbContext dbContext, ILogger<ExamMaterialService> logger) : IExamMaterialService
+public class ExamMaterialService(AppDbContext dbContext) : IExamMaterialService
 {
     public async Task<PageResult<ExamMaterialDto>> GetPageAsync(ExamMaterialQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
     {
@@ -377,7 +376,7 @@ public class ExamMaterialService(AppDbContext dbContext, ILogger<ExamMaterialSer
     };
 }
 
-public class StudentSubjectService(AppDbContext dbContext, ILogger<StudentSubjectService> logger) : IStudentSubjectService
+public class StudentSubjectService(AppDbContext dbContext) : IStudentSubjectService
 {
     public async Task<PageResult<StudentSubjectDto>> GetPageAsync(StudentSubjectQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
     {
@@ -496,7 +495,7 @@ public class StudentSubjectService(AppDbContext dbContext, ILogger<StudentSubjec
     };
 }
 
-public class StudentStudyRecordService(AppDbContext dbContext, ILogger<StudentStudyRecordService> logger) : IStudentStudyRecordService
+public class StudentStudyRecordService(AppDbContext dbContext) : IStudentStudyRecordService
 {
     public async Task<PageResult<StudentStudyRecordDto>> GetPageAsync(StudentStudyRecordQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
     {

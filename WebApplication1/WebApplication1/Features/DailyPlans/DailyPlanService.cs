@@ -1,12 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using WebApplication1.Shared.Common;
 using WebApplication1.Shared.Data;
 using WebApplication1.Shared.Enums;
 
 namespace WebApplication1.Features.DailyPlans;
 
-public class DailyPlanService(AppDbContext dbContext, ILogger<DailyPlanService> logger) : IDailyPlanService
+public class DailyPlanService(AppDbContext dbContext) : IDailyPlanService
 {
     public async Task<PageResult<DailyPlanDto>> GetPageAsync(DailyPlanQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
     {

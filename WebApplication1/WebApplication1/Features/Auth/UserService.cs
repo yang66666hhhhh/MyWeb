@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using WebApplication1.Features.Admin.Dtos;
 using WebApplication1.Features.Auth.Dtos;
 using WebApplication1.Features.Auth.Entities;
@@ -8,7 +7,7 @@ using WebApplication1.Shared.Data;
 
 namespace WebApplication1.Features.Auth;
 
-public class UserService(AppDbContext context, ILogger<UserService> logger) : IUserService
+public class UserService(AppDbContext context) : IUserService
 {
     public async Task<PageResult<UserDto>> GetPageAsync(UserQueryDto query, CancellationToken cancellationToken = default)
     {

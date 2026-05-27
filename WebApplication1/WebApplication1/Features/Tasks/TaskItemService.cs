@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using WebApplication1.Shared.Common;
 using WebApplication1.Shared.Data;
 using WebApplication1.Shared.Enums;
@@ -18,7 +17,7 @@ public interface ITaskItemService
     Task<Guid?> ConvertToWorkLogAsync(ConvertTaskToLogDto input, CancellationToken cancellationToken = default);
 }
 
-public class TaskItemService(AppDbContext dbContext, ILogger<TaskItemService> logger) : ITaskItemService
+public class TaskItemService(AppDbContext dbContext) : ITaskItemService
 {
     public async Task<PageResult<TaskItemDto>> GetPageAsync(TaskItemQueryDto query, Guid? userId = null, CancellationToken cancellationToken = default)
     {
