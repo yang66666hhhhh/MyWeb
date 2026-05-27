@@ -74,7 +74,24 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "Personal Growth Management API",
         Version = "v1",
-        Description = "全栈个人成长与工作管理系统 API - 支持每日计划、习惯打卡、工作日志、知识库、考研备选、AI助手等功能"
+        Description = "全栈个人成长与工作管理系统 API - 支持每日计划、习惯打卡、工作日志、知识库、考研备选、AI助手等功能",
+        Contact = new OpenApiContact
+        {
+            Name = "API Support",
+            Email = "support@example.com"
+        },
+        License = new OpenApiLicense
+        {
+            Name = "MIT License",
+            Url = new Uri("https://opensource.org/licenses/MIT")
+        }
+    });
+
+    options.SwaggerDoc("v2", new OpenApiInfo
+    {
+        Title = "Personal Growth Management API",
+        Version = "v2",
+        Description = "全栈个人成长与工作管理系统 API - V2 版本（实验性）"
     });
 
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
@@ -98,6 +115,41 @@ builder.Services.AddSwaggerGen(options =>
     {
         [new OpenApiSecuritySchemeReference("Bearer", document, null)] = []
     });
+
+    options.TagActionsBy(api =>
+    {
+        if (api.GroupName != null)
+        {
+            return [api.GroupName];
+        }
+
+        var controllerName = api.ActionDescriptor.RouteValues["controller"];
+        if (!string.IsNullOrEmpty(controllerName))
+        {
+            return [controllerName];
+        }
+
+        return ["default"];
+    });
+
+    options.DocInclusionPredicate((docName, api) =>
+    {
+        if (docName == "v1")
+        {
+            return true;
+        }
+
+        if (docName == "v2")
+        {
+            return api.RelativePath?.StartsWith("api/v2") ?? false;
+        }
+
+        return false;
+    });
+
+    options.OrderActionsBy(apiDesc => apiDesc.RelativePath);
+
+    options.EnableAnnotations();
 });
 
 builder.Services.AddCors(options =>
@@ -219,10 +271,22 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
+    app.UseSwagger(options =>
+    {
+        options.RouteTemplate = "swagger/{documentName}/swagger.json";
+    });
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Personal Growth Management API v1");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Personal Growth API v1");
+        options.SwaggerEndpoint("/swagger/v2/swagger.json", "Personal Growth API v2 (Preview)");
+        options.RoutePrefix = "swagger";
+        options.DocumentTitle = "Personal Growth Management API";
+        options.DefaultModelsExpandDepth(2);
+        options.DefaultModelRendering(Swashbuckle.AspNetCore.SwaggerUI.ModelRendering.Example);
+        options.DisplayRequestDuration();
+        options.EnableDeepLinking();
+        options.EnableFilter();
+        options.ShowExtensions();
     });
 }
 
