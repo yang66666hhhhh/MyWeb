@@ -33,4 +33,29 @@ public abstract class BaseApiController : ControllerBase
             .Where(c => c.Type == ClaimTypes.Role)
             .Any(c => c.Value.Equals("owner", StringComparison.OrdinalIgnoreCase));
     }
+
+    protected Guid? GetUserIdForQuery()
+    {
+        return IsProOrAbove() ? null : GetCurrentUserId();
+    }
+
+    protected bool IsUnauthorizedForResource(string? resourceUserId)
+    {
+        var currentUserId = GetCurrentUserId();
+        return !IsProOrAbove() && resourceUserId != currentUserId?.ToString();
+    }
+
+    protected ActionResult<ApiResult<T>> HandleResourceNotFound<T>(T? result, string resourceName)
+    {
+        if (result is null)
+            return NotFound(ApiResult<T>.Fail($"{resourceName}不存在", StatusCodes.Status404NotFound));
+        return Ok(ApiResult<T>.Success(result));
+    }
+
+    protected ActionResult<ApiResult> HandleDeleteResult(bool success, string resourceName)
+    {
+        if (!success)
+            return NotFound(ApiResult.Fail($"{resourceName}不存在"));
+        return Ok(ApiResult.Success("删除成功"));
+    }
 }
