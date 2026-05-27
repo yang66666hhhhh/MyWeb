@@ -187,8 +187,6 @@ builder.Services.AddSwaggerGen(options =>
     });
 
     options.OrderActionsBy(apiDesc => apiDesc.RelativePath);
-
-    options.EnableAnnotations();
 });
 
 builder.Services.AddCors(options =>
