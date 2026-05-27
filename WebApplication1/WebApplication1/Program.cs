@@ -6,6 +6,7 @@ using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using WebApplication1.Shared.Data;
@@ -26,6 +27,7 @@ using WebApplication1.Features.Assets.Services;
 using WebApplication1.Features.Assets.Services.Interfaces;
 using WebApplication1.Features.Content.Services;
 using WebApplication1.Features.Content.Services.Interfaces;
+using WebApplication1.Shared.HealthChecks;
 using WebApplication1.Shared.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -195,7 +197,23 @@ builder.Services.AddHealthChecks()
         builder.Configuration.GetConnectionString("DefaultConnection") ?? "",
         name: "mysql",
         timeout: TimeSpan.FromSeconds(3),
-        tags: ["db", "mysql"]);
+        tags: ["db", "mysql"])
+    .AddCheck<MemoryHealthCheck>(
+        "memory",
+        failureStatus: HealthStatus.Degraded,
+        tags: ["system", "memory"])
+    .AddCheck<DiskSpaceHealthCheck>(
+        "disk",
+        failureStatus: HealthStatus.Degraded,
+        tags: ["system", "disk"])
+    .AddCheck<CpuHealthCheck>(
+        "cpu",
+        failureStatus: HealthStatus.Degraded,
+        tags: ["system", "cpu"])
+    .AddCheck<ApplicationHealthCheck>(
+        "application",
+        failureStatus: HealthStatus.Unhealthy,
+        tags: ["system", "app"]);
 
 var app = builder.Build();
 
@@ -250,6 +268,30 @@ app.MapHealthChecks("/healthz", new Microsoft.AspNetCore.Diagnostics.HealthCheck
         var result = new
         {
             status = report.Status.ToString(),
+            totalDuration = report.TotalDuration.TotalMilliseconds,
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                duration = e.Value.Duration.TotalMilliseconds,
+                description = e.Value.Description,
+                data = e.Value.Data
+            })
+        };
+        await context.Response.WriteAsJsonAsync(result);
+    }
+});
+
+app.MapHealthChecks("/healthz/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("db"),
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var result = new
+        {
+            status = report.Status.ToString(),
+            totalDuration = report.TotalDuration.TotalMilliseconds,
             checks = report.Entries.Select(e => new
             {
                 name = e.Key,
@@ -257,6 +299,21 @@ app.MapHealthChecks("/healthz", new Microsoft.AspNetCore.Diagnostics.HealthCheck
                 duration = e.Value.Duration.TotalMilliseconds,
                 description = e.Value.Description
             })
+        };
+        await context.Response.WriteAsJsonAsync(result);
+    }
+});
+
+app.MapHealthChecks("/healthz/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false,
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var result = new
+        {
+            status = report.Status.ToString(),
+            totalDuration = report.TotalDuration.TotalMilliseconds
         };
         await context.Response.WriteAsJsonAsync(result);
     }
