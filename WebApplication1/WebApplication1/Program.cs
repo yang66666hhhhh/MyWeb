@@ -20,6 +20,10 @@ using WebApplication1.Features.Ai.Services;
 using WebApplication1.Features.Admin.Services;
 using WebApplication1.Features.Auth.Services;
 using WebApplication1.Features.Analytics;
+using WebApplication1.Features.Assets.Services;
+using WebApplication1.Features.Assets.Services.Interfaces;
+using WebApplication1.Features.Content.Services;
+using WebApplication1.Features.Content.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -173,6 +177,8 @@ builder.Services.AddScoped<RoleMenuService>();
 builder.Services.AddScoped<IUserAccessContextService, UserAccessContextService>();
 builder.Services.AddScoped<IFeatureService, FeatureService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddScoped<IAssetService, AssetService>();
+builder.Services.AddScoped<IContentService, ContentService>();
 
 builder.Services.AddHealthChecks()
     .AddMySql(

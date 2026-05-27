@@ -75,3 +75,87 @@ public class AssetQueryDto : PageQueryDto
     public string? Category { get; set; }
     public string? Keyword { get; set; }
 }
+
+public class CreateIncomeDto
+{
+    public string IncomeDate { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public string? Description { get; set; }
+    public string? Remark { get; set; }
+}
+
+public class UpdateIncomeDto
+{
+    public string? IncomeDate { get; set; }
+    public string? Category { get; set; }
+    public string? Title { get; set; }
+    public decimal? Amount { get; set; }
+    public string? Description { get; set; }
+    public string? Remark { get; set; }
+}
+
+public class CreateExpenseDto
+{
+    public string ExpenseDate { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public string? Description { get; set; }
+    public string? Remark { get; set; }
+}
+
+public class UpdateExpenseDto
+{
+    public string? ExpenseDate { get; set; }
+    public string? Category { get; set; }
+    public string? Title { get; set; }
+    public decimal? Amount { get; set; }
+    public string? Description { get; set; }
+    public string? Remark { get; set; }
+}
+
+public class CreateBudgetDto
+{
+    public int Year { get; set; }
+    public int Month { get; set; }
+    public string Category { get; set; } = string.Empty;
+    public decimal PlannedAmount { get; set; }
+    public decimal ActualAmount { get; set; }
+    public string? Remark { get; set; }
+}
+
+public class UpdateBudgetDto
+{
+    public int? Year { get; set; }
+    public int? Month { get; set; }
+    public string? Category { get; set; }
+    public decimal? PlannedAmount { get; set; }
+    public decimal? ActualAmount { get; set; }
+    public string? Remark { get; set; }
+}
+
+public class CreateInvestmentDto
+{
+    public string InvestmentDate { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public decimal? CurrentValue { get; set; }
+    public decimal? ReturnRate { get; set; }
+    public string? Description { get; set; }
+    public string? Remark { get; set; }
+}
+
+public class UpdateInvestmentDto
+{
+    public string? InvestmentDate { get; set; }
+    public string? Type { get; set; }
+    public string? Name { get; set; }
+    public decimal? Amount { get; set; }
+    public decimal? CurrentValue { get; set; }
+    public decimal? ReturnRate { get; set; }
+    public string? Description { get; set; }
+    public string? Remark { get; set; }
+}

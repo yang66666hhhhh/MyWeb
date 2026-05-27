@@ -49,3 +49,61 @@ public class ContentQueryDto : PageQueryDto
     public string? StartDate { get; set; }
     public string? EndDate { get; set; }
 }
+
+public class CreateArticleDto
+{
+    public string Title { get; set; } = string.Empty;
+    public string? Content { get; set; }
+    public string Status { get; set; } = "draft";
+    public string? Tags { get; set; }
+    public string? Category { get; set; }
+    public string? Remark { get; set; }
+}
+
+public class UpdateArticleDto
+{
+    public string? Title { get; set; }
+    public string? Content { get; set; }
+    public string? Status { get; set; }
+    public string? Tags { get; set; }
+    public string? Category { get; set; }
+    public string? Remark { get; set; }
+}
+
+public class CreateMediaItemDto
+{
+    public string FileName { get; set; } = string.Empty;
+    public string FileUrl { get; set; } = string.Empty;
+    public string FileType { get; set; } = string.Empty;
+    public long FileSize { get; set; }
+    public string? Tags { get; set; }
+    public string? Remark { get; set; }
+}
+
+public class UpdateMediaItemDto
+{
+    public string? FileName { get; set; }
+    public string? FileUrl { get; set; }
+    public string? FileType { get; set; }
+    public long? FileSize { get; set; }
+    public string? Tags { get; set; }
+    public string? Remark { get; set; }
+}
+
+public class CreatePublishingCalendarDto
+{
+    public string PlannedDate { get; set; } = string.Empty;
+    public string Platform { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Status { get; set; } = "pending";
+    public string? Remark { get; set; }
+}
+
+public class UpdatePublishingCalendarDto
+{
+    public string? PlannedDate { get; set; }
+    public string? Platform { get; set; }
+    public string? Title { get; set; }
+    public string? Status { get; set; }
+    public string? Remark { get; set; }
+}

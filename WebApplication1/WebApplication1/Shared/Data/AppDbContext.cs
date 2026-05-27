@@ -83,6 +83,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<PersonaFeature> PersonaFeatures => Set<PersonaFeature>();
     public DbSet<UserSubscription> UserSubscriptions => Set<UserSubscription>();
 
+    public DbSet<Investment> Investments => Set<Investment>();
+    public DbSet<Budget> Budgets => Set<Budget>();
+    public DbSet<Expense> Expenses => Set<Expense>();
+    public DbSet<Income> Incomes => Set<Income>();
+
+    public DbSet<Article> Articles => Set<Article>();
+    public DbSet<MediaItem> MediaItems => Set<MediaItem>();
+    public DbSet<PublishingCalendar> PublishingCalendars => Set<PublishingCalendar>();
+
     public override int SaveChanges()
     {
         ApplySoftDelete();
