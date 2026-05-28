@@ -7,6 +7,7 @@ using WebApplication1.Features.Work.Entities;
 using WebApplication1.Features.Growth.Entities;
 using WebApplication1.Features.Admin.Entities;
 using WebApplication1.Features.DailyPlans;
+using WebApplication1.Features.Network.Entities;
 using WebApplication1.Features.Tasks;
 using FieldType = WebApplication1.Features.Work.Entities.FieldType;
 
@@ -1080,6 +1081,38 @@ public static class DbSeeder
             context.WorkLogTemplates.AddRange(eapTemplate, devTemplate, teacherTemplate, salesTemplate, designerTemplate, studentTemplate, freelancerTemplate, generalTemplate);
             await context.SaveChangesAsync();
             logger?.LogInformation("[DbSeeder] WorkLogTemplates seeded.");
+        }
+
+        // Network - 联系人
+        if (!await context.Contacts.AnyAsync())
+        {
+            logger?.LogInformation("[DbSeeder] Seeding Contacts...");
+            var vben = await context.Users.FirstAsync(u => u.Username == "vben");
+            var contacts = new List<Contact>
+            {
+                new() { UserId = vben.Id, Name = "张经理", Company = "客户A公司", Position = "项目经理", Phone = "13800138001", Email = "zhang@clienta.com", WeChat = "zhang_mgr", Tags = "客户,重要", Remark = "主要对接人，负责项目协调", InteractionCount = 5, LastInteractionAt = now.AddDays(-2), CreatedAt = now.AddDays(-30) },
+                new() { UserId = vben.Id, Name = "李工", Company = "供应商B", Position = "技术主管", Phone = "13900139002", Email = "li@supplierb.com", WeChat = "li_tech", Tags = "供应商,技术", Remark = "设备供应商技术负责人", InteractionCount = 3, LastInteractionAt = now.AddDays(-5), CreatedAt = now.AddDays(-20) },
+                new() { UserId = vben.Id, Name = "王总", Company = "合作伙伴C", Position = "CEO", Phone = "13700137003", Email = "wang@partnerc.com", WeChat = "wang_ceo", Tags = "合作伙伴,高层", Remark = "战略合作伙伴", InteractionCount = 2, LastInteractionAt = now.AddDays(-10), CreatedAt = now.AddDays(-60) },
+                new() { UserId = vben.Id, Name = "赵同学", Company = "某大学", Position = "研究生", Phone = "13600136004", Email = "zhao@university.edu", WeChat = "zhao_student", Tags = "校友,技术", Remark = "技术交流伙伴", InteractionCount = 4, LastInteractionAt = now.AddDays(-1), CreatedAt = now.AddDays(-15) },
+                new() { UserId = vben.Id, Name = "刘顾问", Company = "咨询公司D", Position = "高级顾问", Phone = "13500135005", Email = "liu@consultingd.com", WeChat = "liu_advisor", Tags = "顾问,行业", Remark = "行业咨询顾问", InteractionCount = 1, LastInteractionAt = now.AddDays(-15), CreatedAt = now.AddDays(-45) },
+            };
+            context.Contacts.AddRange(contacts);
+            await context.SaveChangesAsync();
+            logger?.LogInformation("[DbSeeder] Contacts seeded.");
+
+            // 添加互动记录
+            logger?.LogInformation("[DbSeeder] Seeding Interactions...");
+            var interactions = new List<Interaction>
+            {
+                new() { UserId = vben.Id, ContactId = contacts[0].Id, Type = "会议", Content = "讨论项目进度和下一步计划", InteractionDate = now.AddDays(-2).ToString("yyyy-MM-dd"), NextFollowUpDate = now.AddDays(5).ToString("yyyy-MM-dd"), Remark = "会议顺利，达成共识", CreatedAt = now.AddDays(-2) },
+                new() { UserId = vben.Id, ContactId = contacts[0].Id, Type = "电话", Content = "确认设备交付时间", InteractionDate = now.AddDays(-5).ToString("yyyy-MM-dd"), Remark = "交付时间确认无误", CreatedAt = now.AddDays(-5) },
+                new() { UserId = vben.Id, ContactId = contacts[1].Id, Type = "拜访", Content = "现场查看设备运行情况", InteractionDate = now.AddDays(-5).ToString("yyyy-MM-dd"), NextFollowUpDate = now.AddDays(7).ToString("yyyy-MM-dd"), Remark = "设备运行正常", CreatedAt = now.AddDays(-5) },
+                new() { UserId = vben.Id, ContactId = contacts[2].Id, Type = "邮件", Content = "发送合作方案", InteractionDate = now.AddDays(-10).ToString("yyyy-MM-dd"), NextFollowUpDate = now.AddDays(3).ToString("yyyy-MM-dd"), CreatedAt = now.AddDays(-10) },
+                new() { UserId = vben.Id, ContactId = contacts[3].Id, Type = "微信", Content = "讨论技术问题", InteractionDate = now.AddDays(-1).ToString("yyyy-MM-dd"), Remark = "交流了最新技术趋势", CreatedAt = now.AddDays(-1) },
+            };
+            context.Interactions.AddRange(interactions);
+            await context.SaveChangesAsync();
+            logger?.LogInformation("[DbSeeder] Interactions seeded.");
         }
 
         await SeedUserExperienceDataAsync(context, logger, now, today);

@@ -7,6 +7,7 @@ using WebApplication1.Features.Auth.Entities.Subscription;
 using WebApplication1.Features.Content.Entities;
 using WebApplication1.Features.DailyPlans;
 using WebApplication1.Features.Growth.Entities;
+using WebApplication1.Features.Network.Entities;
 using WebApplication1.Features.Tasks;
 using WebApplication1.Features.Work.Entities;
 using WebApplication1.Shared;
@@ -91,6 +92,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Article> Articles => Set<Article>();
     public DbSet<MediaItem> MediaItems => Set<MediaItem>();
     public DbSet<PublishingCalendar> PublishingCalendars => Set<PublishingCalendar>();
+
+    public DbSet<Contact> Contacts => Set<Contact>();
+    public DbSet<Interaction> Interactions => Set<Interaction>();
 
     public override int SaveChanges()
     {

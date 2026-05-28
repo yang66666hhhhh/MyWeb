@@ -11,8 +11,11 @@ public class ContactDto
     public string? Position { get; set; }
     public string? Phone { get; set; }
     public string? Email { get; set; }
+    public string? WeChat { get; set; }
     public string? Tags { get; set; }
     public string? Remark { get; set; }
+    public int InteractionCount { get; set; }
+    public string? LastInteractionAt { get; set; }
     public string CreatedAt { get; set; } = string.Empty;
 }
 
@@ -25,6 +28,7 @@ public class InteractionDto
     public string Type { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
     public string InteractionDate { get; set; } = string.Empty;
+    public string? NextFollowUpDate { get; set; }
     public string? Remark { get; set; }
     public string CreatedAt { get; set; } = string.Empty;
 }
@@ -43,4 +47,47 @@ public class NetworkQueryDto : PageQueryDto
     public string? Keyword { get; set; }
     public string? StartDate { get; set; }
     public string? EndDate { get; set; }
+}
+
+public class CreateContactDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string? Company { get; set; }
+    public string? Position { get; set; }
+    public string? Phone { get; set; }
+    public string? Email { get; set; }
+    public string? WeChat { get; set; }
+    public string? Tags { get; set; }
+    public string? Remark { get; set; }
+}
+
+public class UpdateContactDto
+{
+    public string? Name { get; set; }
+    public string? Company { get; set; }
+    public string? Position { get; set; }
+    public string? Phone { get; set; }
+    public string? Email { get; set; }
+    public string? WeChat { get; set; }
+    public string? Tags { get; set; }
+    public string? Remark { get; set; }
+}
+
+public class CreateInteractionDto
+{
+    public Guid ContactId { get; set; }
+    public string Type { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
+    public string InteractionDate { get; set; } = string.Empty;
+    public string? NextFollowUpDate { get; set; }
+    public string? Remark { get; set; }
+}
+
+public class UpdateInteractionDto
+{
+    public string? Type { get; set; }
+    public string? Content { get; set; }
+    public string? InteractionDate { get; set; }
+    public string? NextFollowUpDate { get; set; }
+    public string? Remark { get; set; }
 }

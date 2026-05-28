@@ -29,6 +29,8 @@ using WebApplication1.Features.Assets.Services;
 using WebApplication1.Features.Assets.Services.Interfaces;
 using WebApplication1.Features.Content.Services;
 using WebApplication1.Features.Content.Services.Interfaces;
+using WebApplication1.Features.Network.Services;
+using WebApplication1.Features.Network.Services.Interfaces;
 using WebApplication1.Shared.HealthChecks;
 using WebApplication1.Shared.Localization;
 using WebApplication1.Shared.Services;
@@ -299,6 +301,7 @@ builder.Services.AddScoped<IFeatureService, FeatureService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<IAssetService, AssetService>();
 builder.Services.AddScoped<IContentService, ContentService>();
+builder.Services.AddScoped<INetworkService, NetworkService>();
 
 builder.Services.AddHealthChecks()
     .AddMySql(
