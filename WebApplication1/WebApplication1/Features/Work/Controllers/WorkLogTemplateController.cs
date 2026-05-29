@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Features.Work.Entities;
 using WebApplication1.Features.Work.Dtos;
 using WebApplication1.Shared.Common;
@@ -12,6 +13,7 @@ namespace WebApplication1.Features.Work.Controllers;
 [ApiController]
 [Route("api/work/log-templates")]
 [Authorize]
+[RequireFeature("WORK_LOG")]
 [Tags("Work - Log Templates")]
 public class WorkLogTemplateController(AppDbContext context) : BaseApiController
 {

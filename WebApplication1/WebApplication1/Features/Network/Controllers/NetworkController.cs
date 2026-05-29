@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Features.Network.Dtos;
 using WebApplication1.Features.Network.Services.Interfaces;
 using WebApplication1.Shared.Common;
@@ -8,6 +9,7 @@ namespace WebApplication1.Features.Network.Controllers;
 
 [ApiController]
 [Authorize]
+[RequireFeature("GROWTH_KNOWLEDGE")]
 [Route("api/network")]
 [Tags("Network")]
 public class NetworkController(INetworkService networkService) : BaseApiController

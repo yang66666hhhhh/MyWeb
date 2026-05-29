@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Features.Auth.Entities;
 using WebApplication1.Shared.Data;
 
@@ -11,7 +12,8 @@ namespace WebApplication1.Features.Auth;
 
 public class AuthService(
     IConfiguration configuration,
-    AppDbContext context) : IAuthService
+    AppDbContext context,
+    IUserAccessContextService accessContextService) : IAuthService
 {
     public async Task<string> CreateAccessTokenAsync(string username)
     {
@@ -107,10 +109,27 @@ public class AuthService(
 
     public async Task<IReadOnlyList<string>> GetAccessCodesAsync(ClaimsPrincipal principal)
     {
-        var username = principal.Identity?.Name;
-        if (username is null) return [];
-        var user = await context.Users.FirstOrDefaultAsync(x => x.Username == username);
-        return user != null ? new[] { "dashboard", "growth" } : [];
+        var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim is null || !Guid.TryParse(userIdClaim.Value, out var userId))
+            return [];
+
+        var accessContext = await accessContextService.GetAsync(userId);
+        if (accessContext is null)
+            return [];
+
+        var codes = new List<string>(accessContext.FeatureCodes);
+
+        var rolePermissions = await context.RolePermissions
+            .AsNoTracking()
+            .Where(rp => rp.IsAllowed &&
+                context.UserRoles.Any(ur => ur.UserId == userId && ur.RoleId == rp.RoleId))
+            .Select(rp => $"{rp.MenuId}:{rp.ActionCode}")
+            .Distinct()
+            .ToListAsync();
+
+        codes.AddRange(rolePermissions);
+
+        return codes;
     }
 
     public async Task<UserInfoDto?> GetUserInfoAsync(ClaimsPrincipal principal)

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Features.Content.Dtos;
 using WebApplication1.Features.Content.Services.Interfaces;
 using WebApplication1.Shared.Common;
@@ -8,6 +9,7 @@ namespace WebApplication1.Features.Content.Controllers;
 
 [ApiController]
 [Authorize]
+[RequireFeature("GROWTH_KNOWLEDGE")]
 [Route("api/content")]
 [Tags("Content")]
 public class ContentController(IContentService contentService) : BaseApiController

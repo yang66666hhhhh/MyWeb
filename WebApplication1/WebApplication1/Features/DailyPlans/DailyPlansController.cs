@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Shared.Common;
 
 namespace WebApplication1.Features.DailyPlans;
 
 [ApiController]
 [Authorize]
+[RequireFeature("GROWTH_DAILY_PLAN")]
 [Route("api/growth/daily-plans")]
 [Tags("Daily Plans")]
 public class DailyPlansController(IDailyPlanService dailyPlanService) : BaseApiController

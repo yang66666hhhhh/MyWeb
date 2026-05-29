@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Features.Growth.Dtos;
 using WebApplication1.Features.Growth.Services.Interfaces;
 using WebApplication1.Shared.Common;
@@ -8,6 +9,7 @@ namespace WebApplication1.Features.Growth.Controllers;
 
 [ApiController]
 [Authorize]
+[RequireFeature("GROWTH_KNOWLEDGE")]
 [Route("api/growth/knowledge-base")]
 [Tags("Growth - Knowledge Base")]
 public class KnowledgeBaseController(IKnowledgeArticleService articleService) : BaseApiController

@@ -29,13 +29,6 @@ public class RoleMenu : EntityBase
     public List<MenuAction> Actions { get; set; } = new();
 }
 
-public enum MenuBindingType
-{
-    Role = 0,
-    Persona = 1,
-    Tag = 2,
-}
-
 public static class MenuCategories
 {
     public const string Dashboard = "Dashboard";

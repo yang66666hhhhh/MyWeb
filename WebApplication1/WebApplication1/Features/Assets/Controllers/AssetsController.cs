@@ -2,12 +2,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Features.Assets.Dtos;
 using WebApplication1.Features.Assets.Services.Interfaces;
+using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Shared.Common;
 
 namespace WebApplication1.Features.Assets.Controllers;
 
 [ApiController]
 [Authorize]
+[RequireFeature("ASSET_DASHBOARD")]
 [Route("api/assets")]
 [Tags("Assets")]
 public class AssetsController(IAssetService assetService) : BaseApiController
