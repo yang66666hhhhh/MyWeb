@@ -1,69 +1,242 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Alert, Button, Card, Col, Row, Statistic, Table, Tag } from 'ant-design-vue';
+import {
+  Button,
+  Card,
+  Col,
+  DatePicker,
+  Form,
+  FormItem,
+  Input,
+  InputNumber,
+  message,
+  Modal,
+  Popconfirm,
+  Row,
+  Select,
+  SelectOption,
+  Statistic,
+  Table,
+  Tag,
+} from 'ant-design-vue';
+
+import type { CreateIncomeInput, Income } from '#/api/assets';
+
+import { createIncomeApi, deleteIncomeApi, getIncomePageApi, updateIncomeApi } from '#/api/assets';
 
 const loading = ref(false);
+const dataList = ref<Income[]>([]);
+const total = ref(0);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const modalVisible = ref(false);
+const editingId = ref<string | null>(null);
+const submitting = ref(false);
 
-const income = ref([
-  { id: '1', date: '2024-01-15', source: '工资', amount: 15_000, category: '固定收入', note: '月工资' },
-  { id: '2', date: '2024-01-10', source: '兼职', amount: 3000, category: '兼职收入', note: '周末兼职' },
-  { id: '3', date: '2024-01-05', source: '投资收益', amount: 500, category: '投资', note: '基金分红' },
-]);
+const formState = reactive<CreateIncomeInput>({
+  incomeDate: '',
+  category: '',
+  title: '',
+  amount: 0,
+  description: '',
+  remark: '',
+});
+
+const categoryOptions = ['固定收入', '兼职收入', '投资收益', '奖金', '其他'];
+
+const monthlyIncome = computed(() => {
+  const now = new Date();
+  return dataList.value
+    .filter((item) => {
+      const date = new Date(item.incomeDate);
+      return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+    })
+    .reduce((sum, item) => sum + item.amount, 0);
+});
 
 const columns = [
-  { title: '日期', dataIndex: 'date', key: 'date' },
-  { title: '来源', dataIndex: 'source', key: 'source' },
-  { title: '金额', dataIndex: 'amount', key: 'amount' },
-  { title: '分类', dataIndex: 'category', key: 'category' },
-  { title: '备注', dataIndex: 'note', key: 'note' },
+  { title: '日期', dataIndex: 'incomeDate', key: 'incomeDate', width: 120 },
+  { title: '标题', dataIndex: 'title', key: 'title' },
+  { title: '金额', key: 'amount', width: 120 },
+  { title: '分类', dataIndex: 'category', key: 'category', width: 100 },
+  { title: '备注', dataIndex: 'remark', key: 'remark' },
+  { title: '操作', key: 'action', width: 150 },
 ];
 
 const categoryColors: Record<string, string> = {
   '固定收入': 'blue',
   '兼职收入': 'green',
-  '投资': 'purple',
+  '投资收益': 'purple',
+  '奖金': 'orange',
+  '其他': 'default',
 };
+
+const fetchData = async () => {
+  loading.value = true;
+  try {
+    const res = await getIncomePageApi({ page: currentPage.value, pageSize: pageSize.value });
+    dataList.value = res.items;
+    total.value = res.total;
+  } catch {
+    // ignore
+  } finally {
+    loading.value = false;
+  }
+};
+
+const handleAdd = () => {
+  editingId.value = null;
+  Object.assign(formState, {
+    incomeDate: '',
+    category: '',
+    title: '',
+    amount: 0,
+    description: '',
+    remark: '',
+  });
+  modalVisible.value = true;
+};
+
+const handleEdit = (record: Income) => {
+  editingId.value = record.id;
+  Object.assign(formState, {
+    incomeDate: record.incomeDate,
+    category: record.category,
+    title: record.title,
+    amount: record.amount,
+    description: record.description || '',
+    remark: record.remark || '',
+  });
+  modalVisible.value = true;
+};
+
+const handleDelete = async (id: string) => {
+  try {
+    await deleteIncomeApi(id);
+    message.success('删除成功');
+    fetchData();
+  } catch {
+    message.error('删除失败');
+  }
+};
+
+const handleSubmit = async () => {
+  if (!formState.title || !formState.incomeDate || !formState.amount) {
+    message.warning('请填写必填项');
+    return;
+  }
+  submitting.value = true;
+  try {
+    if (editingId.value) {
+      await updateIncomeApi(editingId.value, formState);
+      message.success('更新成功');
+    } else {
+      await createIncomeApi(formState);
+      message.success('创建成功');
+    }
+    modalVisible.value = false;
+    fetchData();
+  } catch {
+    message.error('操作失败');
+  } finally {
+    submitting.value = false;
+  }
+};
+
+const handlePageChange = (page: number, size: number) => {
+  currentPage.value = page;
+  pageSize.value = size;
+  fetchData();
+};
+
+onMounted(() => {
+  fetchData();
+});
 </script>
 
 <template>
   <Page description="记录和管理收入" title="收入管理">
-    <Alert
-      class="mb-4"
-      message="功能开发中"
-      description="后端API正在开发中，当前为模拟数据"
-      show-icon
-      type="warning"
-    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="本月收入" prefix="¥" :value="18500" /></Card>
+        <Card :loading="loading">
+          <Statistic title="本月收入" prefix="¥" :value="monthlyIncome" />
+        </Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="固定收入" prefix="¥" :value="15000" /></Card>
-      </Col>
-      <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="兼职收入" prefix="¥" :value="3000" /></Card>
-      </Col>
-      <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="投资收益" prefix="¥" :value="500" /></Card>
+        <Card :loading="loading">
+          <Statistic title="记录总数" :value="total" suffix="条" />
+        </Card>
       </Col>
     </Row>
 
     <Card title="收入记录">
-      <template #extra><Button type="primary">记录收入</Button></template>
-      <Table :columns="columns" :data-source="income" :loading="loading" row-key="id">
+      <template #extra>
+        <Button type="primary" @click="handleAdd">记录收入</Button>
+      </template>
+      <Table
+        :columns="columns"
+        :data-source="dataList"
+        :loading="loading"
+        :pagination="{
+          current: currentPage,
+          pageSize,
+          total,
+          showSizeChanger: true,
+          showTotal: (t: number) => `共 ${t} 条`,
+          onChange: handlePageChange,
+        }"
+        row-key="id"
+      >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'amount'">
             <span class="text-green-500">+¥{{ record.amount.toLocaleString() }}</span>
           </template>
           <template v-else-if="column.key === 'category'">
-            <Tag :color="categoryColors[record.category]">{{ record.category }}</Tag>
+            <Tag :color="categoryColors[record.category] || 'default'">{{ record.category }}</Tag>
+          </template>
+          <template v-else-if="column.key === 'action'">
+            <div class="flex gap-2">
+              <Button type="link" size="small" @click="handleEdit(record as Income)">编辑</Button>
+              <Popconfirm title="确认删除?" @confirm="handleDelete(record.id)">
+                <Button type="link" size="small" danger>删除</Button>
+              </Popconfirm>
+            </div>
           </template>
         </template>
       </Table>
     </Card>
+
+    <Modal
+      v-model:open="modalVisible"
+      :title="editingId ? '编辑收入' : '记录收入'"
+      :confirm-loading="submitting"
+      @ok="handleSubmit"
+    >
+      <Form layout="vertical">
+        <FormItem label="日期" required>
+          <DatePicker v-model:value="formState.incomeDate" style="width: 100%" />
+        </FormItem>
+        <FormItem label="标题" required>
+          <Input v-model:value="formState.title" placeholder="收入标题" />
+        </FormItem>
+        <FormItem label="金额" required>
+          <InputNumber v-model:value="formState.amount" :min="0" :precision="2" style="width: 100%" prefix="¥" />
+        </FormItem>
+        <FormItem label="分类">
+          <Select v-model:value="formState.category" placeholder="选择分类">
+            <SelectOption v-for="cat in categoryOptions" :key="cat" :value="cat">{{ cat }}</SelectOption>
+          </Select>
+        </FormItem>
+        <FormItem label="描述">
+          <Input v-model:value="formState.description" placeholder="描述" />
+        </FormItem>
+        <FormItem label="备注">
+          <Input.TextArea v-model:value="formState.remark" placeholder="备注" />
+        </FormItem>
+      </Form>
+    </Modal>
   </Page>
 </template>
