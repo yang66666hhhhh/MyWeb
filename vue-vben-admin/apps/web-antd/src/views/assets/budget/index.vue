@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -35,6 +36,11 @@ const pageSize = ref(10);
 const modalVisible = ref(false);
 const editingId = ref<string | null>(null);
 const submitting = ref(false);
+
+const accessStore = useAccessStore();
+const canCreateBudget = computed(() => accessStore.accessCodes.includes('ASSET_BUDGET'));
+const canEditBudget = computed(() => accessStore.accessCodes.includes('ASSET_BUDGET'));
+const canDeleteBudget = computed(() => accessStore.accessCodes.includes('ASSET_BUDGET'));
 
 const formState = reactive<CreateBudgetInput>({
   year: new Date().getFullYear(),
@@ -177,7 +183,7 @@ onMounted(() => {
 
     <Card title="预算列表">
       <template #extra>
-        <Button type="primary" @click="handleAdd">设置预算</Button>
+        <Button v-if="canCreateBudget" type="primary" @click="handleAdd">设置预算</Button>
       </template>
       <Table
         :columns="columns"
@@ -214,8 +220,8 @@ onMounted(() => {
           </template>
           <template v-else-if="column.key === 'action'">
             <div class="flex gap-2">
-              <Button type="link" size="small" @click="handleEdit(record as Budget)">编辑</Button>
-              <Popconfirm title="确认删除?" @confirm="handleDelete(record.id)">
+              <Button v-if="canEditBudget" type="link" size="small" @click="handleEdit(record as Budget)">编辑</Button>
+              <Popconfirm v-if="canDeleteBudget" title="确认删除?" @confirm="handleDelete(record.id)">
                 <Button type="link" size="small" danger>删除</Button>
               </Popconfirm>
             </div>

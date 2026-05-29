@@ -117,19 +117,7 @@ public class AuthService(
         if (accessContext is null)
             return [];
 
-        var codes = new List<string>(accessContext.FeatureCodes);
-
-        var rolePermissions = await context.RolePermissions
-            .AsNoTracking()
-            .Where(rp => rp.IsAllowed &&
-                context.UserRoles.Any(ur => ur.UserId == userId && ur.RoleId == rp.RoleId))
-            .Select(rp => $"{rp.MenuId}:{rp.ActionCode}")
-            .Distinct()
-            .ToListAsync();
-
-        codes.AddRange(rolePermissions);
-
-        return codes;
+        return accessContext.FeatureCodes.ToList();
     }
 
     public async Task<UserInfoDto?> GetUserInfoAsync(ClaimsPrincipal principal)

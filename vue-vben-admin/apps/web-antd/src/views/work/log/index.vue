@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -39,6 +40,11 @@ const formOpen = ref(false);
 const detailOpen = ref(false);
 const editingId = ref<null | string>(null);
 const selectedItem = ref<WorkLog | null>(null);
+
+const accessStore = useAccessStore();
+const canCreateLog = computed(() => accessStore.accessCodes.includes('WORK_LOG'));
+const canEditLog = computed(() => accessStore.accessCodes.includes('WORK_LOG'));
+const canDeleteLog = computed(() => accessStore.accessCodes.includes('WORK_LOG'));
 
 const projectOptions = [
   { label: '生产线升级项目', value: 'project-1' },
@@ -178,7 +184,7 @@ onMounted(() => {
               </Space>
             </Form.Item>
           </Form>
-          <Button type="primary" @click="openCreate">新增日志</Button>
+          <Button v-if="canCreateLog" type="primary" @click="openCreate">新增日志</Button>
         </div>
       </Card>
 
@@ -233,8 +239,8 @@ onMounted(() => {
             <template v-else-if="column.key === 'action'">
               <Space>
                 <Button size="small" type="link" @click="showDetail(record)">详情</Button>
-                <Button size="small" type="link" @click="openEdit(record)">编辑</Button>
-                <Popconfirm title="确认删除？" @confirm="handleRemove(record.id)">
+                <Button v-if="canEditLog" size="small" type="link" @click="openEdit(record)">编辑</Button>
+                <Popconfirm v-if="canDeleteLog" title="确认删除？" @confirm="handleRemove(record.id)">
                   <Button danger size="small" type="link">删除</Button>
                 </Popconfirm>
               </Space>

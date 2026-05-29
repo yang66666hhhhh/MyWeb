@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -47,6 +48,11 @@ const keyword = ref('');
 const subject = ref<string | undefined>();
 const type = ref<number | undefined>();
 const materials = ref<ExamMaterial[]>([]);
+
+const accessStore = useAccessStore();
+const canCreateMaterial = computed(() => accessStore.accessCodes.includes('STUDENT_MATERIALS'));
+const canEditMaterial = computed(() => accessStore.accessCodes.includes('STUDENT_MATERIALS'));
+const canDeleteMaterial = computed(() => accessStore.accessCodes.includes('STUDENT_MATERIALS'));
 
 const defaultSubjects = ['数据结构', '操作系统', '计算机网络', '计算机组成原理', '数学', '英语', '政治'];
 
@@ -268,7 +274,7 @@ onMounted(() => {
           />
           <Button type="primary" @click="fetchMaterials">查询</Button>
           <Button @click="resetFilters">重置</Button>
-          <Button type="primary" @click="openCreate">新增资料</Button>
+          <Button v-if="canCreateMaterial" type="primary" @click="openCreate">新增资料</Button>
         </Space>
       </template>
 
@@ -309,8 +315,8 @@ onMounted(() => {
           <template v-else-if="column.key === 'action'">
             <Space>
               <Button size="small" type="link" @click="openDetail(toMaterial(record))">查看</Button>
-              <Button size="small" type="link" @click="openEdit(toMaterial(record))">编辑</Button>
-              <Popconfirm title="确认删除该资料？" @confirm="handleDelete(record.id)">
+              <Button v-if="canEditMaterial" size="small" type="link" @click="openEdit(toMaterial(record))">编辑</Button>
+              <Popconfirm v-if="canDeleteMaterial" title="确认删除该资料？" @confirm="handleDelete(record.id)">
                 <Button danger size="small" type="link">删除</Button>
               </Popconfirm>
             </Space>

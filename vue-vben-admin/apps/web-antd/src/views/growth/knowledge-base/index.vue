@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import type { KnowledgeArticle } from '#/api/growth';
 
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -29,6 +30,11 @@ const formOpen = ref(false);
 const detailOpen = ref(false);
 const editingId = ref<null | string>(null);
 const selectedItem = ref<KnowledgeArticle | null>(null);
+
+const accessStore = useAccessStore();
+const canCreateKnowledge = computed(() => accessStore.accessCodes.includes('GROWTH_KNOWLEDGE'));
+const canEditKnowledge = computed(() => accessStore.accessCodes.includes('GROWTH_KNOWLEDGE'));
+const canDeleteKnowledge = computed(() => accessStore.accessCodes.includes('GROWTH_KNOWLEDGE'));
 
 const categoryOptions = [
   { label: '学习/数据结构', value: '学习/数据结构' },
@@ -151,7 +157,7 @@ onMounted(() => {
               </Space>
             </Form.Item>
           </Form>
-          <Button type="primary" @click="openCreate">新增笔记</Button>
+          <Button v-if="canCreateKnowledge" type="primary" @click="openCreate">新增笔记</Button>
         </div>
       </Card>
 
@@ -203,8 +209,8 @@ onMounted(() => {
             <template v-else-if="column.key === 'action'">
               <Space>
                 <Button size="small" type="link" @click="showDetail(record)">详情</Button>
-                <Button size="small" type="link" @click="openEdit(record)">编辑</Button>
-                <Popconfirm title="确认删除这篇笔记？" @confirm="remove(record.id)">
+                <Button v-if="canEditKnowledge" size="small" type="link" @click="openEdit(record)">编辑</Button>
+                <Popconfirm v-if="canDeleteKnowledge" title="确认删除这篇笔记？" @confirm="remove(record.id)">
                   <Button danger size="small" type="link">删除</Button>
                 </Popconfirm>
               </Space>

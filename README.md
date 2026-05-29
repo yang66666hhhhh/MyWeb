@@ -262,12 +262,13 @@ vue-vben-admin/apps/web-antd/.env.production
 
 - 按钮级权限：修复 `GetAccessCodesAsync` 硬编码，接入 `UserAccessContextService`
 - API Feature 覆盖：为 13 个 Controller 补充 `[RequireFeature]` 标记
-- 系统管理权限：为 6 个 Controller 补充 `[Authorize(Roles = "owner")]` 角色限制
+- 系统管理权限：为 5 个 Controller 补充 `[Authorize(Roles = "owner")]` 角色限制
+- RoleMenuController 修复：移除类级别角色限制，确保 pro/member 用户可以获取菜单
 - 废弃代码清理：删除 `MenuBindingType` 枚举
 
 **前端按钮级权限应用：**
 
-- 为 Work/Student/Content/Network/Assets/Growth/AI/System 模块的 16 个页面添加了按钮级权限控制
+- 为 Work/Student/Content/Network/Assets/Growth/AI/System 模块的 20 个页面添加了按钮级权限控制
 - 使用 `useAccessStore().accessCodes` + `v-if` 控制按钮显示
 
 **测试结果：** 140 个后端测试全部通过，前端类型检查和构建成功

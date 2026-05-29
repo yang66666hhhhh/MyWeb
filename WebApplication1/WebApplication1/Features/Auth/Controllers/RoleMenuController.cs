@@ -13,7 +13,6 @@ namespace WebApplication1.Features.Auth.Controllers;
 [ApiController]
 [Route("api/system/role-menus")]
 [Authorize]
-[Authorize(Roles = "owner")]
 [Tags("Admin - Role Menus")]
 public class RoleMenuController(
     RoleMenuService roleMenuService,
@@ -21,7 +20,6 @@ public class RoleMenuController(
     AppDbContext context) : ControllerBase
 {
     [HttpGet("mine")]
-    [Authorize]
     public async Task<ActionResult<ApiResult<List<RoleMenuDto>>>> GetMyMenus(CancellationToken cancellationToken)
     {
         var userId = await GetCurrentExistingUserIdAsync(cancellationToken);
