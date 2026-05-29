@@ -207,6 +207,15 @@
 │   ├── 学习记录 (/student/records)
 │   └── 科目目标 (/student/subjects)
 │
+├── 内容管理 (/content) [Pro, Content]
+│   ├── 文章管理 (/content/article) [Pro]
+│   ├── 媒体文件 (/content/media) [Pro]
+│   └── 发布日历 (/content/calendar) [Pro]
+│
+├── 人脉网络 (/network) [Pro, Network]
+│   ├── 联系人 (/network/contact) [Pro]
+│   └── 互动记录 (/network/interaction) [Pro]
+│
 ├── 实验中心 (/labs) [Pro]
 │   ├── AI实验室 (/labs/ai-lab)
 │   ├── 数据实验室 (/labs/data-lab)
@@ -356,6 +365,8 @@
 - **WorkImports** - 数据导入
 - **AiPlans** / **AiReports** / **AiChatSessions** - AI模块
 - **Income** / **Expense** / **Budget** / **Investment** - 财务资产
+- **Articles** / **MediaItems** / **PublishingCalendars** - 内容管理
+- **Contacts** / **Interactions** - 人脉网络
 - **RoleMenus** - 角色菜单
 - **MenuActions** / **RolePermissions** - 按钮级权限
 
@@ -486,6 +497,42 @@
 | GET | `/` | 获取所有身份类型 |
 | GET | `/{code}` | 获取特定身份 |
 
+### 5.14 内容管理 `/api/content`
+
+| 方法 | 端点 | 描述 |
+|---|---|---|
+| GET | `/articles` | 文章分页列表 |
+| GET | `/articles/{id}` | 获取单篇文章 |
+| POST | `/articles` | 创建文章 |
+| PUT | `/articles/{id}` | 更新文章 |
+| DELETE | `/articles/{id}` | 删除文章 |
+| GET | `/media` | 媒体分页列表 |
+| GET | `/media/{id}` | 获取单个媒体 |
+| POST | `/media` | 创建媒体 |
+| PUT | `/media/{id}` | 更新媒体 |
+| DELETE | `/media/{id}` | 删除媒体 |
+| GET | `/calendar` | 发布日历分页列表 |
+| GET | `/calendar/{id}` | 获取单条日历 |
+| POST | `/calendar` | 创建发布日历 |
+| PUT | `/calendar/{id}` | 更新发布日历 |
+| DELETE | `/calendar/{id}` | 删除发布日历 |
+
+### 5.15 人脉网络 `/api/network`
+
+| 方法 | 端点 | 描述 |
+|---|---|---|
+| GET | `/contacts` | 联系人分页列表 |
+| GET | `/contacts/{id}` | 获取单个联系人 |
+| POST | `/contacts` | 创建联系人 |
+| PUT | `/contacts/{id}` | 更新联系人 |
+| DELETE | `/contacts/{id}` | 删除联系人 |
+| GET | `/contacts/{contactId}/interactions` | 某联系人互动记录列表 |
+| GET | `/interactions/{id}` | 获取单条互动记录 |
+| POST | `/interactions` | 创建互动记录 |
+| PUT | `/interactions/{id}` | 更新互动记录 |
+| DELETE | `/interactions/{id}` | 删除互动记录 |
+| GET | `/tags` | 获取联系人标签列表 |
+
 ---
 
 ## 6. 内置用户
@@ -501,7 +548,7 @@
 
 ## 7. 前端结构
 
-### 7.1 路由模块 (14个)
+### 7.1 路由模块 (16个)
 
 | 模块 | 路径 | 页面数 |
 |---|---|---|
@@ -512,6 +559,8 @@
 | ai | /ai | 6 |
 | analytics | /analytics | 7 |
 | system | /system | 4 |
+| content | /content | 3 |
+| network | /network | 2 |
 | dev | /dev | 3 |
 | design | /design | 2 |
 | teacher | /teacher | 2 |
@@ -521,9 +570,9 @@
 | _core | /auth, /profile, /fallback | 14 |
 | other | /external-links, /about, /demos | 3 |
 
-**总计: 85 个页面**
+**总计: 90 个页面**
 
-### 7.2 API 文件 (29个)
+### 7.2 API 文件 (33个)
 
 ```
 api/
@@ -535,6 +584,9 @@ api/
 │                project.ts, task.ts, index.ts, types.ts)
 ├── student/    (index.ts)
 ├── ai/         (index.ts)
+├── assets/     (index.ts)
+├── content/    (index.ts)
+├── network/    (index.ts)
 ├── analytics.ts
 └── request.ts
 ```
@@ -634,7 +686,19 @@ public async Task<HashSet<string>> GetUserFeaturesAsync(Guid userId)
 }
 ```
 
-### 10.3 WorkLogTemplate (动态日志)
+### 10.3 AuthService.GetAccessCodesAsync
+
+```csharp
+public async Task<IReadOnlyList<string>> GetAccessCodesAsync(ClaimsPrincipal principal)
+{
+    // 1. 从 JWT 获取 UserId
+    // 2. 调用 UserAccessContextService.GetAsync 获取 FeatureCodes
+    // 3. 查询 RolePermissions 表获取按钮权限码
+    // 4. 合并返回 FeatureCodes + 按钮权限码
+}
+```
+
+### 10.4 WorkLogTemplate (动态日志)
 
 ```json
 {
@@ -651,12 +715,62 @@ public async Task<HashSet<string>> GetUserFeaturesAsync(Guid userId)
 ## 11. 已知问题
 
 1. ~~两套每日计划~~（已修复 → 统一为 Tasks 表）
-2. **AI模块桩代码**：需配置 OPENAI_API_KEY 环境变量启用真实AI
+2. **AI模块桩代码**：需配置 OPENAI_API_KEY 环境变量启用真实AI；automation/knowledge-chat/insights 页面暂为桩代码
 3. ~~前端角色选项~~（已修复）
+4. **甘特图**：当前使用 Table 模拟，需引入专业甘特图库
+5. **Persona 中心**：开发者/设计师/教师中心暂为桩代码，后端无对应 API
 
 ---
 
-## 12. 环境变量
+## 12. API Feature 覆盖矩阵
+
+### 12.1 已覆盖 [RequireFeature] 的 Controller
+
+| Controller | Feature Code | 模块 |
+|-----------|-------------|------|
+| HabitsController | GROWTH_HABIT | Growth |
+| KnowledgeBaseController | GROWTH_KNOWLEDGE | Growth |
+| DailyPlansController | GROWTH_DAILY_PLAN | Growth |
+| AnalyticsController | ANALYTICS_GROWTH | Analytics |
+| GrowthProjectsController | GROWTH_SKILL | Growth |
+| TasksController | WORK_TASK | Work |
+| WorkLogsController | WORK_LOG | Work |
+| WorkProjectsController | WORK_PROJECT | Work |
+| WorkDevicesController | WORK_DEVICE | Work |
+| WorkStatisticsController | WORK_STATISTICS | Work |
+| WorkImportsController | WORK_IMPORT | Work |
+| ImplLogController | WORK_LOG | Work |
+| WeeklyPlanController | WORK_TASK | Work |
+| WorkDailyPlansController | WORK_TASK | Work |
+| SoftwareAssetController | WORK_DEVICE | Work |
+| WorkLogTemplateController | WORK_LOG | Work |
+| TemplatesController | WORK_TASK | Work |
+| WorkTaskTypesController | WORK_TASK | Work |
+| AssetsController | ASSET_DASHBOARD | Assets |
+| ContentController | GROWTH_KNOWLEDGE | Content |
+| NetworkController | GROWTH_KNOWLEDGE | Network |
+| PostgraduateController | STUDENT_* | Student |
+| AiController | AI_* | AI |
+
+### 12.2 系统管理 Controller（仅需 [Authorize]）
+
+| Controller | 说明 |
+|-----------|------|
+| UsersController | 用户管理 |
+| RoleMenuController | 角色菜单管理 |
+| MenuAdminController | 菜单管理 |
+| FeatureController | 功能管理 |
+| PersonaFeatureController | Persona 功能管理 |
+| SubscriptionController | 订阅管理 |
+| PersonaTypeController | 身份类型管理 |
+| UserPersonaController | 用户身份管理 |
+| TagsController | 标签管理 |
+| UserTagController | 用户标签管理 |
+| UserTypeController | 用户类型管理 |
+
+---
+
+## 13. 环境变量
 
 生产环境需设置以下环境变量：
 
@@ -668,7 +782,7 @@ public async Task<HashSet<string>> GetUserFeaturesAsync(Guid userId)
 
 ---
 
-## 13. 数据库迁移
+## 14. 数据库迁移
 
 ```bash
 rtk dotnet ef database drop --force  # 首次或重置
@@ -677,17 +791,45 @@ rtk dotnet ef database update
 
 ---
 
-## 14. 测试
+## 15. 测试
 
 ```bash
 rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.csproj --no-restore
 ```
 
-当前测试覆盖：TaskItemService, KnowledgeArticleService, DailyPlanService, WorkProjectService, RoleMenuService
+当前测试覆盖：TaskItemService, KnowledgeArticleService, DailyPlanService, WorkProjectService, RoleMenuService, UserAccessContextService, ImplLogService, AiService, ContentService, AssetService, Validator, DbSeeder, MemoryCacheService, HealthCheck
+
+**测试总数：140 个**
 
 ---
 
-## 15. 更新日志
+## 16. 更新日志
+
+### v2.1 (2025-05-29)
+
+**前端对接后端 API（消除硬编码）：**
+
+- **财务资产模块**：新建 `api/assets/index.ts`，重写 5 个页面（dashboard/income/expenses/budget/investments），对接后端 21 个 API 端点
+- **AI 助手/报告**：重写 `ai/assistant/index.vue` 和 `ai/reports/index.vue`，对接真实聊天和报告生成 API
+- **工作分析**：重写 `analytics/work/index.vue`，对接 `statisticsApi` 4 个端点
+- **内容管理模块**：新建 `api/content/index.ts`、3 个页面（article/media/calendar）、路由文件，对接后端 15 个 API 端点
+- **人脉网络模块**：新建 `api/network/index.ts`、2 个页面（contact/interaction）、路由文件，对接后端 11 个 API 端点
+
+**后端优化：**
+
+- **按钮级权限**：修复 `AuthService.GetAccessCodesAsync` 硬编码问题，改为调用 `UserAccessContextService` 获取真实 FeatureCodes，并查询 `RolePermissions` 表获取按钮权限
+- **API Feature 覆盖**：为 12 个 Controller 补充 `[RequireFeature]` 标记
+  - Growth: HabitsController, KnowledgeBaseController, DailyPlansController, AnalyticsController, GrowthProjectsController
+  - Work: SoftwareAssetController, WorkLogTemplateController, TemplatesController, WorkTaskTypesController
+  - Assets: AssetsController
+  - Content: ContentController
+  - Network: NetworkController
+- **废弃代码清理**：删除 `MenuBindingType` 枚举
+
+**测试结果：**
+- 后端测试：140 个全部通过
+- 前端类型检查：通过
+- 前端构建：成功
 
 ### v2.0 (2025-05)
 
