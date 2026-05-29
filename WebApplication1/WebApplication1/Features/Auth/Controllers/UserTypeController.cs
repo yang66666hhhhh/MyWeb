@@ -8,7 +8,7 @@ using WebApplication1.Shared.Data;
 namespace WebApplication1.Features.Auth.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = "owner")]
 [Route("api/system/user-types")]
 [Tags("Admin - User Types")]
 public class UserTypeController(AppDbContext db) : ControllerBase

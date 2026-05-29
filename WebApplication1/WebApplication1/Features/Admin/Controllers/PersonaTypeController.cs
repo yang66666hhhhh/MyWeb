@@ -8,7 +8,7 @@ namespace WebApplication1.Features.Admin.Controllers;
 
 [ApiController]
 [Route("api/system/persona-types")]
-[Authorize]
+[Authorize(Roles = "owner")]
 [Tags("Admin - Personas")]
 public class PersonaTypeController : ControllerBase
 {

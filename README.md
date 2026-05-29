@@ -12,6 +12,20 @@
 - 鉴权：JWT Bearer
 - AI：OpenAI API，可选配置；未配置时接口会返回明确的不可用状态
 
+## 模块概览
+
+| 模块 | 路径 | 说明 |
+|------|------|------|
+| 个人成长 | `/growth` | 习惯打卡、每日计划、知识库、技能管理等 |
+| 工作中心 | `/work` | 工作日志、项目管理、设备管理、统计分析等 |
+| AI 助手 | `/ai` | AI 对话、智能计划、AI 报告 |
+| 财务资产 | `/assets` | 收入/支出/预算/投资管理 |
+| 内容管理 | `/content` | 文章、媒体文件、发布日历 |
+| 人脉网络 | `/network` | 联系人、互动记录 |
+| 数据分析 | `/analytics` | 成长/工作/财务/时间/习惯分析 |
+| 学生中心 | `/student` | 学习计划、错题本、学习资料、科目目标 |
+| 平台管理 | `/system` | 用户、角色菜单、身份类型管理 |
+
 ## 本地准备
 
 需要安装：
@@ -120,7 +134,7 @@ http://localhost:5062/api
 
 ## 本地验证
 
-后端测试：
+后端测试（140 个）：
 
 ```powershell
 rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.csproj --no-restore
@@ -165,6 +179,8 @@ Owner：拥有全部启用功能
 ```
 
 前端页面内部也必须按 `accessCodes` 降级。基础页面不能无条件请求 Pro 接口；没有权限的统计卡、下拉、快捷入口和操作按钮应隐藏或降级为普通输入，避免用户看到 403 红色提示。
+
+按钮级权限通过 `AuthService.GetAccessCodesAsync` 返回，包含 FeatureCodes 和 RolePermissions。
 
 学生模块统一使用 `/api/student/...`，不再使用旧的 postgraduate 路由。
 
@@ -229,3 +245,24 @@ vue-vben-admin/apps/web-antd/.env.production
 - `JWT_SECRET_KEY`
 - `OPENAI_API_KEY`，如果启用 AI 功能
 - `Cors:Origins`，允许的前端域名
+
+## 更新日志
+
+### v2.1 (2025-05-29)
+
+**前端对接后端 API（消除硬编码）：**
+
+- 财务资产模块：5 个页面对接后端 21 个 API 端点
+- AI 助手/报告：2 个页面对接真实聊天和报告生成 API
+- 工作分析：1 个页面对接统计 API 4 个端点
+- 内容管理模块：新建 3 个页面，对接后端 15 个 API 端点
+- 人脉网络模块：新建 2 个页面，对接后端 11 个 API 端点
+
+**后端优化：**
+
+- 按钮级权限：修复 `GetAccessCodesAsync` 硬编码，接入 `UserAccessContextService`
+- API Feature 覆盖：为 13 个 Controller 补充 `[RequireFeature]` 标记
+- 系统管理权限：为 6 个 Controller 补充 `[Authorize(Roles = "owner")]` 角色限制
+- 废弃代码清理：删除 `MenuBindingType` 枚举
+
+**测试结果：** 140 个后端测试全部通过，前端类型检查和构建成功

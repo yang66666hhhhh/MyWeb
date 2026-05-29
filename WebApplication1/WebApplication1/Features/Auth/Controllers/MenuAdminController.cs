@@ -9,7 +9,7 @@ using WebApplication1.Shared.Data;
 namespace WebApplication1.Features.Auth.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = "owner")]
 [Route("api/system/menus")]
 [Tags("Admin - Menus")]
 public class MenuAdminController(AppDbContext db) : ControllerBase

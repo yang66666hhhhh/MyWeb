@@ -746,27 +746,38 @@ public async Task<IReadOnlyList<string>> GetAccessCodesAsync(ClaimsPrincipal pri
 | WorkLogTemplateController | WORK_LOG | Work |
 | TemplatesController | WORK_TASK | Work |
 | WorkTaskTypesController | WORK_TASK | Work |
+| WorkCategoryController | WORK_LOG | Work |
 | AssetsController | ASSET_DASHBOARD | Assets |
 | ContentController | GROWTH_KNOWLEDGE | Content |
 | NetworkController | GROWTH_KNOWLEDGE | Network |
 | PostgraduateController | STUDENT_* | Student |
 | AiController | AI_* | AI |
 
-### 12.2 系统管理 Controller（仅需 [Authorize]）
+### 12.2 系统管理 Controller（角色限制）
+
+| Controller | 角色限制 | 说明 |
+|-----------|---------|------|
+| UsersController | pro,owner | 用户管理 |
+| RoleMenuController | owner | 角色菜单管理 |
+| MenuAdminController | owner | 菜单管理 |
+| FeatureController | owner | 功能管理 |
+| PersonaFeatureController | owner | Persona 功能管理 |
+| SubscriptionController | - | 订阅管理（用户自己的订阅） |
+| PersonaTypeController | owner | 身份类型管理 |
+| UserPersonaController | - | 用户身份管理（用户自己的身份） |
+| TagsController | owner | 标签管理 |
+| UserTagController | owner | 用户标签管理 |
+| UserTypeController | owner | 用户类型管理 |
+| UserPersonaAdminController | owner | 用户身份管理（管理） |
+
+### 12.3 用户基础 Controller（仅需 [Authorize]）
 
 | Controller | 说明 |
 |-----------|------|
-| UsersController | 用户管理 |
-| RoleMenuController | 角色菜单管理 |
-| MenuAdminController | 菜单管理 |
-| FeatureController | 功能管理 |
-| PersonaFeatureController | Persona 功能管理 |
-| SubscriptionController | 订阅管理 |
-| PersonaTypeController | 身份类型管理 |
-| UserPersonaController | 用户身份管理 |
-| TagsController | 标签管理 |
-| UserTagController | 用户标签管理 |
-| UserTypeController | 用户类型管理 |
+| AuthController | 认证（登录/注册/刷新令牌） |
+| UserController | 用户信息 |
+| UserProfileController | 用户资料 |
+| UserPersonaController | 用户身份切换 |
 
 ---
 
@@ -818,12 +829,14 @@ rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.cspr
 **后端优化：**
 
 - **按钮级权限**：修复 `AuthService.GetAccessCodesAsync` 硬编码问题，改为调用 `UserAccessContextService` 获取真实 FeatureCodes，并查询 `RolePermissions` 表获取按钮权限
-- **API Feature 覆盖**：为 12 个 Controller 补充 `[RequireFeature]` 标记
+- **API Feature 覆盖**：为 13 个 Controller 补充 `[RequireFeature]` 标记
   - Growth: HabitsController, KnowledgeBaseController, DailyPlansController, AnalyticsController, GrowthProjectsController
-  - Work: SoftwareAssetController, WorkLogTemplateController, TemplatesController, WorkTaskTypesController
+  - Work: SoftwareAssetController, WorkLogTemplateController, TemplatesController, WorkTaskTypesController, WorkCategoryController
   - Assets: AssetsController
   - Content: ContentController
   - Network: NetworkController
+- **系统管理权限**：为 6 个 Controller 补充 `[Authorize(Roles = "owner")]` 角色限制
+  - UserTypeController, UserTagController, TagsController, MenuAdminController, RoleMenuController, PersonaTypeController
 - **废弃代码清理**：删除 `MenuBindingType` 枚举
 
 **测试结果：**

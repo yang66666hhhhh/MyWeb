@@ -9,7 +9,7 @@ using WebApplication1.Shared.Data;
 namespace WebApplication1.Features.Auth.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = "owner")]
 [Route("api/system/tags")]
 [Tags("Tags")]
 public class TagsController(AppDbContext db) : ControllerBase
