@@ -835,9 +835,10 @@ rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.cspr
   - Assets: AssetsController
   - Content: ContentController
   - Network: NetworkController
-- **系统管理权限**：为 6 个 Controller 补充 `[Authorize(Roles = "owner")]` 角色限制
-  - UserTypeController, UserTagController, TagsController, MenuAdminController, PersonaTypeController
+- **系统管理权限**：为 5 个 Controller 补充 `[Authorize(Roles = "owner")]` 角色限制
+  - UserTypeController, UserTagController, TagsController, MenuAdminController
 - **RoleMenuController 修复**：移除类级别的 `[Authorize(Roles = "owner")]`，仅保留 `GetMyMenus` 端点无角色限制，管理接口仍需 owner 权限
+- **PersonaTypeController 修复**：移除类级别的 `[Authorize(Roles = "owner")]`，`GetPage` 和 `GetAll` 端点允许 pro 用户访问，管理接口仍需 owner 权限
 - **GetAccessCodesAsync 修复**：简化实现，移除对 RolePermissions 表的查询，避免查询异常
 - **废弃代码清理**：删除 `MenuBindingType` 枚举
 
