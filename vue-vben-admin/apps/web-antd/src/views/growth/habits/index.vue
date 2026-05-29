@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -34,6 +35,12 @@ const formOpen = ref(false);
 const detailOpen = ref(false);
 const editingId = ref<null | string>(null);
 const selectedItem = ref<null | Habit>(null);
+
+const accessStore = useAccessStore();
+const canCreateHabit = computed(() => accessStore.accessCodes.includes('GROWTH_HABIT'));
+const canEditHabit = computed(() => accessStore.accessCodes.includes('GROWTH_HABIT'));
+const canDeleteHabit = computed(() => accessStore.accessCodes.includes('GROWTH_HABIT'));
+const canCheckInHabit = computed(() => accessStore.accessCodes.includes('GROWTH_HABIT'));
 
 const { changePage, items, load, loading, query, search, total } = usePagedQuery<
   Habit,
@@ -167,7 +174,7 @@ onMounted(() => {
         <Form.Item>
           <Space>
             <Button type="primary" @click="search"> 查询 </Button>
-            <Button @click="openCreate"> 新增 </Button>
+            <Button v-if="canCreateHabit" @click="openCreate"> 新增 </Button>
           </Space>
         </Form.Item>
       </Form>
@@ -210,12 +217,12 @@ onMounted(() => {
           <template v-else-if="column.key === 'action'">
             <Space>
               <Button size="small" type="link" @click="showDetail(record)"> 详情 </Button>
-              <Button size="small" type="link" @click="checkIn(record)"> 打卡 </Button>
-              <Button size="small" type="link" @click="openEdit(record.id)"> 编辑 </Button>
-              <Button size="small" type="link" @click="toggleStatus(record)">
+              <Button v-if="canCheckInHabit" size="small" type="link" @click="checkIn(record)"> 打卡 </Button>
+              <Button v-if="canEditHabit" size="small" type="link" @click="openEdit(record.id)"> 编辑 </Button>
+              <Button v-if="canEditHabit" size="small" type="link" @click="toggleStatus(record)">
                 {{ record.status === 1 ? '停用' : '启用' }}
               </Button>
-              <Popconfirm title="确认删除这个习惯？" @confirm="remove(record.id)">
+              <Popconfirm v-if="canDeleteHabit" title="确认删除这个习惯？" @confirm="remove(record.id)">
                 <Button danger size="small" type="link"> 删除 </Button>
               </Popconfirm>
             </Space>

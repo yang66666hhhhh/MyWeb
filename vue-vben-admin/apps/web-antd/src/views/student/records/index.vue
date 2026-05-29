@@ -55,6 +55,10 @@ const subject = ref<string | undefined>();
 const records = ref<StudentStudyRecord[]>([]);
 const subjectOptions = ref<Array<{ label: string; value: string }>>([]);
 
+const canCreateRecord = computed(() => accessStore.accessCodes.includes('STUDENT_RECORDS'));
+const canEditRecord = computed(() => accessStore.accessCodes.includes('STUDENT_RECORDS'));
+const canDeleteRecord = computed(() => accessStore.accessCodes.includes('STUDENT_RECORDS'));
+
 const columns: TableColumnsType<StudentStudyRecord> = [
   { title: '日期', dataIndex: 'recordDate', key: 'recordDate', width: 120 },
   { title: '科目', dataIndex: 'subject', key: 'subject', width: 120 },
@@ -224,7 +228,7 @@ onMounted(async () => {
             style="width: 140px"
           />
           <Button type="primary" @click="fetchRecords">查询</Button>
-          <Button type="primary" @click="openCreate">新增记录</Button>
+          <Button v-if="canCreateRecord" type="primary" @click="openCreate">新增记录</Button>
         </Space>
       </template>
 
@@ -254,8 +258,8 @@ onMounted(async () => {
           </template>
           <template v-else-if="column.key === 'action'">
             <Space>
-              <Button size="small" type="link" @click="openEdit(toRecord(record))">编辑</Button>
-              <Popconfirm title="确认删除该学习记录？" @confirm="handleDelete(record.id)">
+              <Button v-if="canEditRecord" size="small" type="link" @click="openEdit(toRecord(record))">编辑</Button>
+              <Popconfirm v-if="canDeleteRecord" title="确认删除该学习记录？" @confirm="handleDelete(record.id)">
                 <Button danger size="small" type="link">删除</Button>
               </Popconfirm>
             </Space>

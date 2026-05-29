@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -27,6 +28,11 @@ const formOpen = ref(false);
 const editingId = ref<null | string>(null);
 const items = ref<any[]>([]);
 const total = ref(0);
+
+const accessStore = useAccessStore();
+const canCreatePlan = computed(() => accessStore.accessCodes.includes('GROWTH_DAILY_PLAN'));
+const canEditPlan = computed(() => accessStore.accessCodes.includes('GROWTH_DAILY_PLAN'));
+const canDeletePlan = computed(() => accessStore.accessCodes.includes('GROWTH_DAILY_PLAN'));
 
 const query = reactive({
   page: 1,
@@ -196,7 +202,7 @@ onMounted(() => fetchPage());
           </Form>
           <div class="flex items-center gap-3">
             <span class="text-gray-500 text-sm">{{ summaryText }}</span>
-            <Button type="primary" @click="openCreate">新增计划</Button>
+            <Button v-if="canCreatePlan" type="primary" @click="openCreate">新增计划</Button>
           </div>
         </div>
       </Card>
@@ -229,11 +235,11 @@ onMounted(() => fetchPage());
             </template>
             <template v-else-if="column.key === 'action'">
               <Space>
-                <Button v-if="record.status === 0" size="small" type="link" @click="handleChangeStatus(record, 1)">开始</Button>
-                <Button size="small" type="link" @click="openEdit(record.id)">编辑</Button>
-                <Button :disabled="record.status === 2" size="small" type="link" @click="handleChangeStatus(record, 2)">完成</Button>
-                <Button :disabled="record.status === 2 || record.status === 3" size="small" type="link" @click="handleChangeStatus(record, 3)">取消</Button>
-                <Popconfirm title="确认删除？" @confirm="handleRemove(record.id)">
+                <Button v-if="canEditPlan && record.status === 0" size="small" type="link" @click="handleChangeStatus(record, 1)">开始</Button>
+                <Button v-if="canEditPlan" size="small" type="link" @click="openEdit(record.id)">编辑</Button>
+                <Button v-if="canEditPlan" :disabled="record.status === 2" size="small" type="link" @click="handleChangeStatus(record, 2)">完成</Button>
+                <Button v-if="canEditPlan" :disabled="record.status === 2 || record.status === 3" size="small" type="link" @click="handleChangeStatus(record, 3)">取消</Button>
+                <Popconfirm v-if="canDeletePlan" title="确认删除？" @confirm="handleRemove(record.id)">
                   <Button danger size="small" type="link">删除</Button>
                 </Popconfirm>
               </Space>

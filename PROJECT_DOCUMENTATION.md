@@ -842,13 +842,16 @@ rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.cspr
 **前端按钮级权限应用：**
 
 - 为以下模块的页面添加了 `v-if` 按钮级权限控制：
-  - Work: tasks, project
-  - Student: learning
-  - Content: article
-  - Network: contact
-  - Assets: income
+  - Work: tasks, project, device
+  - Student: learning, records, subjects
+  - Content: article, media
+  - Network: contact, interaction
+  - Assets: income, expenses
+  - Growth: habits, daily-plans
+  - AI: assistant
+  - System: user
 - 使用 `useAccessStore().accessCodes` 判断权限
-- 控制的按钮类型：新建/新增、编辑、删除、完成
+- 控制的按钮类型：新建/新增、编辑、删除、完成、打卡、启停
 
 **测试结果：**
 - 后端测试：140 个全部通过

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -38,6 +39,11 @@ const detailOpen = ref(false);
 const editingId = ref<null | string>(null);
 const selectedItem = ref<UserDto | null>(null);
 const originalPersonaIds = ref<string[]>([]);
+
+const accessStore = useAccessStore();
+const canCreateUser = computed(() => accessStore.accessCodes.includes('SYSTEM_USER_MANAGE'));
+const canEditUser = computed(() => accessStore.accessCodes.includes('SYSTEM_USER_MANAGE'));
+const canDeleteUser = computed(() => accessStore.accessCodes.includes('SYSTEM_USER_MANAGE'));
 
 const formState = ref({
   email: '',
@@ -245,7 +251,7 @@ function getRoleLabel(role: string) {
               </Button>
             </Form.Item>
           </Form>
-          <Button type="primary" @click="openCreate">
+          <Button v-if="canCreateUser" type="primary" @click="openCreate">
             新增用户
           </Button>
         </div>
@@ -294,10 +300,10 @@ function getRoleLabel(role: string) {
                 <Button size="small" type="link" @click="showDetail(record)">
                   详情
                 </Button>
-                <Button size="small" type="link" @click="openEdit(record)">
+                <Button v-if="canEditUser" size="small" type="link" @click="openEdit(record)">
                   编辑
                 </Button>
-                <Popconfirm title="确认删除？" @confirm="handleRemove(record.id)">
+                <Popconfirm v-if="canDeleteUser" title="确认删除？" @confirm="handleRemove(record.id)">
                   <Button danger size="small" type="link">
                     删除
                   </Button>

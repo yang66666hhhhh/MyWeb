@@ -267,7 +267,7 @@ vue-vben-admin/apps/web-antd/.env.production
 
 **前端按钮级权限应用：**
 
-- 为 Work/Student/Content/Network/Assets 模块的页面添加了按钮级权限控制
+- 为 Work/Student/Content/Network/Assets/Growth/AI/System 模块的 16 个页面添加了按钮级权限控制
 - 使用 `useAccessStore().accessCodes` + `v-if` 控制按钮显示
 
 **测试结果：** 140 个后端测试全部通过，前端类型检查和构建成功

@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -45,6 +46,11 @@ const formOpen = ref(false);
 const editingId = ref<null | string>(null);
 const keyword = ref('');
 const subjects = ref<StudentSubject[]>([]);
+
+const accessStore = useAccessStore();
+const canCreateSubject = computed(() => accessStore.accessCodes.includes('STUDENT_SUBJECTS'));
+const canEditSubject = computed(() => accessStore.accessCodes.includes('STUDENT_SUBJECTS'));
+const canDeleteSubject = computed(() => accessStore.accessCodes.includes('STUDENT_SUBJECTS'));
 
 const colorOptions = [
   { label: '蓝色', value: 'blue' },
@@ -198,7 +204,7 @@ onMounted(() => {
             @press-enter="fetchSubjects"
           />
           <Button type="primary" @click="fetchSubjects">查询</Button>
-          <Button type="primary" @click="openCreate">新增科目</Button>
+          <Button v-if="canCreateSubject" type="primary" @click="openCreate">新增科目</Button>
         </Space>
       </template>
 
@@ -225,8 +231,8 @@ onMounted(() => {
           </template>
           <template v-else-if="column.key === 'action'">
             <Space>
-              <Button size="small" type="link" @click="openEdit(toSubject(record))">编辑</Button>
-              <Popconfirm title="确认删除该科目？" @confirm="handleDelete(record.id)">
+              <Button v-if="canEditSubject" size="small" type="link" @click="openEdit(toSubject(record))">编辑</Button>
+              <Popconfirm v-if="canDeleteSubject" title="确认删除该科目？" @confirm="handleDelete(record.id)">
                 <Button danger size="small" type="link">删除</Button>
               </Popconfirm>
             </Space>

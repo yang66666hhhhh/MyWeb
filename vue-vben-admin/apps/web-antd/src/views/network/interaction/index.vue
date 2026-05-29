@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -42,6 +43,11 @@ const modalVisible = ref(false);
 const editingId = ref<string | null>(null);
 const submitting = ref(false);
 const selectedContactId = ref<string | undefined>(undefined);
+
+const accessStore = useAccessStore();
+const canCreateInteraction = computed(() => accessStore.accessCodes.includes('GROWTH_KNOWLEDGE'));
+const canEditInteraction = computed(() => accessStore.accessCodes.includes('GROWTH_KNOWLEDGE'));
+const canDeleteInteraction = computed(() => accessStore.accessCodes.includes('GROWTH_KNOWLEDGE'));
 
 const formState = reactive<CreateInteractionInput>({
   contactId: '',
@@ -196,7 +202,7 @@ onMounted(() => {
           >
             <SelectOption v-for="c in contacts" :key="c.id" :value="c.id">{{ c.name }}</SelectOption>
           </Select>
-          <Button type="primary" @click="handleAdd">记录互动</Button>
+          <Button v-if="canCreateInteraction" type="primary" @click="handleAdd">记录互动</Button>
         </div>
       </template>
       <Table
@@ -219,8 +225,8 @@ onMounted(() => {
           </template>
           <template v-else-if="column.key === 'action'">
             <div class="flex gap-2">
-              <Button type="link" size="small" @click="handleEdit(record as Interaction)">编辑</Button>
-              <Popconfirm title="确认删除?" @confirm="handleDelete(record.id)">
+              <Button v-if="canEditInteraction" type="link" size="small" @click="handleEdit(record as Interaction)">编辑</Button>
+              <Popconfirm v-if="canDeleteInteraction" title="确认删除?" @confirm="handleDelete(record.id)">
                 <Button type="link" size="small" danger>删除</Button>
               </Popconfirm>
             </div>

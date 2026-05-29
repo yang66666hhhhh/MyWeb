@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import { nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -27,6 +28,10 @@ const messages = ref<AiChatMessage[]>([]);
 const sessions = ref<AiChatSession[]>([]);
 const currentSessionId = ref<string | null>(null);
 const sessionsLoading = ref(false);
+
+const accessStore = useAccessStore();
+const canUseAssistant = computed(() => accessStore.accessCodes.includes('AI_ASSISTANT'));
+const canDeleteSession = computed(() => accessStore.accessCodes.includes('AI_ASSISTANT'));
 
 const messagesEndRef = ref<HTMLDivElement>();
 
@@ -138,7 +143,7 @@ onMounted(() => {
     <div class="flex gap-4 h-[calc(100vh-200px)]">
       <Card title="会话列表" class="w-[280px] flex-shrink-0" :loading="sessionsLoading">
         <template #extra>
-          <Button type="link" size="small" @click="handleNewSession">新建</Button>
+          <Button v-if="canUseAssistant" type="link" size="small" @click="handleNewSession">新建</Button>
         </template>
         <div class="h-[calc(100%-40px)] overflow-auto">
           <List :data-source="sessions" :split="false">
@@ -150,7 +155,7 @@ onMounted(() => {
               >
                 <ListItemMeta :title="item.title || '新会话'" :description="item.lastMessage || '暂无消息'" />
                 <template #actions>
-                  <Popconfirm title="确认删除此会话?" @confirm="handleDeleteSession(item.id)">
+                  <Popconfirm v-if="canDeleteSession" title="确认删除此会话?" @confirm="handleDeleteSession(item.id)">
                     <Button type="link" size="small" danger @click.stop>删除</Button>
                   </Popconfirm>
                 </template>
