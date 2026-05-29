@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -51,6 +52,11 @@ const keyword = ref('');
 const status = ref<number | undefined>();
 const type = ref<number | undefined>();
 const tasks = ref<PostgraduateTask[]>([]);
+
+const accessStore = useAccessStore();
+const canCreateLearning = computed(() => accessStore.accessCodes.includes('STUDENT_LEARNING'));
+const canEditLearning = computed(() => accessStore.accessCodes.includes('STUDENT_LEARNING'));
+const canDeleteLearning = computed(() => accessStore.accessCodes.includes('STUDENT_LEARNING'));
 
 const statusOptions = [
   { label: '全部状态', value: undefined },
@@ -328,7 +334,7 @@ onMounted(() => {
           />
           <Button type="primary" @click="fetchTasks">查询</Button>
           <Button @click="resetFilters">重置</Button>
-          <Button type="primary" @click="openCreate">新建计划</Button>
+          <Button v-if="canCreateLearning" type="primary" @click="openCreate">新建计划</Button>
         </Space>
       </template>
 
@@ -366,11 +372,11 @@ onMounted(() => {
           </template>
           <template v-else-if="column.key === 'action'">
             <Space>
-              <Button v-if="record.status !== 2" size="small" type="link" @click="markCompleted(toTask(record))">
+              <Button v-if="canEditLearning && record.status !== 2" size="small" type="link" @click="markCompleted(toTask(record))">
                 完成
               </Button>
-              <Button size="small" type="link" @click="openEdit(toTask(record))">编辑</Button>
-              <Popconfirm title="确认删除该学习任务？" @confirm="handleDelete(record.id)">
+              <Button v-if="canEditLearning" size="small" type="link" @click="openEdit(toTask(record))">编辑</Button>
+              <Popconfirm v-if="canDeleteLearning" title="确认删除该学习任务？" @confirm="handleDelete(record.id)">
                 <Button danger size="small" type="link">删除</Button>
               </Popconfirm>
             </Space>

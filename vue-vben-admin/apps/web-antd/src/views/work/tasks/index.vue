@@ -84,6 +84,10 @@ const priorityMap: Record<number, { color: string; label: string }> = {
 };
 
 const canViewProjects = computed(() => accessStore.accessCodes.includes('WORK_PROJECT'));
+const canCreateTask = computed(() => accessStore.accessCodes.includes('WORK_TASK'));
+const canEditTask = computed(() => accessStore.accessCodes.includes('WORK_TASK'));
+const canDeleteTask = computed(() => accessStore.accessCodes.includes('WORK_TASK'));
+const canCompleteTask = computed(() => accessStore.accessCodes.includes('WORK_TASK'));
 
 const columns = computed<any[]>(() => [
   { title: '任务标题', dataIndex: 'title', key: 'title', minWidth: 220 },
@@ -312,7 +316,7 @@ onMounted(() => {
             <Button v-if="props.context === 'implementation'" @click="goToWeeklyReport">
               查看实施周报
             </Button>
-            <Button type="primary" @click="openCreate">{{ createButtonText }}</Button>
+            <Button v-if="canCreateTask" type="primary" @click="openCreate">{{ createButtonText }}</Button>
           </div>
         </div>
       </Card>
@@ -349,9 +353,9 @@ onMounted(() => {
             </template>
             <template v-else-if="column.key === 'action'">
               <Space>
-                <Button v-if="record.status !== 2" size="small" type="link" @click="handleComplete(record.id)">完成</Button>
-                <Button size="small" type="link" @click="openEdit(record)">编辑</Button>
-                <Popconfirm title="确认删除？" @confirm="handleRemove(record.id)">
+                <Button v-if="canCompleteTask && record.status !== 2" size="small" type="link" @click="handleComplete(record.id)">完成</Button>
+                <Button v-if="canEditTask" size="small" type="link" @click="openEdit(record)">编辑</Button>
+                <Popconfirm v-if="canDeleteTask" title="确认删除？" @confirm="handleRemove(record.id)">
                   <Button danger size="small" type="link">删除</Button>
                 </Popconfirm>
               </Space>

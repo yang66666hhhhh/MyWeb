@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -42,6 +43,11 @@ const formOpen = ref(false);
 const detailOpen = ref(false);
 const editingId = ref<null | string>(null);
 const selectedItem = ref<WorkProject | null>(null);
+
+const accessStore = useAccessStore();
+const canCreateProject = computed(() => accessStore.accessCodes.includes('WORK_PROJECT'));
+const canEditProject = computed(() => accessStore.accessCodes.includes('WORK_PROJECT'));
+const canDeleteProject = computed(() => accessStore.accessCodes.includes('WORK_PROJECT'));
 
 const formState = ref({
   customerName: '',
@@ -198,7 +204,7 @@ onMounted(() => {
               </Space>
             </Form.Item>
           </Form>
-          <Button type="primary" @click="openCreate">新增项目</Button>
+          <Button v-if="canCreateProject" type="primary" @click="openCreate">新增项目</Button>
         </div>
       </Card>
 
@@ -236,8 +242,8 @@ onMounted(() => {
             <template v-else-if="column.key === 'action'">
               <Space>
                 <Button size="small" type="link" @click="showDetail(record)">详情</Button>
-                <Button size="small" type="link" @click="openEdit(record)">编辑</Button>
-                <Popconfirm title="确认删除？" @confirm="handleRemove(record.id)">
+                <Button v-if="canEditProject" size="small" type="link" @click="openEdit(record)">编辑</Button>
+                <Popconfirm v-if="canDeleteProject" title="确认删除？" @confirm="handleRemove(record.id)">
                   <Button danger size="small" type="link">删除</Button>
                 </Popconfirm>
               </Space>

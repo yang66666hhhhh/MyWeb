@@ -265,4 +265,9 @@ vue-vben-admin/apps/web-antd/.env.production
 - 系统管理权限：为 6 个 Controller 补充 `[Authorize(Roles = "owner")]` 角色限制
 - 废弃代码清理：删除 `MenuBindingType` 枚举
 
+**前端按钮级权限应用：**
+
+- 为 Work/Student/Content/Network/Assets 模块的页面添加了按钮级权限控制
+- 使用 `useAccessStore().accessCodes` + `v-if` 控制按钮显示
+
 **测试结果：** 140 个后端测试全部通过，前端类型检查和构建成功

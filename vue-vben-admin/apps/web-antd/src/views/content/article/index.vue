@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -33,6 +34,11 @@ const pageSize = ref(10);
 const modalVisible = ref(false);
 const editingId = ref<string | null>(null);
 const submitting = ref(false);
+
+const accessStore = useAccessStore();
+const canCreateArticle = computed(() => accessStore.accessCodes.includes('GROWTH_KNOWLEDGE'));
+const canEditArticle = computed(() => accessStore.accessCodes.includes('GROWTH_KNOWLEDGE'));
+const canDeleteArticle = computed(() => accessStore.accessCodes.includes('GROWTH_KNOWLEDGE'));
 
 const formState = reactive<CreateArticleInput>({
   title: '',
@@ -167,7 +173,7 @@ onMounted(() => {
 
     <Card title="文章列表">
       <template #extra>
-        <Button type="primary" @click="handleAdd">新建文章</Button>
+        <Button v-if="canCreateArticle" type="primary" @click="handleAdd">新建文章</Button>
       </template>
       <Table
         :columns="columns"
@@ -192,8 +198,8 @@ onMounted(() => {
           </template>
           <template v-else-if="column.key === 'action'">
             <div class="flex gap-2">
-              <Button type="link" size="small" @click="handleEdit(record as Article)">编辑</Button>
-              <Popconfirm title="确认删除?" @confirm="handleDelete(record.id)">
+              <Button v-if="canEditArticle" type="link" size="small" @click="handleEdit(record as Article)">编辑</Button>
+              <Popconfirm v-if="canDeleteArticle" title="确认删除?" @confirm="handleDelete(record.id)">
                 <Button type="link" size="small" danger>删除</Button>
               </Popconfirm>
             </div>
