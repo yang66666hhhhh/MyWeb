@@ -1,99 +1,192 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Alert, Button, Card, Col, Row, Statistic, Table, Tag } from 'ant-design-vue';
+import {
+  Button,
+  Card,
+  Col,
+  Form,
+  FormItem,
+  Input,
+  message,
+  Modal,
+  Popconfirm,
+  Row,
+  Select,
+  SelectOption,
+  Statistic,
+  Switch,
+  Table,
+  Tag,
+} from 'ant-design-vue';
+
+import type { CodeRepository, CreateCodeRepositoryInput } from '#/api/persona';
+
+import {
+  createRepositoryApi,
+  deleteRepositoryApi,
+  getRepositoriesApi,
+  updateRepositoryApi,
+} from '#/api/persona';
 
 const loading = ref(false);
+const dataList = ref<CodeRepository[]>([]);
+const total = ref(0);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const modalVisible = ref(false);
+const editingId = ref<string | null>(null);
+const submitting = ref(false);
 
-const repositories = ref([
-  {
-    id: '1',
-    name: 'vue-vben-admin',
-    description: 'Vue 3 + Vite + Ant Design Vue 管理后台',
-    language: 'TypeScript',
-    stars: 1250,
-    forks: 380,
-    lastUpdated: '2024-01-15',
-  },
-  {
-    id: '2',
-    name: 'dotnet-core-api',
-    description: 'ASP.NET Core 10 Web API 模板',
-    language: 'C#',
-    stars: 890,
-    forks: 210,
-    lastUpdated: '2024-01-10',
-  },
-  {
-    id: '3',
-    name: 'python-ml-toolkit',
-    description: '机器学习工具包',
-    language: 'Python',
-    stars: 560,
-    forks: 120,
-    lastUpdated: '2024-01-08',
-  },
-]);
+const formState = reactive<CreateCodeRepositoryInput>({
+  name: '',
+  description: '',
+  url: '',
+  language: '',
+  isPublic: true,
+  tags: '',
+});
+
+const languageOptions = ['TypeScript', 'JavaScript', 'Python', 'C#', 'Java', 'Go', 'Rust'];
 
 const columns = [
   { title: '仓库名称', dataIndex: 'name', key: 'name' },
-  { title: '描述', dataIndex: 'description', key: 'description' },
-  { title: '语言', dataIndex: 'language', key: 'language' },
-  { title: 'Stars', dataIndex: 'stars', key: 'stars' },
-  { title: 'Forks', dataIndex: 'forks', key: 'forks' },
-  { title: '最后更新', dataIndex: 'lastUpdated', key: 'lastUpdated' },
+  { title: '描述', dataIndex: 'description', key: 'description', ellipsis: true },
+  { title: '语言', dataIndex: 'language', key: 'language', width: 100 },
+  { title: 'Stars', dataIndex: 'stars', key: 'stars', width: 80 },
+  { title: '可见性', key: 'isPublic', width: 80 },
+  { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 120 },
+  { title: '操作', key: 'action', width: 150 },
 ];
 
 const languageColors: Record<string, string> = {
   TypeScript: 'blue',
-  CSharp: 'purple',
+  'C#': 'purple',
   Python: 'green',
   JavaScript: 'yellow',
+  Java: 'orange',
+  Go: 'cyan',
+  Rust: 'red',
 };
+
+const totalStars = computed(() => dataList.value.reduce((sum, r) => sum + (r.stars || 0), 0));
+
+const fetchData = async () => {
+  loading.value = true;
+  try {
+    const res = await getRepositoriesApi({ page: currentPage.value, pageSize: pageSize.value });
+    dataList.value = res.items;
+    total.value = res.total;
+  } catch {
+    // ignore
+  } finally {
+    loading.value = false;
+  }
+};
+
+const handleAdd = () => {
+  editingId.value = null;
+  Object.assign(formState, {
+    name: '',
+    description: '',
+    url: '',
+    language: '',
+    isPublic: true,
+    tags: '',
+  });
+  modalVisible.value = true;
+};
+
+const handleEdit = (record: CodeRepository) => {
+  editingId.value = record.id;
+  Object.assign(formState, {
+    name: record.name,
+    description: record.description || '',
+    url: record.url,
+    language: record.language,
+    isPublic: record.isPublic,
+    tags: record.tags || '',
+  });
+  modalVisible.value = true;
+};
+
+const handleDelete = async (id: string) => {
+  try {
+    await deleteRepositoryApi(id);
+    message.success('删除成功');
+    fetchData();
+  } catch {
+    message.error('删除失败');
+  }
+};
+
+const handleSubmit = async () => {
+  if (!formState.name || !formState.url || !formState.language) {
+    message.warning('请填写必填项');
+    return;
+  }
+  submitting.value = true;
+  try {
+    if (editingId.value) {
+      await updateRepositoryApi(editingId.value, formState);
+      message.success('更新成功');
+    } else {
+      await createRepositoryApi(formState);
+      message.success('创建成功');
+    }
+    modalVisible.value = false;
+    fetchData();
+  } catch {
+    message.error('操作失败');
+  } finally {
+    submitting.value = false;
+  }
+};
+
+const handlePageChange = (page: number, size: number) => {
+  currentPage.value = page;
+  pageSize.value = size;
+  fetchData();
+};
+
+onMounted(() => {
+  fetchData();
+});
 </script>
 
 <template>
   <Page description="管理您的代码仓库，查看项目状态和统计信息" title="代码仓库">
-    <Alert
-      class="mb-4"
-      message="功能开发中"
-      description="后端API正在开发中，当前为模拟数据"
-      show-icon
-      type="warning"
-    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
-        <Card>
-          <Statistic title="仓库总数" :value="repositories.length" />
+        <Card :loading="loading">
+          <Statistic title="仓库总数" :value="total" />
         </Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card>
-          <Statistic title="总 Stars" :value="2700" />
-        </Card>
-      </Col>
-      <Col :lg="6" :md="12" :xs="24">
-        <Card>
-          <Statistic title="总 Forks" :value="710" />
-        </Card>
-      </Col>
-      <Col :lg="6" :md="12" :xs="24">
-        <Card>
-          <Statistic title="活跃项目" :value="3" />
+        <Card :loading="loading">
+          <Statistic title="总 Stars" :value="totalStars" />
         </Card>
       </Col>
     </Row>
 
     <Card title="我的仓库">
       <template #extra>
-        <Button type="primary">新建仓库</Button>
+        <Button type="primary" @click="handleAdd">新建仓库</Button>
       </template>
       <Table
         :columns="columns"
-        :data-source="repositories"
+        :data-source="dataList"
         :loading="loading"
+        :pagination="{
+          current: currentPage,
+          pageSize,
+          total,
+          showSizeChanger: true,
+          showTotal: (t: number) => `共 ${t} 条`,
+          onChange: handlePageChange,
+        }"
         row-key="id"
       >
         <template #bodyCell="{ column, record }">
@@ -102,8 +195,51 @@ const languageColors: Record<string, string> = {
               {{ record.language }}
             </Tag>
           </template>
+          <template v-else-if="column.key === 'isPublic'">
+            <Tag :color="record.isPublic ? 'green' : 'orange'">
+              {{ record.isPublic ? '公开' : '私有' }}
+            </Tag>
+          </template>
+          <template v-else-if="column.key === 'action'">
+            <div class="flex gap-2">
+              <Button type="link" size="small" @click="handleEdit(record as CodeRepository)">编辑</Button>
+              <Popconfirm title="确认删除?" @confirm="handleDelete(record.id)">
+                <Button type="link" size="small" danger>删除</Button>
+              </Popconfirm>
+            </div>
+          </template>
         </template>
       </Table>
     </Card>
+
+    <Modal
+      v-model:open="modalVisible"
+      :title="editingId ? '编辑仓库' : '新建仓库'"
+      :confirm-loading="submitting"
+      @ok="handleSubmit"
+    >
+      <Form layout="vertical">
+        <FormItem label="仓库名称" required>
+          <Input v-model:value="formState.name" placeholder="仓库名称" />
+        </FormItem>
+        <FormItem label="描述">
+          <Input.TextArea v-model:value="formState.description" placeholder="仓库描述" :rows="2" />
+        </FormItem>
+        <FormItem label="仓库地址" required>
+          <Input v-model:value="formState.url" placeholder="https://github.com/..." />
+        </FormItem>
+        <FormItem label="编程语言" required>
+          <Select v-model:value="formState.language" placeholder="选择语言">
+            <SelectOption v-for="lang in languageOptions" :key="lang" :value="lang">{{ lang }}</SelectOption>
+          </Select>
+        </FormItem>
+        <FormItem label="公开仓库">
+          <Switch v-model:checked="formState.isPublic" />
+        </FormItem>
+        <FormItem label="标签">
+          <Input v-model:value="formState.tags" placeholder="多个标签用逗号分隔" />
+        </FormItem>
+      </Form>
+    </Modal>
   </Page>
 </template>

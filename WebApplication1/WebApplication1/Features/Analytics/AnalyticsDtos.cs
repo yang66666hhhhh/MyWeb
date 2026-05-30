@@ -1,11 +1,5 @@
 namespace WebApplication1.Features.Analytics;
 
-public class AnalyticsQueryDto
-{
-    public DateOnly? StartDate { get; set; }
-    public DateOnly? EndDate { get; set; }
-}
-
 public class DashboardOverviewDto
 {
     public int TotalTasks { get; set; }

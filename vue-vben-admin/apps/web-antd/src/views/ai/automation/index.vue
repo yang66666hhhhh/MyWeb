@@ -1,71 +1,227 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Alert, Button, Card, Col, List, Row, Space, Statistic, Tag } from 'ant-design-vue';
+import {
+  Button,
+  Card,
+  Col,
+  Form,
+  Input,
+  List,
+  message,
+  Modal,
+  Popconfirm,
+  Row,
+  Select,
+  Space,
+  Statistic,
+  Switch,
+  Tag,
+} from 'ant-design-vue';
 
-const loading = ref(false);
+import type {
+  AutomationWorkflow,
+  CreateAutomationWorkflowInput,
+} from '#/api/ai/extended';
 
-const workflows = ref([
-  { id: '1', name: '日报自动生成', trigger: '每天18:00', action: '汇总工作日志并生成日报', status: '运行中', lastRun: '2024-01-15 18:00' },
-  { id: '2', name: '周报提醒', trigger: '每周五17:00', action: '发送周报填写提醒', status: '运行中', lastRun: '2024-01-12 17:00' },
-  { id: '3', name: '习惯打卡提醒', trigger: '每天21:00', action: '检查并提醒未打卡习惯', status: '运行中', lastRun: '2024-01-15 21:00' },
-  { id: '4', name: '学习计划推送', trigger: '每天08:00', action: '推送今日学习计划', status: '已暂停', lastRun: '2024-01-14 08:00' },
-]);
+import {
+  createWorkflowApi,
+  deleteWorkflowApi,
+  getWorkflowsApi,
+  updateWorkflowApi,
+} from '#/api/ai/extended';
+import { usePagedQuery } from '#/composables/usePagedQuery';
+
+const formOpen = ref(false);
+const editingId = ref<null | string>(null);
+const formData = ref<CreateAutomationWorkflowInput>({
+  name: '',
+  description: '',
+  triggerType: '',
+  actions: '',
+});
+
+const { items, load, loading, query, search, total, changePage } = usePagedQuery<
+  AutomationWorkflow,
+  { keyword?: string; page: number; pageSize: number; type?: string }
+>({
+  defaultQuery: {
+    page: 1,
+    pageSize: 10,
+  },
+  fetcher: getWorkflowsApi,
+});
+
+const triggerOptions = [
+  { label: '定时触发', value: '定时触发' },
+  { label: '事件触发', value: '事件触发' },
+  { label: '手动触发', value: '手动触发' },
+];
 
 const statusColors: Record<string, string> = {
-  '运行中': 'success',
-  '已暂停': 'warning',
-  '已停止': 'error',
+  true: 'success',
+  false: 'warning',
 };
+
+function openCreate() {
+  editingId.value = null;
+  formData.value = { name: '', description: '', triggerType: '', actions: '' };
+  formOpen.value = true;
+}
+
+function openEdit(record: AutomationWorkflow) {
+  editingId.value = record.id;
+  formData.value = {
+    name: record.name,
+    description: record.description || '',
+    triggerType: record.triggerType || '',
+    actions: record.actions || '',
+  };
+  formOpen.value = true;
+}
+
+async function handleSubmit() {
+  try {
+    if (editingId.value) {
+      await updateWorkflowApi(editingId.value, formData.value);
+      message.success('更新成功');
+    } else {
+      await createWorkflowApi(formData.value);
+      message.success('创建成功');
+    }
+    formOpen.value = false;
+    await load();
+  } catch {
+    message.error('操作失败');
+  }
+}
+
+async function handleDelete(id: string) {
+  try {
+    await deleteWorkflowApi(id);
+    message.success('删除成功');
+    await load();
+  } catch {
+    message.error('删除失败');
+  }
+}
+
+async function handleToggleStatus(record: AutomationWorkflow) {
+  try {
+    await updateWorkflowApi(record.id, { isActive: !record.isActive });
+    message.success(record.isActive ? '已暂停' : '已启动');
+    await load();
+  } catch {
+    message.error('操作失败');
+  }
+}
+
+function handlePageChange(page: number, pageSize: number) {
+  void changePage(page, pageSize);
+}
+
+onMounted(() => {
+  void load();
+});
 </script>
 
 <template>
   <Page description="创建和管理自动化工作流" title="自动化工作流">
-    <Alert
-      class="mb-4"
-      message="功能开发中"
-      description="后端API正在开发中，当前为模拟数据"
-      show-icon
-      type="warning"
-    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="工作流总数" :value="workflows.length" /></Card>
+        <Card><Statistic title="工作流总数" :value="total" /></Card>
+      </Col>
+        <Col :lg="6" :md="12" :xs="24">
+        <Card>
+          <Statistic title="运行中" :value="items.filter((i: AutomationWorkflow) => i.isActive).length" />
+        </Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="运行中" :value="3" /></Card>
-      </Col>
-      <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="已暂停" :value="1" /></Card>
-      </Col>
-      <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="今日执行" :value="3" /></Card>
+        <Card>
+          <Statistic title="已暂停" :value="items.filter((i: AutomationWorkflow) => !i.isActive).length" />
+        </Card>
       </Col>
     </Row>
 
+    <Card class="mb-4">
+      <Form layout="inline" :model="query">
+        <Form.Item label="关键词">
+          <Input v-model:value="query.keyword" allow-clear placeholder="工作流名称" @press-enter="search" />
+        </Form.Item>
+        <Form.Item>
+          <Space>
+            <Button type="primary" @click="search">查询</Button>
+            <Button @click="openCreate">创建工作流</Button>
+          </Space>
+        </Form.Item>
+      </Form>
+    </Card>
+
     <Card title="工作流列表">
-      <template #extra><Button type="primary">创建工作流</Button></template>
-      <List :data-source="workflows" :loading="loading">
+      <List
+        :data-source="items"
+        :loading="loading"
+        :pagination="{
+          current: query.page,
+          pageSize: query.pageSize,
+          total,
+          showSizeChanger: true,
+          showTotal: (value: number) => `共 ${value} 条`,
+          onChange: handlePageChange,
+        }"
+      >
         <template #renderItem="{ item }">
           <List.Item>
             <List.Item.Meta :title="item.name">
               <template #description>
                 <div>
-                  <div>触发: {{ item.trigger }}</div>
-                  <div>动作: {{ item.action }}</div>
-                  <div>最后执行: {{ item.lastRun }}</div>
+                  <div v-if="item.triggerType">触发: {{ item.triggerType }}</div>
+                  <div v-if="item.actions">动作: {{ item.actions }}</div>
+                  <div v-if="item.lastRunAt">最后执行: {{ item.lastRunAt }}</div>
                 </div>
               </template>
             </List.Item.Meta>
             <Space>
-              <Tag :color="statusColors[item.status]">{{ item.status }}</Tag>
-              <Button type="link">{{ item.status === '运行中' ? '暂停' : '启动' }}</Button>
+              <Tag :color="statusColors[String(item.isActive)]">
+                {{ item.isActive ? '运行中' : '已暂停' }}
+              </Tag>
+              <Switch
+                :checked="item.isActive"
+                checked-children="启动"
+                un-checked-children="暂停"
+                @change="handleToggleStatus(item)"
+              />
+              <Button type="link" @click="openEdit(item)">编辑</Button>
+              <Popconfirm title="确认删除？" @confirm="handleDelete(item.id)">
+                <Button danger type="link">删除</Button>
+              </Popconfirm>
             </Space>
           </List.Item>
         </template>
       </List>
     </Card>
+
+    <Modal
+      v-model:open="formOpen"
+      :title="editingId ? '编辑工作流' : '创建工作流'"
+      @ok="handleSubmit"
+    >
+      <Form layout="vertical" :model="formData">
+        <Form.Item label="工作流名称" required>
+          <Input v-model:value="formData.name" placeholder="请输入工作流名称" />
+        </Form.Item>
+        <Form.Item label="触发类型">
+          <Select v-model:value="formData.triggerType" :options="triggerOptions" placeholder="请选择触发类型" />
+        </Form.Item>
+        <Form.Item label="动作">
+          <Input v-model:value="formData.actions" placeholder="描述工作流动作" />
+        </Form.Item>
+        <Form.Item label="描述">
+          <Input.TextArea v-model:value="formData.description" placeholder="工作流描述" />
+        </Form.Item>
+      </Form>
+    </Modal>
   </Page>
 </template>

@@ -248,6 +248,18 @@ vue-vben-admin/apps/web-antd/.env.production
 
 ## 更新日志
 
+### v2.2 (2025-05-30)
+
+**完善所有页面（消除桩代码）：**
+
+- Growth 模块：11 个页面对接后端 API（skills, goals, year-plans, monthly-review, learning-path, courses, fitness, sleep, mood-tracker, reading-list, focus-timer）
+- Work 模块：3 个页面对接后端 API（okr, risk-control, files）
+- Analytics 模块：5 个页面对接后端 API（time, habits, finance, custom-reports, ai-insights）
+- AI 模块：3 个页面对接后端 API（automation, knowledge-chat, insights）
+- Persona 模块：7 个页面对接后端 API（dev/design/teacher 中心）
+
+**测试结果：** 140 个后端测试全部通过，前端类型检查和构建成功
+
 ### v2.1 (2025-05-29)
 
 **前端对接后端 API（消除硬编码）：**

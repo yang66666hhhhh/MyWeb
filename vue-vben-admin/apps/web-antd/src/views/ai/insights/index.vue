@@ -1,75 +1,165 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Alert, Button, Card, Col, Input, Row, Space, Statistic, Tag } from 'ant-design-vue';
+import {
+  Button,
+  Card,
+  Col,
+  Form,
+  Input,
+  List,
+  message,
+  Popconfirm,
+  Row,
+  Select,
+  Space,
+  Statistic,
+  Tag,
+} from 'ant-design-vue';
 
-const loading = ref(false);
-const query = ref('');
+import type { AiInsightItem } from '#/api/ai/extended';
 
-const insights = ref([
-  { id: '1', title: '工作效率趋势', type: '趋势', value: '上升12%', description: '近一周工作效率相比上周提升12%', priority: '积极' },
-  { id: '2', title: '时间分配分析', type: '分析', value: '需优化', description: '会议时间占比过高(35%)，建议减少到20%', priority: '建议' },
-  { id: '3', title: '任务完成预测', type: '预测', value: '按时完成', description: '当前进度下，本月目标可按时完成', priority: '正常' },
-  { id: '4', title: '学习投入分析', type: '分析', value: '稳定', description: '每日学习时间保持在2小时左右', priority: '正常' },
-]);
+import {
+  deleteInsightApi,
+  generateInsightApi,
+  getInsightsApi,
+} from '#/api/ai/extended';
+import { usePagedQuery } from '#/composables/usePagedQuery';
 
-const typeColors: Record<string, string> = {
+const generating = ref(false);
+const generateForm = ref({
+  title: '',
+  category: '',
+  source: '',
+});
+
+const { items, load, loading, query, search, total, changePage } = usePagedQuery<
+  AiInsightItem,
+  { keyword?: string; page: number; pageSize: number; type?: string }
+>({
+  defaultQuery: {
+    page: 1,
+    pageSize: 10,
+  },
+  fetcher: getInsightsApi,
+});
+
+const categoryOptions = [
+  { label: '全部分类', value: undefined },
+  { label: '趋势', value: '趋势' },
+  { label: '分析', value: '分析' },
+  { label: '预测', value: '预测' },
+];
+
+const categoryColors: Record<string, string> = {
   '趋势': 'blue',
   '分析': 'purple',
   '预测': 'green',
 };
 
-const priorityColors: Record<string, string> = {
-  '积极': 'success',
-  '建议': 'warning',
-  '正常': 'processing',
-};
+async function handleGenerate() {
+  generating.value = true;
+  try {
+    await generateInsightApi(generateForm.value);
+    message.success('洞察生成成功');
+    generateForm.value = { title: '', category: '', source: '' };
+    await load();
+  } catch {
+    message.error('生成失败');
+  } finally {
+    generating.value = false;
+  }
+}
+
+async function handleDelete(id: string) {
+  try {
+    await deleteInsightApi(id);
+    message.success('删除成功');
+    await load();
+  } catch {
+    message.error('删除失败');
+  }
+}
+
+function handlePageChange(page: number, pageSize: number) {
+  void changePage(page, pageSize);
+}
+
+onMounted(() => {
+  void load();
+});
 </script>
 
 <template>
   <Page description="AI驱动的数据洞察分析" title="数据洞察">
-    <Alert
-      class="mb-4"
-      message="功能开发中"
-      description="后端API正在开发中，当前为模拟数据"
-      show-icon
-      type="warning"
-    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="洞察数量" :value="insights.length" /></Card>
+        <Card><Statistic title="洞察数量" :value="total" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="积极信号" :value="1" /></Card>
-      </Col>
-      <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="建议优化" :value="1" /></Card>
-      </Col>
-      <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="正常指标" :value="2" /></Card>
+        <Card><Statistic title="当前页" :value="items.length" /></Card>
       </Col>
     </Row>
 
+    <Card class="mb-4">
+      <Form layout="inline" :model="query">
+        <Form.Item label="关键词">
+          <Input v-model:value="query.keyword" allow-clear placeholder="搜索洞察" @press-enter="search" />
+        </Form.Item>
+        <Form.Item label="分类">
+          <Select v-model:value="query.type" :options="categoryOptions" class="w-32" allow-clear />
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" @click="search">查询</Button>
+        </Form.Item>
+      </Form>
+    </Card>
+
+    <Card class="mb-4" title="生成新洞察">
+      <Space>
+        <Input v-model:value="generateForm.title" placeholder="洞察标题（可选）" style="width: 200px" />
+        <Select v-model:value="generateForm.category" :options="categoryOptions.filter(o => o.value)" placeholder="分类" class="w-32" />
+        <Input v-model:value="generateForm.source" placeholder="数据来源（可选）" style="width: 200px" />
+        <Button type="primary" :loading="generating" @click="handleGenerate">生成洞察</Button>
+      </Space>
+    </Card>
+
     <Card title="AI洞察">
-      <template #extra>
-        <Space>
-          <Input v-model:value="query" placeholder="输入分析需求..." style="width: 300px" />
-          <Button type="primary" :loading="loading">分析</Button>
-        </Space>
-      </template>
-      <div v-for="insight in insights" :key="insight.id" class="mb-4 p-4 border rounded-lg">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-lg font-bold">{{ insight.title }}</span>
-          <Space>
-            <Tag :color="typeColors[insight.type]">{{ insight.type }}</Tag>
-            <Tag :color="priorityColors[insight.priority]">{{ insight.priority }}</Tag>
-          </Space>
-        </div>
-        <div class="text-2xl font-bold mb-2">{{ insight.value }}</div>
-        <div class="text-gray-500">{{ insight.description }}</div>
-      </div>
+      <List
+        :data-source="items"
+        :loading="loading"
+        :pagination="{
+          current: query.page,
+          pageSize: query.pageSize,
+          total,
+          showSizeChanger: true,
+          showTotal: (value: number) => `共 ${value} 条`,
+          onChange: handlePageChange,
+        }"
+      >
+        <template #renderItem="{ item }">
+          <List.Item>
+            <div class="w-full">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-lg font-bold">{{ item.title }}</span>
+                <Space>
+                  <Tag v-if="item.category" :color="categoryColors[item.category] || 'default'">
+                    {{ item.category }}
+                  </Tag>
+                  <span class="text-gray-400">{{ item.createdAt }}</span>
+                  <Popconfirm title="确认删除？" @confirm="handleDelete(item.id)">
+                    <Button danger type="link">删除</Button>
+                  </Popconfirm>
+                </Space>
+              </div>
+              <div v-if="item.content" class="text-gray-500">{{ item.content }}</div>
+              <div v-if="item.source" class="text-gray-400 mt-1">来源: {{ item.source }}</div>
+            </div>
+          </List.Item>
+        </template>
+      </List>
     </Card>
   </Page>
 </template>

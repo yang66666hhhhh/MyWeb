@@ -1,83 +1,252 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Alert, Button, Card, Col, List, Row, Space, Statistic, Tag } from 'ant-design-vue';
+import {
+  Button,
+  Card,
+  Col,
+  Form,
+  Input,
+  InputNumber,
+  message,
+  Modal,
+  Popconfirm,
+  Row,
+  Select,
+  Space,
+  Statistic,
+  Table,
+  Tag,
+} from 'ant-design-vue';
 
-const loading = ref(false);
+import type { CreateSkillInput, Skill, UpdateSkillInput } from '#/api/growth/extended';
 
-const skills = ref([
-  { id: '1', name: 'Vue 3', category: '前端', level: '高级', progress: 90, lastPracticed: '2024-01-15' },
-  { id: '2', name: 'TypeScript', category: '前端', level: '中级', progress: 75, lastPracticed: '2024-01-14' },
-  { id: '3', name: 'ASP.NET Core', category: '后端', level: '中级', progress: 70, lastPracticed: '2024-01-13' },
-  { id: '4', name: 'MySQL', category: '数据库', level: '中级', progress: 65, lastPracticed: '2024-01-12' },
-  { id: '5', name: 'Docker', category: 'DevOps', level: '初级', progress: 40, lastPracticed: '2024-01-10' },
-]);
+import {
+  createSkillApi,
+  deleteSkillApi,
+  getSkillsApi,
+  updateSkillApi,
+} from '#/api/growth/extended';
+import { usePagedQuery } from '#/composables/usePagedQuery';
+
+const formOpen = ref(false);
+const editingId = ref<null | string>(null);
+const formData = ref<CreateSkillInput & UpdateSkillInput>({
+  name: '',
+  category: '',
+  level: 0,
+  targetLevel: 0,
+  description: '',
+  tags: '',
+});
+
+const { changePage, items, load, loading, query, search, total } = usePagedQuery<
+  Skill,
+  { category?: string; keyword?: string; page: number; pageSize: number }
+>({
+  defaultQuery: {
+    page: 1,
+    pageSize: 10,
+  },
+  fetcher: getSkillsApi,
+});
+
+const categoryOptions = [
+  { label: '全部分类', value: undefined },
+  { label: '前端', value: '前端' },
+  { label: '后端', value: '后端' },
+  { label: '数据库', value: '数据库' },
+  { label: 'DevOps', value: 'DevOps' },
+];
 
 const categoryColors: Record<string, string> = {
-  '前端': 'blue',
-  '后端': 'green',
-  '数据库': 'orange',
-  'DevOps': 'purple',
+  前端: 'blue',
+  后端: 'green',
+  数据库: 'orange',
+  DevOps: 'purple',
 };
 
-const levelColors: Record<string, string> = {
-  '初级': 'default',
-  '中级': 'processing',
-  '高级': 'success',
-};
+const columns = [
+  { dataIndex: 'name', key: 'name', title: '技能名称' },
+  { dataIndex: 'category', key: 'category', title: '分类', width: 100 },
+  { dataIndex: 'level', key: 'level', title: '当前等级', width: 100 },
+  { dataIndex: 'targetLevel', key: 'targetLevel', title: '目标等级', width: 100 },
+  { dataIndex: 'experiencePoints', key: 'experiencePoints', title: '经验值', width: 100 },
+  { key: 'progress', title: '进度', width: 160 },
+  { dataIndex: 'createdAt', key: 'createdAt', title: '创建时间', width: 180 },
+  { key: 'action', title: '操作', width: 200 },
+];
+
+const stats = computed(() => {
+  const list = items.value as Skill[];
+  return {
+    total: total.value,
+    avgLevel: list.length ? Math.round(list.reduce((s, i) => s + i.level, 0) / list.length) : 0,
+    avgProgress: list.length
+      ? Math.round(list.reduce((s, i) => s + (i.targetLevel ? (i.level / i.targetLevel) * 100 : 0), 0) / list.length)
+      : 0,
+  };
+});
+
+function handleTableChange(pagination: { current?: number; pageSize?: number }) {
+  void changePage(pagination.current ?? 1, pagination.pageSize ?? 10);
+}
+
+function openCreate() {
+  editingId.value = null;
+  formData.value = { name: '', category: '', level: 0, targetLevel: 0, description: '', tags: '' };
+  formOpen.value = true;
+}
+
+function openEdit(record: Skill) {
+  editingId.value = record.id;
+  formData.value = {
+    name: record.name,
+    category: record.category,
+    level: record.level,
+    targetLevel: record.targetLevel,
+    description: record.description || '',
+    tags: record.tags || '',
+  };
+  formOpen.value = true;
+}
+
+async function handleSubmit() {
+  try {
+    if (editingId.value) {
+      await updateSkillApi(editingId.value, formData.value);
+      message.success('更新成功');
+    } else {
+      await createSkillApi(formData.value as CreateSkillInput);
+      message.success('创建成功');
+    }
+    formOpen.value = false;
+    await load();
+  } catch {
+    message.error('操作失败');
+  }
+}
+
+async function handleDelete(id: string) {
+  try {
+    await deleteSkillApi(id);
+    message.success('删除成功');
+    await load();
+  } catch {
+    message.error('删除失败');
+  }
+}
+
+onMounted(() => {
+  void load();
+});
 </script>
 
 <template>
   <Page description="管理和追踪您的技能成长" title="技能管理">
-    <Alert
-      class="mb-4"
-      message="功能开发中"
-      description="后端API正在开发中，当前为模拟数据"
-      show-icon
-      type="warning"
-    />
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="技能总数" :value="skills.length" /></Card>
+        <Card><Statistic title="技能总数" :value="stats.total" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="高级技能" :value="1" /></Card>
+        <Card><Statistic title="平均等级" :value="stats.avgLevel" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="中级技能" :value="3" /></Card>
+        <Card><Statistic title="平均进度" :value="stats.avgProgress" suffix="%" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="平均进度" :value="68" suffix="%" /></Card>
+        <Card><Statistic title="当前页" :value="items.length" suffix="条" /></Card>
       </Col>
     </Row>
 
-    <Card title="我的技能">
-      <template #extra><Button type="primary">添加技能</Button></template>
-      <List :data-source="skills" :loading="loading">
-        <template #renderItem="{ item }">
-          <List.Item>
-            <List.Item.Meta :title="item.name">
-              <template #description>
-                <Space>
-                  <Tag :color="categoryColors[item.category]">{{ item.category }}</Tag>
-                  <Tag :color="levelColors[item.level]">{{ item.level }}</Tag>
-                </Space>
-              </template>
-            </List.Item.Meta>
-            <div class="flex items-center gap-4">
-              <div class="w-32">
-                <div class="mb-1 text-right text-sm">{{ item.progress }}%</div>
-                <div class="h-2 rounded-full bg-gray-200">
-                  <div class="h-full rounded-full bg-blue-500" :style="{ width: `${item.progress}%` }"></div>
-                </div>
-              </div>
-              <span class="text-gray-400">{{ item.lastPracticed }}</span>
-            </div>
-          </List.Item>
-        </template>
-      </List>
+    <Card class="mb-4">
+      <Form layout="inline" :model="query">
+        <Form.Item label="关键词">
+          <Input v-model:value="query.keyword" allow-clear placeholder="技能名称" @press-enter="search" />
+        </Form.Item>
+        <Form.Item label="分类">
+          <Select v-model:value="query.category" :options="categoryOptions" class="w-36" allow-clear />
+        </Form.Item>
+        <Form.Item>
+          <Space>
+            <Button type="primary" @click="search">查询</Button>
+            <Button @click="openCreate">新增技能</Button>
+          </Space>
+        </Form.Item>
+      </Form>
     </Card>
+
+    <Card>
+      <Table
+        :columns="columns"
+        :data-source="items"
+        :loading="loading"
+        :pagination="{
+          current: query.page,
+          pageSize: query.pageSize,
+          showSizeChanger: true,
+          showTotal: (value: number) => `共 ${value} 条`,
+          total,
+        }"
+        row-key="id"
+        @change="handleTableChange"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'category'">
+            <Tag :color="categoryColors[record.category]">{{ record.category }}</Tag>
+          </template>
+          <template v-else-if="column.key === 'progress'">
+            <div class="w-32">
+              <div class="mb-1 text-right text-sm">
+                {{ record.targetLevel ? Math.round((record.level / record.targetLevel) * 100) : 0 }}%
+              </div>
+              <div class="h-2 rounded-full bg-gray-200">
+                <div
+                  class="h-full rounded-full bg-blue-500"
+                  :style="{ width: `${record.targetLevel ? Math.round((record.level / record.targetLevel) * 100) : 0}%` }"
+                ></div>
+              </div>
+            </div>
+          </template>
+          <template v-else-if="column.key === 'action'">
+            <Space>
+              <Button size="small" type="link" @click="openEdit(record as Skill)">编辑</Button>
+              <Popconfirm title="确认删除？" @confirm="handleDelete(record.id)">
+                <Button danger size="small" type="link">删除</Button>
+              </Popconfirm>
+            </Space>
+          </template>
+        </template>
+      </Table>
+    </Card>
+
+    <Modal
+      v-model:open="formOpen"
+      :title="editingId ? '编辑技能' : '新增技能'"
+      @ok="handleSubmit"
+    >
+      <Form layout="vertical" :model="formData">
+        <Form.Item label="技能名称" required>
+          <Input v-model:value="formData.name" placeholder="请输入技能名称" />
+        </Form.Item>
+        <Form.Item label="分类" required>
+          <Select v-model:value="formData.category" :options="categoryOptions.filter(o => o.value)" placeholder="请选择分类" />
+        </Form.Item>
+        <Form.Item label="当前等级">
+          <InputNumber v-model:value="formData.level" :min="0" class="w-full" />
+        </Form.Item>
+        <Form.Item label="目标等级">
+          <InputNumber v-model:value="formData.targetLevel" :min="0" class="w-full" />
+        </Form.Item>
+        <Form.Item label="描述">
+          <Input.TextArea v-model:value="formData.description" placeholder="技能描述" />
+        </Form.Item>
+        <Form.Item label="标签">
+          <Input v-model:value="formData.tags" placeholder="标签，逗号分隔" />
+        </Form.Item>
+      </Form>
+    </Modal>
   </Page>
 </template>

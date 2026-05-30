@@ -1,17 +1,56 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Alert, Button, Card, List, Tag } from 'ant-design-vue';
+import {
+  Button,
+  Card,
+  Form,
+  Input,
+  List,
+  message,
+  Modal,
+  Popconfirm,
+  Select,
+  Space,
+  Tag,
+} from 'ant-design-vue';
 
-const loading = ref(false);
+import type { CreateCustomReportInput, CustomReport } from '#/api/analytics/extended';
 
-const reports = ref([
-  { id: '1', name: '月度成长报告', type: '月报', period: '2024-01', status: '已生成', createdAt: '2024-02-01' },
-  { id: '2', name: '工作效率周报', type: '周报', period: '2024-W03', status: '已生成', createdAt: '2024-01-22' },
-  { id: '3', name: '习惯养成报告', type: '自定义', period: '2024-01', status: '已生成', createdAt: '2024-01-31' },
-]);
+import {
+  createCustomReportApi,
+  deleteCustomReportApi,
+  getCustomReportsApi,
+} from '#/api/analytics/extended';
+import { usePagedQuery } from '#/composables/usePagedQuery';
+
+const formOpen = ref(false);
+const formData = ref<CreateCustomReportInput>({
+  title: '',
+  description: '',
+  type: undefined,
+});
+
+const { items, load, loading, query, search, total, changePage } = usePagedQuery<
+  CustomReport,
+  { keyword?: string; page: number; pageSize: number; type?: string }
+>({
+  defaultQuery: {
+    page: 1,
+    pageSize: 10,
+  },
+  fetcher: getCustomReportsApi,
+});
+
+const typeOptions = [
+  { label: '全部类型', value: undefined },
+  { label: '月报', value: '月报' },
+  { label: '周报', value: '周报' },
+  { label: '年报', value: '年报' },
+  { label: '自定义', value: '自定义' },
+];
 
 const typeColors: Record<string, string> = {
   '月报': 'blue',
@@ -19,32 +58,104 @@ const typeColors: Record<string, string> = {
   '年报': 'purple',
   '自定义': 'orange',
 };
+
+function openCreate() {
+  formData.value = { title: '', description: '', type: undefined };
+  formOpen.value = true;
+}
+
+async function handleSubmit() {
+  try {
+    await createCustomReportApi(formData.value);
+    message.success('创建成功');
+    formOpen.value = false;
+    await load();
+  } catch {
+    message.error('创建失败');
+  }
+}
+
+async function handleDelete(id: string) {
+  try {
+    await deleteCustomReportApi(id);
+    message.success('删除成功');
+    await load();
+  } catch {
+    message.error('删除失败');
+  }
+}
+
+function handleTableChange(pagination: { current?: number; pageSize?: number }) {
+  void changePage(pagination.current ?? 1, pagination.pageSize ?? 10);
+}
+
+onMounted(() => {
+  void load();
+});
 </script>
 
 <template>
   <Page description="创建和查看自定义报表" title="自定义报表">
-    <Alert
-      class="mb-4"
-      message="功能开发中"
-      description="后端API正在开发中，当前为模拟数据"
-      show-icon
-      type="warning"
-    />
+    <Card class="mb-4">
+      <Form layout="inline" :model="query">
+        <Form.Item label="关键词">
+          <Input v-model:value="query.keyword" allow-clear placeholder="报表名称" @press-enter="search" />
+        </Form.Item>
+        <Form.Item label="类型">
+          <Select v-model:value="query.type" :options="typeOptions" class="w-32" allow-clear />
+        </Form.Item>
+        <Form.Item>
+          <Space>
+            <Button type="primary" @click="search">查询</Button>
+            <Button @click="openCreate">创建报表</Button>
+          </Space>
+        </Form.Item>
+      </Form>
+    </Card>
+
     <Card title="报表列表">
-      <template #extra><Button type="primary">创建报表</Button></template>
-      <List :data-source="reports" :loading="loading">
+      <List
+        :data-source="items"
+        :loading="loading"
+        :pagination="{
+          current: query.page,
+          pageSize: query.pageSize,
+          total,
+          showSizeChanger: true,
+          showTotal: (value: number) => `共 ${value} 条`,
+          onChange: (page: number, pageSize: number) => handleTableChange({ current: page, pageSize }),
+        }"
+      >
         <template #renderItem="{ item }">
           <List.Item>
-            <List.Item.Meta :title="item.name" :description="`周期: ${item.period} | 生成时间: ${item.createdAt}`" />
+            <List.Item.Meta
+              :title="item.title"
+              :description="item.description || `创建时间: ${item.createdAt}`"
+            />
             <div class="flex items-center gap-2">
-              <Tag :color="typeColors[item.type]">{{ item.type }}</Tag>
-              <Tag color="success">{{ item.status }}</Tag>
+              <Tag v-if="item.type" :color="typeColors[item.type]">{{ item.type }}</Tag>
               <Button type="link">查看</Button>
-              <Button type="link">导出</Button>
+              <Popconfirm title="确认删除？" @confirm="handleDelete(item.id)">
+                <Button danger type="link">删除</Button>
+              </Popconfirm>
             </div>
           </List.Item>
         </template>
       </List>
     </Card>
+
+    <Modal v-model:open="formOpen" title="创建报表" @ok="handleSubmit">
+      <Form layout="vertical" :model="formData">
+        <Form.Item label="报表名称" required>
+          <Input v-model:value="formData.title" placeholder="请输入报表名称" />
+        </Form.Item>
+        <Form.Item label="类型">
+          <Select v-model:value="formData.type" :options="typeOptions.filter(o => o.value)" placeholder="请选择类型" />
+        </Form.Item>
+        <Form.Item label="描述">
+          <Input.TextArea v-model:value="formData.description" placeholder="报表描述" />
+        </Form.Item>
+      </Form>
+    </Modal>
   </Page>
 </template>
