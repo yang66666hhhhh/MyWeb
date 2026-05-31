@@ -49,6 +49,12 @@ const formState = reactive<CreateCodeRepositoryInput>({
   tags: '',
 });
 
+const formRef = ref();
+const formRules = {
+  name: [{ required: true, message: '请输入仓库名称', type: 'string' as const }],
+  url: [{ required: true, message: '请输入仓库地址', type: 'string' as const }],
+  language: [{ required: true, message: '请选择编程语言', type: 'string' as const }],};
+
 const languageOptions = ['TypeScript', 'JavaScript', 'Python', 'C#', 'Java', 'Go', 'Rust'];
 
 const columns = [
@@ -123,6 +129,7 @@ const handleDelete = async (id: string) => {
 };
 
 const handleSubmit = async () => {
+    try { await formRef.value?.validate(); } catch { return; }
   if (!formState.name || !formState.url || !formState.language) {
     message.warning('请填写必填项');
     return;
@@ -218,7 +225,7 @@ onMounted(() => {
       :confirm-loading="submitting"
       @ok="handleSubmit"
     >
-      <Form layout="vertical">
+      <Form ref="formRef" :model="formState" layout="vertical" :rules="formRules">
         <FormItem label="仓库名称" required>
           <Input v-model:value="formState.name" placeholder="仓库名称" />
         </FormItem>

@@ -248,6 +248,16 @@ vue-vben-admin/apps/web-antd/.env.production
 
 ## 更新日志
 
+### v2.3 (2025-05-31)
+
+**表单验证优化：**
+
+- 为 36 个页面添加了 Ant Design Form `:rules` 验证
+- 使用 `formRef.value?.validate()` 替代手动 `if` 判断
+- 修复了 TypeScript 类型错误
+
+**测试结果：** 140 个后端测试全部通过，前端类型检查和构建成功
+
 ### v2.2 (2025-05-30)
 
 **完善所有页面（消除桩代码）：**

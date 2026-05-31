@@ -861,6 +861,28 @@ rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.cspr
 - 前端类型检查：通过
 - 前端构建：成功
 
+### v2.3 (2025-05-31)
+
+**表单验证优化：**
+
+- 为 36 个页面添加了 Ant Design Form `:rules` 验证：
+  - Work: tasks, project, device, okr, risk-control, files
+  - Assets: income, expenses, budget, investments
+  - Growth: skills, goals, year-plans, monthly-review, learning-path, courses, fitness, sleep, mood-tracker, reading-list
+  - AI: automation
+  - Student: learning, records, subjects, materials, mistakes
+  - Content: article, media, calendar
+  - Network: contact, interaction
+  - Persona: code-repository, issues, pipelines, design/assets, prototypes, teacher/courses, teacher/students
+- 使用 `formRef.value?.validate()` 替代手动 `if` 判断
+- 添加了 `formRules` 定义，包含必填项、格式验证等规则
+- 修复了 TypeScript 类型错误，使用 `as const` 断言
+
+**验证结果：**
+- 后端测试：140 个全部通过
+- 前端类型检查：通过
+- 前端构建：成功
+
 ### v2.2 (2025-05-30)
 
 **完善所有页面（消除桩代码）：**

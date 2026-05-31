@@ -131,6 +131,10 @@ const formState = ref<TaskFormState>({
   type: 0,
 });
 
+const formRef = ref();
+const formRules = {
+  title: [{ required: true, message: '请输入任务标题', type: 'string' as const }],};
+
 const totalCount = computed(() => tasks.value.length);
 const inProgressCount = computed(() => tasks.value.filter((item) => item.status === 1).length);
 const completedCount = computed(() => tasks.value.filter((item) => item.status === 2).length);
@@ -222,6 +226,7 @@ function handleDueDateChange(_: Dayjs | string, dateString: string) {
 }
 
 async function handleSave() {
+    try { await formRef.value?.validate(); } catch { return; }
   if (!formState.value.title.trim()) {
     message.warning('请填写任务标题');
     return;
@@ -391,7 +396,7 @@ onMounted(() => {
       width="620px"
       @ok="handleSave"
     >
-      <Form :model="formState" layout="vertical">
+      <Form ref="formRef" :model="formState" layout="vertical" :rules="formRules">
         <Form.Item label="任务标题" required>
           <Input v-model:value="formState.title" placeholder="例如：完成二叉树遍历专题" />
         </Form.Item>

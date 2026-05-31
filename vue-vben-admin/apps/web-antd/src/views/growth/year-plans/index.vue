@@ -41,6 +41,12 @@ const formData = ref<CreateYearPlanInput & UpdateYearPlanInput>({
   tags: '',
 });
 
+const formRef = ref();
+const formRules = {
+  year: [{ required: true, message: '请输入年份', type: 'number' as const }],
+  title: [{ required: true, message: '请输入目标标题', type: 'string' as const }],
+  category: [{ required: true, message: '请选择分类', type: 'string' as const }],};
+
 const { changePage, items, load, loading, query, search, total } = usePagedQuery<
   YearPlan,
   { category?: string; keyword?: string; page: number; pageSize: number; status?: number }
@@ -125,6 +131,7 @@ function openEdit(record: YearPlan) {
 }
 
 async function handleSubmit() {
+    try { await formRef.value?.validate(); } catch { return; }
   try {
     if (editingId.value) {
       await updateYearPlanApi(editingId.value, formData.value);
@@ -239,7 +246,7 @@ onMounted(() => {
       :title="editingId ? '编辑年度目标' : '新增年度目标'"
       @ok="handleSubmit"
     >
-      <Form layout="vertical" :model="formData">
+      <Form ref="formRef" layout="vertical" :model="formData" :rules="formRules">
         <Form.Item label="年份" required>
           <InputNumber v-model:value="formData.year" :min="2020" :max="2030" class="w-full" />
         </Form.Item>

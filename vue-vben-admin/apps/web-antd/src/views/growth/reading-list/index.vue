@@ -42,6 +42,10 @@ const formData = ref<CreateReadingBookInput & UpdateReadingBookInput>({
   tags: '',
 });
 
+const formRef = ref();
+const formRules = {
+  title: [{ required: true, message: '请输入书名', type: 'string' as const }],};
+
 const { changePage, items, load, loading, query, search, total } = usePagedQuery<
   ReadingBook,
   { category?: string; keyword?: string; page: number; pageSize: number; status?: number }
@@ -119,6 +123,7 @@ function openEdit(record: ReadingBook) {
 }
 
 async function handleSubmit() {
+    try { await formRef.value?.validate(); } catch { return; }
   try {
     if (editingId.value) {
       await updateReadingBookApi(editingId.value, formData.value);
@@ -237,7 +242,7 @@ onMounted(() => {
       :title="editingId ? '编辑书籍' : '添加书籍'"
       @ok="handleSubmit"
     >
-      <Form layout="vertical" :model="formData">
+      <Form ref="formRef" layout="vertical" :model="formData" :rules="formRules">
         <Form.Item label="书名" required>
           <Input v-model:value="formData.title" placeholder="请输入书名" />
         </Form.Item>

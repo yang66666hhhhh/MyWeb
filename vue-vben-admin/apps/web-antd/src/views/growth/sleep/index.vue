@@ -40,6 +40,11 @@ const formData = ref<CreateSleepRecordInput & UpdateSleepRecordInput>({
   tags: '',
 });
 
+const formRef = ref();
+const formRules = {
+  bedTime: [{ required: true, message: '请输入就寝时间', type: 'string' as const }],
+  wakeTime: [{ required: true, message: '请输入起床时间', type: 'string' as const }],};
+
 const { changePage, items, load, loading, query, search, total } = usePagedQuery<
   SleepRecord,
   { keyword?: string; page: number; pageSize: number }
@@ -109,6 +114,7 @@ function openEdit(record: SleepRecord) {
 }
 
 async function handleSubmit() {
+    try { await formRef.value?.validate(); } catch { return; }
   try {
     if (editingId.value) {
       await updateSleepRecordApi(editingId.value, formData.value);
@@ -209,7 +215,7 @@ onMounted(() => {
       :title="editingId ? '编辑睡眠记录' : '记录睡眠'"
       @ok="handleSubmit"
     >
-      <Form layout="vertical" :model="formData">
+      <Form ref="formRef" layout="vertical" :model="formData" :rules="formRules">
         <Form.Item label="就寝时间" required>
           <Input v-model:value="formData.bedTime" placeholder="如: 23:00" />
         </Form.Item>

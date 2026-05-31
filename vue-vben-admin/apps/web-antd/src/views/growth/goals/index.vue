@@ -43,6 +43,11 @@ const formData = ref<CreateGoalInput & UpdateGoalInput>({
   tags: '',
 });
 
+const formRef = ref();
+const formRules = {
+  title: [{ required: true, message: '请输入目标标题', type: 'string' as const }],
+  category: [{ required: true, message: '请选择分类', type: 'string' as const }],};
+
 const { changePage, items, load, loading, query, search, total } = usePagedQuery<
   Goal,
   { category?: string; keyword?: string; page: number; pageSize: number; status?: number }
@@ -136,6 +141,7 @@ function openEdit(record: Goal) {
 }
 
 async function handleSubmit() {
+    try { await formRef.value?.validate(); } catch { return; }
   try {
     if (editingId.value) {
       await updateGoalApi(editingId.value, formData.value);
@@ -253,7 +259,7 @@ onMounted(() => {
       :title="editingId ? '编辑目标' : '新增目标'"
       @ok="handleSubmit"
     >
-      <Form layout="vertical" :model="formData">
+      <Form ref="formRef" layout="vertical" :model="formData" :rules="formRules">
         <Form.Item label="目标标题" required>
           <Input v-model:value="formData.title" placeholder="请输入目标标题" />
         </Form.Item>

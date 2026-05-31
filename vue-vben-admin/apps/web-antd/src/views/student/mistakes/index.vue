@@ -101,6 +101,11 @@ const formState = ref<MistakeFormState>({
   tags: '',
 });
 
+const formRef = ref();
+const formRules = {
+  subject: [{ required: true, message: '请选择科目', type: 'string' as const }],
+  question: [{ required: true, message: '请输入题目', type: 'string' as const }],};
+
 const totalCount = computed(() => mistakes.value.length);
 const pendingCount = computed(() => mistakes.value.filter((item) => item.status === 0).length);
 const reviewingCount = computed(() => mistakes.value.filter((item) => item.status === 1).length);
@@ -195,6 +200,7 @@ function handleNextReviewDateChange(_: Dayjs | string, dateString: string) {
 }
 
 async function handleSave() {
+    try { await formRef.value?.validate(); } catch { return; }
   if (!formState.value.question.trim() || !formState.value.subject.trim()) {
     message.warning('请填写科目和题目');
     return;
@@ -342,7 +348,7 @@ onMounted(() => {
       width="720px"
       @ok="handleSave"
     >
-      <Form :model="formState" layout="vertical">
+      <Form ref="formRef" :model="formState" layout="vertical" :rules="formRules">
         <Row :gutter="16">
           <Col :span="12">
             <Form.Item label="科目" required>

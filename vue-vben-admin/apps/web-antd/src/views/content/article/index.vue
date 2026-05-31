@@ -49,6 +49,10 @@ const formState = reactive<CreateArticleInput>({
   remark: '',
 });
 
+const formRef = ref();
+const formRules = {
+  title: [{ required: true, message: '请输入标题', type: 'string' as const }],};
+
 const statusOptions = [
   { value: 'draft', label: '草稿' },
   { value: 'published', label: '已发布' },
@@ -128,6 +132,7 @@ const handleDelete = async (id: string) => {
 };
 
 const handleSubmit = async () => {
+    try { await formRef.value?.validate(); } catch { return; }
   if (!formState.title) {
     message.warning('请填写标题');
     return;
@@ -215,7 +220,7 @@ onMounted(() => {
       width="700px"
       @ok="handleSubmit"
     >
-      <Form layout="vertical">
+      <Form ref="formRef" :model="formState" layout="vertical" :rules="formRules">
         <FormItem label="标题" required>
           <Input v-model:value="formState.title" placeholder="文章标题" />
         </FormItem>

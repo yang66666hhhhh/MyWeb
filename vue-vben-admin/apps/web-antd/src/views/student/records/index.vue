@@ -77,6 +77,11 @@ const formState = ref<RecordFormState>({
   taskTitle: '',
 });
 
+const formRef = ref();
+const formRules = {
+  subject: [{ required: true, message: '请选择科目', type: 'string' as const }],
+  summary: [{ required: true, message: '请输入学习摘要', type: 'string' as const }],};
+
 const totalCount = computed(() => records.value.length);
 const totalMinutes = computed(() => records.value.reduce((sum, item) => sum + item.durationMinutes, 0));
 const totalHours = computed(() => Math.round((totalMinutes.value / 60) * 10) / 10);
@@ -147,6 +152,7 @@ function toRecord(record: Record<string, any>) {
 }
 
 async function handleSave() {
+    try { await formRef.value?.validate(); } catch { return; }
   if (!formState.value.subject.trim() || !formState.value.summary.trim()) {
     message.warning('请填写科目和学习摘要');
     return;
@@ -274,7 +280,7 @@ onMounted(async () => {
       width="680px"
       @ok="handleSave"
     >
-      <Form :model="formState" layout="vertical">
+      <Form ref="formRef" :model="formState" layout="vertical" :rules="formRules">
         <Row :gutter="16">
           <Col :span="8">
             <Form.Item label="日期">

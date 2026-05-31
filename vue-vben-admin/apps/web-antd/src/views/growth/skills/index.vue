@@ -33,6 +33,7 @@ import { usePagedQuery } from '#/composables/usePagedQuery';
 
 const formOpen = ref(false);
 const editingId = ref<null | string>(null);
+const formRef = ref();
 const formData = ref<CreateSkillInput & UpdateSkillInput>({
   name: '',
   category: '',
@@ -66,6 +67,11 @@ const categoryColors: Record<string, string> = {
   后端: 'green',
   数据库: 'orange',
   DevOps: 'purple',
+};
+
+const formRules = {
+  name: [{ required: true, message: '请输入技能名称', type: 'string' as const, trigger: 'blur' as const }],
+  category: [{ required: true, message: '请选择分类', type: 'string' as const, trigger: 'change' as const }],
 };
 
 const columns = [
@@ -114,6 +120,11 @@ function openEdit(record: Skill) {
 }
 
 async function handleSubmit() {
+  try {
+    await formRef.value?.validate();
+  } catch {
+    return;
+  }
   try {
     if (editingId.value) {
       await updateSkillApi(editingId.value, formData.value);
@@ -227,7 +238,7 @@ onMounted(() => {
       :title="editingId ? '编辑技能' : '新增技能'"
       @ok="handleSubmit"
     >
-      <Form layout="vertical" :model="formData">
+      <Form ref="formRef" layout="vertical" :model="formData" :rules="formRules">
         <Form.Item label="技能名称" required>
           <Input v-model:value="formData.name" placeholder="请输入技能名称" />
         </Form.Item>

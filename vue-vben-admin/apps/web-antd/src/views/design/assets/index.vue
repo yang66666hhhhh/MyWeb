@@ -51,6 +51,13 @@ const formState = reactive<CreateDesignAssetInput>({
   tags: '',
 });
 
+const formRef = ref();
+const formRules = {
+  name: [{ required: true, message: '请输入资源名称', type: 'string' as const }],
+  category: [{ required: true, message: '请选择分类', type: 'string' as const }],
+  fileUrl: [{ required: true, message: '请输入文件地址', type: 'string' as const }],
+  fileType: [{ required: true, message: '请选择文件格式', type: 'string' as const }],};
+
 const categoryOptions = ['图片', '图标', '设计系统', '插画', '字体', '其他'];
 const fileTypeOptions = ['SVG', 'PNG', 'JPG', 'Figma', 'Sketch', 'PSD', 'AI', 'PDF'];
 
@@ -132,6 +139,7 @@ const handleDelete = async (id: string) => {
 };
 
 const handleSubmit = async () => {
+    try { await formRef.value?.validate(); } catch { return; }
   if (!formState.name || !formState.category || !formState.fileUrl || !formState.fileType) {
     message.warning('请填写必填项');
     return;
@@ -225,7 +233,7 @@ onMounted(() => {
       :confirm-loading="submitting"
       @ok="handleSubmit"
     >
-      <Form layout="vertical">
+      <Form ref="formRef" :model="formState" layout="vertical" :rules="formRules">
         <FormItem label="资源名称" required>
           <Input v-model:value="formState.name" placeholder="资源名称" />
         </FormItem>

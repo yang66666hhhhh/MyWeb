@@ -49,6 +49,11 @@ const formState = reactive<CreateTeacherCourseInput>({
   tags: '',
 });
 
+const formRef = ref();
+const formRules = {
+  name: [{ required: true, message: '请输入课程名称', type: 'string' as const }],
+  code: [{ required: true, message: '请输入课程代码', type: 'string' as const }],};
+
 const semesterOptions = [
   { label: '第一学期', value: 1 },
   { label: '第二学期', value: 2 },
@@ -131,6 +136,7 @@ const handleDelete = async (id: string) => {
 };
 
 const handleSubmit = async () => {
+    try { await formRef.value?.validate(); } catch { return; }
   if (!formState.name || !formState.code) {
     message.warning('请填写必填项');
     return;
@@ -237,7 +243,7 @@ onMounted(() => {
       :confirm-loading="submitting"
       @ok="handleSubmit"
     >
-      <Form layout="vertical">
+      <Form ref="formRef" :model="formState" layout="vertical" :rules="formRules">
         <FormItem label="课程名称" required>
           <Input v-model:value="formState.name" placeholder="课程名称" />
         </FormItem>

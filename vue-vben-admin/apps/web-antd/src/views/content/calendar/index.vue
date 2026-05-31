@@ -49,6 +49,12 @@ const formState = reactive<CreatePublishingCalendarInput>({
   remark: '',
 });
 
+const formRef = ref();
+const formRules = {
+  title: [{ required: true, message: '请输入标题', type: 'string' as const }],
+  platform: [{ required: true, message: '请选择平台', type: 'string' as const }],
+  plannedDate: [{ required: true, message: '请选择计划日期', type: 'string' as const }],};
+
 const platformOptions = ['微信公众号', '知乎', '掘金', 'CSDN', '博客', '微博', '其他'];
 
 const statusOptions = [
@@ -125,6 +131,7 @@ const handleDelete = async (id: string) => {
 };
 
 const handleSubmit = async () => {
+    try { await formRef.value?.validate(); } catch { return; }
   if (!formState.title || !formState.platform || !formState.plannedDate) {
     message.warning('请填写必填项');
     return;
@@ -208,7 +215,7 @@ onMounted(() => {
       :confirm-loading="submitting"
       @ok="handleSubmit"
     >
-      <Form layout="vertical">
+      <Form ref="formRef" :model="formState" layout="vertical" :rules="formRules">
         <FormItem label="标题" required>
           <Input v-model:value="formState.title" placeholder="内容标题" />
         </FormItem>

@@ -45,6 +45,12 @@ const formData = ref<CreateMonthlyReviewInput & UpdateMonthlyReviewInput>({
   tags: '',
 });
 
+const formRef = ref();
+const formRules = {
+  year: [{ required: true, message: '请输入年份', type: 'number' as const }],
+  month: [{ required: true, message: '请选择月份', type: 'number' as const }],
+  title: [{ required: true, message: '请输入标题', type: 'string' as const }],};
+
 const { changePage, items, load, loading, query, search, total } = usePagedQuery<
   MonthlyReview,
   { keyword?: string; page: number; pageSize: number }
@@ -116,6 +122,7 @@ function openEdit(record: MonthlyReview) {
 }
 
 async function handleSubmit() {
+    try { await formRef.value?.validate(); } catch { return; }
   try {
     if (editingId.value) {
       await updateMonthlyReviewApi(editingId.value, formData.value);
@@ -217,7 +224,7 @@ onMounted(() => {
       width="600px"
       @ok="handleSubmit"
     >
-      <Form layout="vertical" :model="formData">
+      <Form ref="formRef" layout="vertical" :model="formData" :rules="formRules">
         <Form.Item v-if="!editingId" label="年份" required>
           <InputNumber v-model:value="formData.year" :min="2020" :max="2030" class="w-full" />
         </Form.Item>

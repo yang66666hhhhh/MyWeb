@@ -43,6 +43,10 @@ const formData = ref<CreateAutomationWorkflowInput>({
   actions: '',
 });
 
+const formRef = ref();
+const formRules = {
+  name: [{ required: true, message: '请输入工作流名称', type: 'string' as const }],};
+
 const { items, load, loading, query, search, total, changePage } = usePagedQuery<
   AutomationWorkflow,
   { keyword?: string; page: number; pageSize: number; type?: string }
@@ -83,6 +87,7 @@ function openEdit(record: AutomationWorkflow) {
 }
 
 async function handleSubmit() {
+    try { await formRef.value?.validate(); } catch { return; }
   try {
     if (editingId.value) {
       await updateWorkflowApi(editingId.value, formData.value);
@@ -208,7 +213,7 @@ onMounted(() => {
       :title="editingId ? '编辑工作流' : '创建工作流'"
       @ok="handleSubmit"
     >
-      <Form layout="vertical" :model="formData">
+      <Form ref="formRef" layout="vertical" :model="formData" :rules="formRules">
         <Form.Item label="工作流名称" required>
           <Input v-model:value="formData.name" placeholder="请输入工作流名称" />
         </Form.Item>

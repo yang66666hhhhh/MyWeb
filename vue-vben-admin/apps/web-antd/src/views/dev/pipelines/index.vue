@@ -49,6 +49,12 @@ const formState = reactive<CreatePipelineInput>({
   steps: '',
 });
 
+const formRef = ref();
+const formRules = {
+  name: [{ required: true, message: '请输入流水线名称', type: 'string' as const }],
+  repository: [{ required: true, message: '请输入仓库', type: 'string' as const }],
+  branch: [{ required: true, message: '请输入分支', type: 'string' as const }],};
+
 const triggerTypeOptions = ['push', 'manual', 'schedule', 'merge_request'];
 
 const statusMap: Record<number, string> = {
@@ -136,6 +142,7 @@ const handleDelete = async (id: string) => {
 };
 
 const handleSubmit = async () => {
+    try { await formRef.value?.validate(); } catch { return; }
   if (!formState.name || !formState.repository || !formState.branch) {
     message.warning('请填写必填项');
     return;
@@ -239,7 +246,7 @@ onMounted(() => {
       :confirm-loading="submitting"
       @ok="handleSubmit"
     >
-      <Form layout="vertical">
+      <Form ref="formRef" :model="formState" layout="vertical" :rules="formRules">
         <FormItem label="流水线名称" required>
           <Input v-model:value="formState.name" placeholder="流水线名称" />
         </FormItem>

@@ -49,6 +49,10 @@ const formState = reactive<CreateContactInput>({
   remark: '',
 });
 
+const formRef = ref();
+const formRules = {
+  name: [{ required: true, message: '请输入姓名', type: 'string' as const }],};
+
 const columns = [
   { title: '姓名', dataIndex: 'name', key: 'name', width: 100 },
   { title: '公司', dataIndex: 'company', key: 'company', width: 150 },
@@ -114,6 +118,7 @@ const handleDelete = async (id: string) => {
 };
 
 const handleSubmit = async () => {
+    try { await formRef.value?.validate(); } catch { return; }
   if (!formState.name) {
     message.warning('请填写姓名');
     return;
@@ -200,7 +205,7 @@ onMounted(() => {
       :confirm-loading="submitting"
       @ok="handleSubmit"
     >
-      <Form layout="vertical">
+      <Form ref="formRef" :model="formState" layout="vertical" :rules="formRules">
         <FormItem label="姓名" required>
           <Input v-model:value="formState.name" placeholder="联系人姓名" />
         </FormItem>

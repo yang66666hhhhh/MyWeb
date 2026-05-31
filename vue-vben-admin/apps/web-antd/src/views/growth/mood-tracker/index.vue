@@ -42,6 +42,10 @@ const formData = ref<CreateMoodRecordInput & UpdateMoodRecordInput>({
   tags: '',
 });
 
+const formRef = ref();
+const formRules = {
+  recordDate: [{ required: true, message: '请选择记录日期', type: 'string' as const }],};
+
 const { changePage, items, load, loading, query, search, total } = usePagedQuery<
   MoodRecord,
   { keyword?: string; page: number; pageSize: number }
@@ -111,6 +115,7 @@ function openEdit(record: MoodRecord) {
 }
 
 async function handleSubmit() {
+    try { await formRef.value?.validate(); } catch { return; }
   try {
     if (editingId.value) {
       await updateMoodRecordApi(editingId.value, formData.value);
@@ -212,7 +217,7 @@ onMounted(() => {
       :title="editingId ? '编辑心情记录' : '记录心情'"
       @ok="handleSubmit"
     >
-      <Form layout="vertical" :model="formData">
+      <Form ref="formRef" layout="vertical" :model="formData" :rules="formRules">
         <Form.Item label="记录日期" required>
           <DatePicker v-model:value="formData.recordDate" class="w-full" />
         </Form.Item>

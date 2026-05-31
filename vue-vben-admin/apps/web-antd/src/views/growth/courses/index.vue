@@ -44,6 +44,12 @@ const formData = ref<CreateCourseInput & UpdateCourseInput>({
   tags: '',
 });
 
+const formRef = ref();
+const formRules = {
+  title: [{ required: true, message: '请输入课程名称', type: 'string' as const }],
+  platform: [{ required: true, message: '请输入平台', type: 'string' as const }],
+  category: [{ required: true, message: '请选择分类', type: 'string' as const }],};
+
 const { changePage, items, load, loading, query, search, total } = usePagedQuery<
   Course,
   { category?: string; keyword?: string; page: number; pageSize: number; status?: number }
@@ -125,6 +131,7 @@ function openEdit(record: Course) {
 }
 
 async function handleSubmit() {
+    try { await formRef.value?.validate(); } catch { return; }
   try {
     if (editingId.value) {
       await updateCourseApi(editingId.value, formData.value);
@@ -245,7 +252,7 @@ onMounted(() => {
       :title="editingId ? '编辑课程' : '添加课程'"
       @ok="handleSubmit"
     >
-      <Form layout="vertical" :model="formData">
+      <Form ref="formRef" layout="vertical" :model="formData" :rules="formRules">
         <Form.Item label="课程名称" required>
           <Input v-model:value="formData.title" placeholder="请输入课程名称" />
         </Form.Item>

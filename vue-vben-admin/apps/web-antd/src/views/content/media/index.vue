@@ -50,6 +50,12 @@ const formState = reactive<CreateMediaItemInput>({
   remark: '',
 });
 
+const formRef = ref();
+const formRules = {
+  fileName: [{ required: true, message: '请输入文件名', type: 'string' as const }],
+  fileUrl: [{ required: true, message: '请输入文件URL', type: 'string' as const }],
+  fileType: [{ required: true, message: '请选择文件类型', type: 'string' as const }],};
+
 const fileTypeOptions = ['image', 'video', 'audio', 'document', 'other'];
 
 const columns = [
@@ -126,6 +132,7 @@ const handleDelete = async (id: string) => {
 };
 
 const handleSubmit = async () => {
+    try { await formRef.value?.validate(); } catch { return; }
   if (!formState.fileName || !formState.fileUrl || !formState.fileType) {
     message.warning('请填写必填项');
     return;
@@ -215,7 +222,7 @@ onMounted(() => {
       :confirm-loading="submitting"
       @ok="handleSubmit"
     >
-      <Form layout="vertical">
+      <Form ref="formRef" :model="formState" layout="vertical" :rules="formRules">
         <FormItem label="文件名" required>
           <Input v-model:value="formState.fileName" placeholder="文件名" />
         </FormItem>

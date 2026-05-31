@@ -46,6 +46,10 @@ const formState = reactive<CreateTeacherStudentInput>({
   tags: '',
 });
 
+const formRef = ref();
+const formRules = {
+  name: [{ required: true, message: '请输入学生姓名', type: 'string' as const }],};
+
 const columns = [
   { title: '学生姓名', dataIndex: 'name', key: 'name' },
   { title: '学号', dataIndex: 'studentId', key: 'studentId', width: 120 },
@@ -120,6 +124,7 @@ const handleDelete = async (id: string) => {
 };
 
 const handleSubmit = async () => {
+    try { await formRef.value?.validate(); } catch { return; }
   if (!formState.name) {
     message.warning('请填写学生姓名');
     return;
@@ -213,7 +218,7 @@ onMounted(() => {
       :confirm-loading="submitting"
       @ok="handleSubmit"
     >
-      <Form layout="vertical">
+      <Form ref="formRef" :model="formState" layout="vertical" :rules="formRules">
         <FormItem label="学生姓名" required>
           <Input v-model:value="formState.name" placeholder="学生姓名" />
         </FormItem>

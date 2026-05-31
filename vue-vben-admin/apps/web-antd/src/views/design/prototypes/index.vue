@@ -45,6 +45,11 @@ const formState = reactive<CreatePrototypeInput>({
   tags: '',
 });
 
+const formRef = ref();
+const formRules = {
+  title: [{ required: true, message: '请输入原型名称', type: 'string' as const }],
+  project: [{ required: true, message: '请输入所属项目', type: 'string' as const }],};
+
 const statusMap: Record<number, string> = {
   0: '草稿',
   1: '进行中',
@@ -119,6 +124,7 @@ const handleDelete = async (id: string) => {
 };
 
 const handleSubmit = async () => {
+    try { await formRef.value?.validate(); } catch { return; }
   if (!formState.title || !formState.project) {
     message.warning('请填写必填项');
     return;
@@ -217,7 +223,7 @@ onMounted(() => {
       :confirm-loading="submitting"
       @ok="handleSubmit"
     >
-      <Form layout="vertical">
+      <Form ref="formRef" :model="formState" layout="vertical" :rules="formRules">
         <FormItem label="原型名称" required>
           <Input v-model:value="formState.title" placeholder="原型名称" />
         </FormItem>

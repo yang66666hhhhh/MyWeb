@@ -78,6 +78,10 @@ const formState = ref<SubjectFormState>({
   targetHours: 120,
 });
 
+const formRef = ref();
+const formRules = {
+  name: [{ required: true, message: '请输入科目名称', type: 'string' as const }],};
+
 const totalCount = computed(() => subjects.value.length);
 const activeCount = computed(() => subjects.value.filter((item) => item.isActive).length);
 const targetHoursTotal = computed(() => subjects.value.reduce((sum, item) => sum + item.targetHours, 0));
@@ -132,6 +136,7 @@ function toSubject(record: Record<string, any>) {
 }
 
 async function handleSave() {
+    try { await formRef.value?.validate(); } catch { return; }
   if (!formState.value.name.trim()) {
     message.warning('请填写科目名称');
     return;
@@ -247,7 +252,7 @@ onMounted(() => {
       width="620px"
       @ok="handleSave"
     >
-      <Form :model="formState" layout="vertical">
+      <Form ref="formRef" :model="formState" layout="vertical" :rules="formRules">
         <Form.Item label="科目名称" required>
           <Input v-model:value="formState.name" placeholder="例如：数学" />
         </Form.Item>

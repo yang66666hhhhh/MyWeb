@@ -104,6 +104,11 @@ const formState = ref<MaterialFormState>({
   type: 0,
 });
 
+const formRef = ref();
+const formRules = {
+  title: [{ required: true, message: '请输入资料标题', type: 'string' as const }],
+  subject: [{ required: true, message: '请选择科目', type: 'string' as const }],};
+
 const totalCount = computed(() => materials.value.length);
 const noteCount = computed(() => materials.value.filter((item) => item.type === 0).length);
 const formulaCount = computed(() => materials.value.filter((item) => item.type === 2).length);
@@ -188,6 +193,7 @@ function splitTags(tags?: null | string) {
 }
 
 async function handleSave() {
+    try { await formRef.value?.validate(); } catch { return; }
   if (!formState.value.title.trim() || !formState.value.subject.trim()) {
     message.warning('请填写资料标题和科目');
     return;
@@ -331,7 +337,7 @@ onMounted(() => {
       width="760px"
       @ok="handleSave"
     >
-      <Form :model="formState" layout="vertical">
+      <Form ref="formRef" :model="formState" layout="vertical" :rules="formRules">
         <Form.Item label="资料标题" required>
           <Input v-model:value="formState.title" placeholder="例如：线性代数特征值总结" />
         </Form.Item>

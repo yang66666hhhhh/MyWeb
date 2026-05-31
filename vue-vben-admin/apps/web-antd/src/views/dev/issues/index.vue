@@ -48,6 +48,11 @@ const formState = reactive<CreateIssueInput>({
   labels: '',
 });
 
+const formRef = ref();
+const formRules = {
+  title: [{ required: true, message: '请输入标题', type: 'string' as const }],
+  repository: [{ required: true, message: '请输入仓库', type: 'string' as const }],};
+
 const priorityOptions = [
   { label: '高', value: 3 },
   { label: '中', value: 2 },
@@ -144,6 +149,7 @@ const handleDelete = async (id: string) => {
 };
 
 const handleSubmit = async () => {
+    try { await formRef.value?.validate(); } catch { return; }
   if (!formState.title || !formState.repository) {
     message.warning('请填写必填项');
     return;
@@ -249,7 +255,7 @@ onMounted(() => {
       :confirm-loading="submitting"
       @ok="handleSubmit"
     >
-      <Form layout="vertical">
+      <Form ref="formRef" :model="formState" layout="vertical" :rules="formRules">
         <FormItem label="标题" required>
           <Input v-model:value="formState.title" placeholder="问题标题" />
         </FormItem>

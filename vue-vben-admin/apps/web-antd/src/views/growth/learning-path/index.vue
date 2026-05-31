@@ -41,6 +41,11 @@ const formData = ref<CreateLearningPathInput & UpdateLearningPathInput>({
   tags: '',
 });
 
+const formRef = ref();
+const formRules = {
+  title: [{ required: true, message: '请输入路径标题', type: 'string' as const }],
+  category: [{ required: true, message: '请选择分类', type: 'string' as const }],};
+
 const { changePage, items, load, loading, query, search, total } = usePagedQuery<
   LearningPath,
   { category?: string; keyword?: string; page: number; pageSize: number; status?: number }
@@ -119,6 +124,7 @@ function openEdit(record: LearningPath) {
 }
 
 async function handleSubmit() {
+    try { await formRef.value?.validate(); } catch { return; }
   try {
     if (editingId.value) {
       await updateLearningPathApi(editingId.value, formData.value);
@@ -239,7 +245,7 @@ onMounted(() => {
       :title="editingId ? '编辑学习路径' : '新建学习路径'"
       @ok="handleSubmit"
     >
-      <Form layout="vertical" :model="formData">
+      <Form ref="formRef" layout="vertical" :model="formData" :rules="formRules">
         <Form.Item label="路径标题" required>
           <Input v-model:value="formData.title" placeholder="请输入路径标题" />
         </Form.Item>

@@ -42,6 +42,12 @@ const formData = ref<CreateFitnessRecordInput & UpdateFitnessRecordInput>({
   tags: '',
 });
 
+const formRef = ref();
+const formRules = {
+  exerciseType: [{ required: true, message: '请输入运动类型', type: 'string' as const }],
+  exerciseDate: [{ required: true, message: '请选择运动日期', type: 'string' as const }],
+  durationMinutes: [{ required: true, message: '请输入时长', type: 'number' as const }],};
+
 const { changePage, items, load, loading, query, search, total } = usePagedQuery<
   FitnessRecord,
   { keyword?: string; page: number; pageSize: number }
@@ -103,6 +109,7 @@ function openEdit(record: FitnessRecord) {
 }
 
 async function handleSubmit() {
+    try { await formRef.value?.validate(); } catch { return; }
   try {
     if (editingId.value) {
       await updateFitnessRecordApi(editingId.value, formData.value);
@@ -206,7 +213,7 @@ onMounted(() => {
       :title="editingId ? '编辑运动记录' : '记录运动'"
       @ok="handleSubmit"
     >
-      <Form layout="vertical" :model="formData">
+      <Form ref="formRef" layout="vertical" :model="formData" :rules="formRules">
         <Form.Item label="运动类型" required>
           <Input v-model:value="formData.exerciseType" placeholder="如: 跑步, 力量训练, 瑜伽" />
         </Form.Item>

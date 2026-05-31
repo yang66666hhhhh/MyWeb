@@ -58,6 +58,13 @@ const formState = reactive<CreateInteractionInput>({
   remark: '',
 });
 
+const formRef = ref();
+const formRules = {
+  contactId: [{ required: true, message: '请选择联系人', type: 'string' as const }],
+  type: [{ required: true, message: '请选择互动类型', type: 'string' as const }],
+  content: [{ required: true, message: '请输入互动内容', type: 'string' as const }],
+  interactionDate: [{ required: true, message: '请选择互动日期', type: 'string' as const }],};
+
 const typeOptions = ['电话', '会议', '邮件', '微信', '面谈', '其他'];
 
 const columns = [
@@ -140,6 +147,7 @@ const handleDelete = async (id: string) => {
 };
 
 const handleSubmit = async () => {
+    try { await formRef.value?.validate(); } catch { return; }
   if (!formState.contactId || !formState.type || !formState.content || !formState.interactionDate) {
     message.warning('请填写必填项');
     return;
@@ -241,7 +249,7 @@ onMounted(() => {
       :confirm-loading="submitting"
       @ok="handleSubmit"
     >
-      <Form layout="vertical">
+      <Form ref="formRef" :model="formState" layout="vertical" :rules="formRules">
         <FormItem label="联系人" required>
           <Select v-model:value="formState.contactId" placeholder="选择联系人">
             <SelectOption v-for="c in contacts" :key="c.id" :value="c.id">{{ c.name }}</SelectOption>
