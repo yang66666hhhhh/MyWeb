@@ -116,6 +116,7 @@ onMounted(() => {
             :data-source="projectHours"
             :loading="loading"
             :pagination="false"
+            :locale="{ emptyText: '暂无项目数据' }"
             row-key="projectId"
             size="small"
           >
@@ -137,6 +138,7 @@ onMounted(() => {
             :data-source="taskTypeDistribution"
             :loading="loading"
             :pagination="false"
+            :locale="{ emptyText: '暂无任务类型数据' }"
             row-key="taskTypeId"
             size="small"
           >
@@ -161,6 +163,7 @@ onMounted(() => {
             :data-source="dailyHours"
             :loading="loading"
             :pagination="{ pageSize: 10 }"
+            :locale="{ emptyText: '暂无工时数据' }"
             row-key="date"
             size="small"
           >

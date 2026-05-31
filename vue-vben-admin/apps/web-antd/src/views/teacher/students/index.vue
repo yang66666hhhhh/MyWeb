@@ -124,11 +124,7 @@ const handleDelete = async (id: string) => {
 };
 
 const handleSubmit = async () => {
-    try { await formRef.value?.validate(); } catch { return; }
-  if (!formState.name) {
-    message.warning('请填写学生姓名');
-    return;
-  }
+  try { await formRef.value?.validate(); } catch { return; }
   submitting.value = true;
   try {
     if (editingId.value) {

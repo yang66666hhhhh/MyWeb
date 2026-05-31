@@ -5,7 +5,7 @@ import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Card, Col, Row, Statistic } from 'ant-design-vue';
+import { Card, Col, message, Row, Statistic } from 'ant-design-vue';
 
 import { analyticsApi } from '#/api/analytics';
 
@@ -20,16 +20,16 @@ const priorityDistribution = ref<TaskPriorityDistribution[]>([]);
 async function fetchData() {
   loading.value = true;
   try {
-    const [overviewData, distData, priorityData] = await Promise.all([
+    const [overviewRes, distRes, priorityRes] = await Promise.allSettled([
       analyticsApi.getDashboard(),
       analyticsApi.getTaskDistribution(),
       analyticsApi.getPriorityDistribution(),
     ]);
-    overview.value = overviewData;
-    taskDistribution.value = distData;
-    priorityDistribution.value = priorityData;
+    if (overviewRes.status === 'fulfilled') overview.value = overviewRes.value;
+    if (distRes.status === 'fulfilled') taskDistribution.value = distRes.value;
+    if (priorityRes.status === 'fulfilled') priorityDistribution.value = priorityRes.value;
   } catch {
-    // Handle error
+    message.error('加载成长数据失败');
   } finally {
     loading.value = false;
   }

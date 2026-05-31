@@ -136,11 +136,7 @@ const handleDelete = async (id: string) => {
 };
 
 const handleSubmit = async () => {
-    try { await formRef.value?.validate(); } catch { return; }
-  if (!formState.name || !formState.code) {
-    message.warning('请填写必填项');
-    return;
-  }
+  try { await formRef.value?.validate(); } catch { return; }
   submitting.value = true;
   try {
     if (editingId.value) {

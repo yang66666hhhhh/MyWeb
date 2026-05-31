@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Card, Col, Row, Spin, Statistic } from 'ant-design-vue';
+import { Card, Col, message, Row, Spin, Statistic } from 'ant-design-vue';
 
 import type {
   ExpenseBreakdown,
@@ -30,14 +30,16 @@ const expenseBreakdown = ref<ExpenseBreakdown[]>([]);
 async function fetchData() {
   loading.value = true;
   try {
-    const [overviewData, trendData, expenseData] = await Promise.all([
+    const [overviewRes, trendRes, expenseRes] = await Promise.allSettled([
       getFinanceOverviewApi(),
       getMonthlyFinanceTrendApi(),
       getExpenseBreakdownApi(),
     ]);
-    overview.value = overviewData;
-    monthlyTrend.value = trendData;
-    expenseBreakdown.value = expenseData;
+    if (overviewRes.status === 'fulfilled') overview.value = overviewRes.value;
+    if (trendRes.status === 'fulfilled') monthlyTrend.value = trendRes.value;
+    if (expenseRes.status === 'fulfilled') expenseBreakdown.value = expenseRes.value;
+  } catch {
+    message.error('加载财务数据失败');
   } finally {
     loading.value = false;
   }

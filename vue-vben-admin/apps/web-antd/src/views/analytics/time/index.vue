@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Card, Col, Row, Spin, Statistic } from 'ant-design-vue';
+import { Card, Col, message, Row, Spin, Statistic } from 'ant-design-vue';
 
 import type {
   HourlyDistribution,
@@ -30,14 +30,16 @@ const weeklyTrend = ref<WeeklyTrend[]>([]);
 async function fetchData() {
   loading.value = true;
   try {
-    const [overviewData, hourlyData, trendData] = await Promise.all([
+    const [overviewRes, hourlyRes, trendRes] = await Promise.allSettled([
       getTimeOverviewApi(),
       getHourlyDistributionApi(),
       getWeeklyTrendApi(),
     ]);
-    overview.value = overviewData;
-    hourlyDistribution.value = hourlyData;
-    weeklyTrend.value = trendData;
+    if (overviewRes.status === 'fulfilled') overview.value = overviewRes.value;
+    if (hourlyRes.status === 'fulfilled') hourlyDistribution.value = hourlyRes.value;
+    if (trendRes.status === 'fulfilled') weeklyTrend.value = trendRes.value;
+  } catch {
+    message.error('加载时间数据失败');
   } finally {
     loading.value = false;
   }

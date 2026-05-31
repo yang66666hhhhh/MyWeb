@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Card, Col, Row, Spin, Statistic } from 'ant-design-vue';
+import { Card, Col, message, Row, Spin, Statistic } from 'ant-design-vue';
 
 import type { HabitsAnalyticsOverview, HabitTrend } from '#/api/analytics/extended';
 
@@ -21,12 +21,14 @@ const habitTrends = ref<HabitTrend[]>([]);
 async function fetchData() {
   loading.value = true;
   try {
-    const [overviewData, trendsData] = await Promise.all([
+    const [overviewRes, trendsRes] = await Promise.allSettled([
       getHabitsOverviewApi(),
       getHabitTrendsApi(),
     ]);
-    overview.value = overviewData;
-    habitTrends.value = trendsData;
+    if (overviewRes.status === 'fulfilled') overview.value = overviewRes.value;
+    if (trendsRes.status === 'fulfilled') habitTrends.value = trendsRes.value;
+  } catch {
+    message.error('加载习惯数据失败');
   } finally {
     loading.value = false;
   }

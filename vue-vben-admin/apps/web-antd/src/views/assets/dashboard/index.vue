@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Card, Col, Row, Statistic, Table, Tag } from 'ant-design-vue';
+import { Card, Col, message, Row, Statistic, Table, Tag } from 'ant-design-vue';
 
 import type { AssetSummary, Income } from '#/api/assets';
 
@@ -35,7 +35,7 @@ const fetchSummary = async () => {
     const data = await assetApi.getSummary();
     summary.value = data;
   } catch {
-    // ignore
+    message.error('加载资产数据失败');
   } finally {
     loading.value = false;
   }
@@ -43,34 +43,38 @@ const fetchSummary = async () => {
 
 const fetchRecentTransactions = async () => {
   try {
-    const [incomeRes, expenseRes] = await Promise.all([
+    const [incomeRes, expenseRes] = await Promise.allSettled([
       assetApi.getIncomes({ page: 1, pageSize: 5 }),
       assetApi.getExpenses({ page: 1, pageSize: 5 }),
     ]);
 
-    const incomes = incomeRes.items.map((item: Income) => ({
-      id: item.id,
-      title: item.title,
-      amount: item.amount,
-      category: item.category,
-      date: item.incomeDate,
-      type: 'income' as const,
-    }));
+    const incomes = incomeRes.status === 'fulfilled'
+      ? incomeRes.value.items.map((item: Income) => ({
+          id: item.id,
+          title: item.title,
+          amount: item.amount,
+          category: item.category,
+          date: item.incomeDate,
+          type: 'income' as const,
+        }))
+      : [];
 
-    const expenses = expenseRes.items.map((item: any) => ({
-      id: item.id,
-      title: item.title,
-      amount: item.amount,
-      category: item.category,
-      date: item.expenseDate,
-      type: 'expense' as const,
-    }));
+    const expenses = expenseRes.status === 'fulfilled'
+      ? expenseRes.value.items.map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          amount: item.amount,
+          category: item.category,
+          date: item.expenseDate,
+          type: 'expense' as const,
+        }))
+      : [];
 
     recentTransactions.value = [...incomes, ...expenses]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 10);
   } catch {
-    // ignore
+    message.error('加载交易记录失败');
   }
 };
 

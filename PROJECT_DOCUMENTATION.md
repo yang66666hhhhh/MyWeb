@@ -883,6 +883,35 @@ rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.cspr
 - 前端类型检查：通过
 - 前端构建：成功
 
+### v2.8 (2025-05-31)
+
+**代码质量优化：**
+
+- **P0 修复**：分析页面 `Promise.all` 改为 `Promise.allSettled`（5页）
+  - analytics/finance, habits, time, growth, assets/dashboard
+  - 单个接口失败不再导致全部数据加载失败
+
+- **P0 修复**：修复错误被静默吞掉（3页）
+  - analytics/growth, assets/dashboard
+  - 添加 `message.error()` 提示用户
+
+- **P0 修复**：自定义报表表单添加验证（1页）
+  - analytics/custom-reports
+  - 添加 formRules 和 formRef.validate()
+
+- **P1 优化**：移除重复验证逻辑（2页）
+  - teacher/courses, teacher/students
+  - 移除手动 if 判断，统一使用 form rules 验证
+
+- **P2 优化**：分析页面空状态优化（4页）
+  - analytics/work
+  - 为 3 个 Table 添加空状态提示
+
+**验证结果：**
+- 后端测试：140 个全部通过
+- 前端类型检查：通过
+- 前端构建：成功
+
 ### v2.7 (2025-05-31)
 
 **表单验证补充：**
