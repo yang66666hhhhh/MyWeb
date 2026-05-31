@@ -25,6 +25,8 @@ import {
 import { menuAdminApi, tagApi, userTagApi, userTypeApi } from '#/api/system/menu-tag';
 
 const activeTab = ref('user-types');
+const loading = ref(false);
+const submitting = ref(false);
 
 const tags = ref<TagDto[]>([]);
 const menuTree = ref<MenuTreeAdminDto[]>([]);
@@ -33,30 +35,48 @@ const users = ref<UserTagDto[]>([]);
 const userTypes = ref<UserTypeDto[]>([]);
 
 async function loadTags() {
-  const res = await tagApi.list();
-  if (res) tags.value = res;
+  try {
+    const res = await tagApi.list();
+    if (res) tags.value = res;
+  } catch (e: any) {
+    message.error(e?.message || '加载标签失败');
+  }
 }
 
 async function loadMenus() {
-  const res = await menuAdminApi.getAll();
-  if (res) {
-    menuTree.value = res;
+  try {
+    const res = await menuAdminApi.getAll();
+    if (res) menuTree.value = res;
+  } catch (e: any) {
+    message.error(e?.message || '加载菜单失败');
   }
 }
 
 async function loadMenuPaths() {
-  const res = await menuAdminApi.getPaths();
-  if (res) menuPaths.value = res;
+  try {
+    const res = await menuAdminApi.getPaths();
+    if (res) menuPaths.value = res;
+  } catch (e: any) {
+    message.error(e?.message || '加载菜单路径失败');
+  }
 }
 
 async function loadUsers() {
-  const res = await userTagApi.getUsers();
-  if (res) users.value = res;
+  try {
+    const res = await userTagApi.getUsers();
+    if (res) users.value = res;
+  } catch (e: any) {
+    message.error(e?.message || '加载用户列表失败');
+  }
 }
 
 async function loadUserTypes() {
-  const res = await userTypeApi.list();
-  if (res) userTypes.value = res;
+  try {
+    const res = await userTypeApi.list();
+    if (res) userTypes.value = res;
+  } catch (e: any) {
+    message.error(e?.message || '加载用户类型失败');
+  }
 }
 
 onMounted(() => {
@@ -96,21 +116,32 @@ async function saveTag() {
     message.error('请输入标签名称');
     return;
   }
-  if (editingTagId.value) {
-    await tagApi.update(editingTagId.value, tagFormState.value);
-    message.success('更新成功');
-  } else {
-    await tagApi.create(tagFormState.value);
-    message.success('创建成功');
+  submitting.value = true;
+  try {
+    if (editingTagId.value) {
+      await tagApi.update(editingTagId.value, tagFormState.value);
+      message.success('更新成功');
+    } else {
+      await tagApi.create(tagFormState.value);
+      message.success('创建成功');
+    }
+    tagFormOpen.value = false;
+    loadTags();
+  } catch (e: any) {
+    message.error(e?.message || '操作失败');
+  } finally {
+    submitting.value = false;
   }
-  tagFormOpen.value = false;
-  loadTags();
 }
 
 async function deleteTag(id: string) {
-  await tagApi.delete(id);
-  message.success('删除成功');
-  loadTags();
+  try {
+    await tagApi.delete(id);
+    message.success('删除成功');
+    loadTags();
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
+  }
 }
 
 // Menu form
@@ -154,21 +185,32 @@ async function saveMenu() {
     message.error('请输入名称和路径');
     return;
   }
-  if (editingMenuId.value) {
-    await menuAdminApi.update(editingMenuId.value, menuFormState.value);
-    message.success('更新成功');
-  } else {
-    await menuAdminApi.create(menuFormState.value);
-    message.success('创建成功');
+  submitting.value = true;
+  try {
+    if (editingMenuId.value) {
+      await menuAdminApi.update(editingMenuId.value, menuFormState.value);
+      message.success('更新成功');
+    } else {
+      await menuAdminApi.create(menuFormState.value);
+      message.success('创建成功');
+    }
+    menuFormOpen.value = false;
+    loadMenus();
+  } catch (e: any) {
+    message.error(e?.message || '操作失败');
+  } finally {
+    submitting.value = false;
   }
-  menuFormOpen.value = false;
-  loadMenus();
 }
 
 async function deleteMenu(id: string) {
-  await menuAdminApi.delete(id);
-  message.success('删除成功');
-  loadMenus();
+  try {
+    await menuAdminApi.delete(id);
+    message.success('删除成功');
+    loadMenus();
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
+  }
 }
 
 // UserType form
@@ -199,21 +241,32 @@ async function saveUserType() {
     message.error('请输入名称和代码');
     return;
   }
-  if (editingUserTypeId.value) {
-    await userTypeApi.update(editingUserTypeId.value, userTypeFormState.value);
-    message.success('更新成功');
-  } else {
-    await userTypeApi.create(userTypeFormState.value);
-    message.success('创建成功');
+  submitting.value = true;
+  try {
+    if (editingUserTypeId.value) {
+      await userTypeApi.update(editingUserTypeId.value, userTypeFormState.value);
+      message.success('更新成功');
+    } else {
+      await userTypeApi.create(userTypeFormState.value);
+      message.success('创建成功');
+    }
+    userTypeFormOpen.value = false;
+    loadUserTypes();
+  } catch (e: any) {
+    message.error(e?.message || '操作失败');
+  } finally {
+    submitting.value = false;
   }
-  userTypeFormOpen.value = false;
-  loadUserTypes();
 }
 
 async function deleteUserType(id: string) {
-  await userTypeApi.delete(id);
-  message.success('删除成功');
-  loadUserTypes();
+  try {
+    await userTypeApi.delete(id);
+    message.success('删除成功');
+    loadUserTypes();
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
+  }
 }
 
 // User assign
@@ -229,16 +282,23 @@ function openAssignModal(user: UserTagDto) {
 
 async function saveUserAssign() {
   if (!editingAssignUserId.value) return;
-  await userTypeApi.assign(editingAssignUserId.value, assignUserTypeId.value);
-  message.success('分配成功');
-  userAssignModalOpen.value = false;
-  loadUsers();
+  submitting.value = true;
+  try {
+    await userTypeApi.assign(editingAssignUserId.value, assignUserTypeId.value);
+    message.success('分配成功');
+    userAssignModalOpen.value = false;
+    loadUsers();
+  } catch (e: any) {
+    message.error(e?.message || '分配失败');
+  } finally {
+    submitting.value = false;
+  }
 }
 </script>
 
 <template>
   <Page>
-    <Card>
+    <Card :loading="loading">
       <Tabs v-model:active-key="activeTab">
         <Tabs.TabPane key="user-types" tab="用户类型">
           <div class="mb-4">
@@ -347,7 +407,7 @@ async function saveUserAssign() {
     </Card>
   </Page>
 
-  <Modal v-model:open="userTypeFormOpen" :title="editingUserTypeId ? '编辑用户类型' : '新增用户类型'" width="600px" @ok="saveUserType">
+  <Modal v-model:open="userTypeFormOpen" :title="editingUserTypeId ? '编辑用户类型' : '新增用户类型'" width="600px" :confirm-loading="submitting" @ok="saveUserType">
     <Form layout="vertical">
       <Form.Item label="名称" required>
         <Input v-model:value="userTypeFormState.name" placeholder="如：考研学生" />
@@ -375,7 +435,7 @@ async function saveUserAssign() {
     </Form>
   </Modal>
 
-  <Modal v-model:open="tagFormOpen" :title="editingTagId ? '编辑标签' : '新增标签'" @ok="saveTag">
+  <Modal v-model:open="tagFormOpen" :title="editingTagId ? '编辑标签' : '新增标签'" :confirm-loading="submitting" @ok="saveTag">
     <Form layout="vertical">
       <Form.Item label="名称" required>
         <Input v-model:value="tagFormState.name" placeholder="标签名称" />
@@ -392,7 +452,7 @@ async function saveUserAssign() {
     </Form>
   </Modal>
 
-  <Modal v-model:open="menuFormOpen" :title="editingMenuId ? '编辑菜单' : '新增菜单'" width="600px" @ok="saveMenu">
+  <Modal v-model:open="menuFormOpen" :title="editingMenuId ? '编辑菜单' : '新增菜单'" width="600px" :confirm-loading="submitting" @ok="saveMenu">
     <Form layout="vertical">
       <Form.Item label="路径" required>
         <Select v-model:value="menuFormState.path" placeholder="选择路径" style="width: 100%">
@@ -425,7 +485,7 @@ async function saveUserAssign() {
     </Form>
   </Modal>
 
-  <Modal v-model:open="userAssignModalOpen" title="分配用户类型" @ok="saveUserAssign">
+  <Modal v-model:open="userAssignModalOpen" title="分配用户类型" :confirm-loading="submitting" @ok="saveUserAssign">
     <Form layout="vertical">
       <Form.Item label="选择用户类型">
         <Select v-model:value="assignUserTypeId" placeholder="请选择用户类型" style="width: 200px" allow-clear>

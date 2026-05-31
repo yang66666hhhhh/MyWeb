@@ -28,6 +28,9 @@ import { usePagedQuery } from '#/composables/usePagedQuery';
 
 const formOpen = ref(false);
 const formRef = ref();
+const detailOpen = ref(false);
+const currentReport = ref<CustomReport | null>(null);
+const submitting = ref(false);
 const formData = ref<CreateCustomReportInput>({
   title: '',
   description: '',
@@ -69,19 +72,27 @@ function openCreate() {
   formOpen.value = true;
 }
 
+function handleView(report: CustomReport) {
+  currentReport.value = report;
+  detailOpen.value = true;
+}
+
 async function handleSubmit() {
   try {
     await formRef.value?.validate();
   } catch {
     return;
   }
+  submitting.value = true;
   try {
     await createCustomReportApi(formData.value);
     message.success('创建成功');
     formOpen.value = false;
     await load();
-  } catch {
-    message.error('创建失败');
+  } catch (e: any) {
+    message.error(e?.message || '创建失败');
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -144,7 +155,7 @@ onMounted(() => {
             />
             <div class="flex items-center gap-2">
               <Tag v-if="item.type" :color="typeColors[item.type]">{{ item.type }}</Tag>
-              <Button type="link">查看</Button>
+              <Button type="link" @click="handleView(item)">查看</Button>
               <Popconfirm title="确认删除？" @confirm="handleDelete(item.id)">
                 <Button danger type="link">删除</Button>
               </Popconfirm>
@@ -154,7 +165,7 @@ onMounted(() => {
       </List>
     </Card>
 
-    <Modal v-model:open="formOpen" title="创建报表" @ok="handleSubmit">
+    <Modal v-model:open="formOpen" title="创建报表" :confirm-loading="submitting" @ok="handleSubmit">
       <Form ref="formRef" layout="vertical" :model="formData" :rules="formRules">
         <Form.Item label="报表名称" required>
           <Input v-model:value="formData.title" placeholder="请输入报表名称" />
@@ -166,6 +177,21 @@ onMounted(() => {
           <Input.TextArea v-model:value="formData.description" placeholder="报表描述" />
         </Form.Item>
       </Form>
+    </Modal>
+
+    <Modal v-model:open="detailOpen" title="报表详情" :footer="null" width="600px">
+      <div v-if="currentReport">
+        <h3 class="mb-4 text-lg font-bold">{{ currentReport.title }}</h3>
+        <div class="mb-2">
+          <Tag v-if="currentReport.type" :color="typeColors[currentReport.type]">{{ currentReport.type }}</Tag>
+        </div>
+        <div v-if="currentReport.description" class="mb-4 text-gray-600">
+          {{ currentReport.description }}
+        </div>
+        <div class="text-sm text-gray-400">
+          创建时间：{{ currentReport.createdAt }}
+        </div>
+      </div>
     </Modal>
   </Page>
 </template>

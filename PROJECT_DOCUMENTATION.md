@@ -883,6 +883,27 @@ rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.cspr
 - 前端类型检查：通过
 - 前端构建：成功
 
+### v2.9 (2025-05-31)
+
+**P0 修复：**
+
+- **system/menu-tag**：修复 4 个 Modal 缺少 confirm-loading、7 个操作函数缺少 try/catch 错误处理
+  - 添加 `submitting` 状态管理
+  - 为所有 `loadXxx()` 方法添加 try/catch 错误处理
+  - 为所有 `saveXxx()` 和 `deleteXxx()` 方法添加 try/catch 错误处理
+  - 为所有 Modal 添加 `:confirm-loading="submitting"`
+
+- **analytics/custom-reports**：修复"查看"按钮无事件绑定
+  - 添加 `handleView` 函数
+  - 添加详情弹窗
+  - 添加 `submitting` 状态管理
+  - 优化错误提示为 `e?.message || '默认消息'` 模式
+
+**验证结果：**
+- 后端测试：140 个全部通过
+- 前端类型检查：通过
+- 前端构建：成功
+
 ### v2.8 (2025-05-31)
 
 **代码质量优化：**
