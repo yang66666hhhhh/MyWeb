@@ -883,6 +883,24 @@ rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.cspr
 - 前端类型检查：通过
 - 前端构建：成功
 
+### v2.4 (2025-05-31)
+
+**工作台页面完善：**
+
+- 新建 `api/dashboard/index.ts` - 工作台 API 定义
+- 重写 `views/dashboard/workspace/index.vue` - 对接后端 API
+  - 统计卡片：今日任务/工时、本周任务/工时
+  - 今日计划：从 `/api/growth/tasks` 获取今日计划
+  - 最近任务：从 `/api/growth/tasks` 获取最近工作任务
+  - 最近工作日志：从 `/api/work/logs` 获取最近日志
+  - 快捷导航：基于用户权限动态显示
+  - 时间问候：根据当前时间显示不同问候语
+
+**验证结果：**
+- 后端测试：140 个全部通过
+- 前端类型检查：通过
+- 前端构建：成功
+
 ### v2.2 (2025-05-30)
 
 **完善所有页面（消除桩代码）：**

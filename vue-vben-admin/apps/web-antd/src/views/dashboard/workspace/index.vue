@@ -1,256 +1,274 @@
 <script lang="ts" setup>
-import type {
-  WorkbenchProjectItem,
-  WorkbenchQuickNavItem,
-  WorkbenchTodoItem,
-  WorkbenchTrendItem,
-} from '@vben/common-ui';
-
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
+import { Page } from '@vben/common-ui';
+import { useAccessStore, useUserStore } from '@vben/stores';
+
 import {
-  WorkbenchHeader,
-  WorkbenchProject,
-  WorkbenchQuickNav,
-  WorkbenchTodo,
-  WorkbenchTrends,
-} from '@vben/common-ui';
-import { preferences } from '@vben/preferences';
-import { useUserStore } from '@vben/stores';
-import { openWindow } from '@vben/utils';
+  Button,
+  Card,
+  Col,
+  List,
+  ListItem,
+  ListItemMeta,
+  Row,
+  Space,
+  Statistic,
+  Table,
+  Tag,
+} from 'ant-design-vue';
 
-const userStore = useUserStore();
+import type { RecentTask, RecentWorkLog, TodayPlan } from '#/api/dashboard';
 
-// 这是一个示例数据，实际项目中需要根据实际情况进行调整
-// url 也可以是内部路由，在 navTo 方法中识别处理，进行内部跳转
-// 例如：url: /dashboard/workspace
-const projectItems: WorkbenchProjectItem[] = [
-  {
-    color: '',
-    content: '不要等待机会，而要创造机会。',
-    date: '2021-04-01',
-    group: '开源组',
-    icon: 'carbon:logo-github',
-    title: 'Github',
-    url: 'https://github.com',
-  },
-  {
-    color: '#3fb27f',
-    content: '现在的你决定将来的你。',
-    date: '2021-04-01',
-    group: '算法组',
-    icon: 'ion:logo-vue',
-    title: 'Vue',
-    url: 'https://vuejs.org',
-  },
-  {
-    color: '#e18525',
-    content: '没有什么才能比努力更重要。',
-    date: '2021-04-01',
-    group: '上班摸鱼',
-    icon: 'ion:logo-html5',
-    title: 'Html5',
-    url: 'https://developer.mozilla.org/zh-CN/docs/Web/HTML',
-  },
-  {
-    color: '#bf0c2c',
-    content: '热情和欲望可以突破一切难关。',
-    date: '2021-04-01',
-    group: 'UI',
-    icon: 'ion:logo-angular',
-    title: 'Angular',
-    url: 'https://angular.io',
-  },
-  {
-    color: '#00d8ff',
-    content: '健康的身体是实现目标的基石。',
-    date: '2021-04-01',
-    group: '技术牛',
-    icon: 'bx:bxl-react',
-    title: 'React',
-    url: 'https://reactjs.org',
-  },
-  {
-    color: '#EBD94E',
-    content: '路是走出来的，而不是空想出来的。',
-    date: '2021-04-01',
-    group: '架构组',
-    icon: 'ion:logo-javascript',
-    title: 'Js',
-    url: 'https://developer.mozilla.org/zh-CN/docs/Web/JavaScript',
-  },
-];
-
-// 同样，这里的 url 也可以使用以 http 开头的外部链接
-const quickNavItems: WorkbenchQuickNavItem[] = [
-  {
-    color: '#1fdaca',
-    icon: 'ion:home-outline',
-    title: '首页',
-    url: '/',
-  },
-  {
-    color: '#bf0c2c',
-    icon: 'ion:grid-outline',
-    title: '仪表盘',
-    url: '/dashboard',
-  },
-  {
-    color: '#e18525',
-    icon: 'ion:layers-outline',
-    title: '组件',
-    url: '/demos/features/icons',
-  },
-  {
-    color: '#3fb27f',
-    icon: 'ion:settings-outline',
-    title: '系统管理',
-    url: '/demos/features/login-expired', // 这里的 URL 是示例，实际项目中需要根据实际情况进行调整
-  },
-  {
-    color: '#4daf1bc9',
-    icon: 'ion:key-outline',
-    title: '权限管理',
-    url: '/demos/access/page-control',
-  },
-  {
-    color: '#00d8ff',
-    icon: 'ion:bar-chart-outline',
-    title: '图表',
-    url: '/analytics',
-  },
-];
-
-const todoItems = ref<WorkbenchTodoItem[]>([
-  {
-    completed: false,
-    content: `审查最近提交到Git仓库的前端代码，确保代码质量和规范。`,
-    date: '2024-07-30 11:00:00',
-    title: '审查前端代码提交',
-  },
-  {
-    completed: true,
-    content: `检查并优化系统性能，降低CPU使用率。`,
-    date: '2024-07-30 11:00:00',
-    title: '系统性能优化',
-  },
-  {
-    completed: false,
-    content: `进行系统安全检查，确保没有安全漏洞或未授权的访问。 `,
-    date: '2024-07-30 11:00:00',
-    title: '安全检查',
-  },
-  {
-    completed: false,
-    content: `更新项目中的所有npm依赖包，确保使用最新版本。`,
-    date: '2024-07-30 11:00:00',
-    title: '更新项目依赖',
-  },
-  {
-    completed: false,
-    content: `修复用户报告的页面UI显示问题，确保在不同浏览器中显示一致。 `,
-    date: '2024-07-30 11:00:00',
-    title: '修复UI显示问题',
-  },
-]);
-const trendItems: WorkbenchTrendItem[] = [
-  {
-    avatar: 'svg:avatar-1',
-    content: `在 <a>开源组</a> 创建了项目 <a>Vue</a>`,
-    date: '刚刚',
-    title: '威廉',
-  },
-  {
-    avatar: 'svg:avatar-2',
-    content: `关注了 <a>威廉</a> `,
-    date: '1个小时前',
-    title: '艾文',
-  },
-  {
-    avatar: 'svg:avatar-3',
-    content: `发布了 <a>个人动态</a> `,
-    date: '1天前',
-    title: '克里斯',
-  },
-  {
-    avatar: 'svg:avatar-4',
-    content: `发表文章 <a>如何编写一个Vite插件</a> `,
-    date: '2天前',
-    title: 'Vben',
-  },
-  {
-    avatar: 'svg:avatar-1',
-    content: `回复了 <a>杰克</a> 的问题 <a>如何进行项目优化？</a>`,
-    date: '3天前',
-    title: '皮特',
-  },
-  {
-    avatar: 'svg:avatar-2',
-    content: `关闭了问题 <a>如何运行项目</a> `,
-    date: '1周前',
-    title: '杰克',
-  },
-  {
-    avatar: 'svg:avatar-3',
-    content: `发布了 <a>个人动态</a> `,
-    date: '1周前',
-    title: '威廉',
-  },
-  {
-    avatar: 'svg:avatar-4',
-    content: `推送了代码到 <a>Github</a>`,
-    date: '2021-04-01 20:00',
-    title: '威廉',
-  },
-  {
-    avatar: 'svg:avatar-4',
-    content: `发表文章 <a>如何编写使用 Admin Vben</a> `,
-    date: '2021-03-01 20:00',
-    title: 'Vben',
-  },
-];
+import { dashboardApi } from '#/api/dashboard';
 
 const router = useRouter();
+const accessStore = useAccessStore();
+const userStore = useUserStore();
+const loading = ref(false);
 
-// 这是一个示例方法，实际项目中需要根据实际情况进行调整
-// This is a sample method, adjust according to the actual project requirements
-function navTo(nav: WorkbenchProjectItem | WorkbenchQuickNavItem) {
-  if (nav.url?.startsWith('http')) {
-    openWindow(nav.url);
-    return;
+const overview = ref({
+  todayTasks: 0,
+  todayCompletedTasks: 0,
+  todayWorkHours: 0,
+  weekTasks: 0,
+  weekCompletedTasks: 0,
+  weekWorkHours: 0,
+  totalProjects: 0,
+  totalHabits: 0,
+  totalKnowledge: 0,
+});
+
+const recentTasks = ref<RecentTask[]>([]);
+const recentWorkLogs = ref<RecentWorkLog[]>([]);
+const todayPlans = ref<TodayPlan[]>([]);
+
+const statusMap: Record<number, { color: string; label: string }> = {
+  0: { color: 'default', label: '待处理' },
+  1: { color: 'processing', label: '进行中' },
+  2: { color: 'success', label: '已完成' },
+  3: { color: 'error', label: '已取消' },
+};
+
+const priorityMap: Record<number, { color: string; label: string }> = {
+  1: { color: 'green', label: '低' },
+  2: { color: 'orange', label: '中' },
+  3: { color: 'red', label: '高' },
+  4: { color: 'magenta', label: '紧急' },
+};
+
+const taskColumns = [
+  { title: '任务', dataIndex: 'title', key: 'title', ellipsis: true },
+  { title: '优先级', key: 'priority', width: 80 },
+  { title: '状态', key: 'status', width: 80 },
+  { title: '日期', dataIndex: 'planDate', key: 'planDate', width: 100 },
+];
+
+const quickNavItems = [
+  { icon: 'lucide:check-square', title: '工作任务', url: '/work/tasks', feature: 'WORK_TASK' },
+  { icon: 'lucide:clipboard-list', title: '工作日志', url: '/work/work-log', feature: 'WORK_LOG' },
+  { icon: 'lucide:folder-kanban', title: '工作项目', url: '/work/project', feature: 'WORK_PROJECT' },
+  { icon: 'lucide:calendar-heart', title: '每日计划', url: '/growth/daily-plans', feature: 'GROWTH_DAILY_PLAN' },
+  { icon: 'lucide:repeat', title: '习惯打卡', url: '/growth/habits', feature: 'GROWTH_HABIT' },
+  { icon: 'lucide:book-open', title: '知识库', url: '/growth/knowledge-base', feature: 'GROWTH_KNOWLEDGE' },
+  { icon: 'lucide:bot', title: 'AI 助手', url: '/ai/assistant', feature: 'AI_ASSISTANT' },
+  { icon: 'lucide:wallet', title: '财务资产', url: '/assets/dashboard', feature: 'ASSET_DASHBOARD' },
+];
+
+const filteredNavItems = quickNavItems.filter(
+  (item) => !item.feature || accessStore.accessCodes.includes(item.feature),
+);
+
+const completedToday = computed(() => todayPlans.value.filter((p) => p.status === 2).length);
+const completionRate = computed(() =>
+  todayPlans.value.length > 0 ? Math.round((completedToday.value / todayPlans.value.length) * 100) : 0,
+);
+
+const fetchData = async () => {
+  loading.value = true;
+  try {
+    const [overviewData, tasksData, logsData, plansData] = await Promise.allSettled([
+      dashboardApi.getOverview(),
+      dashboardApi.getRecentTasks({ pageSize: 5 }),
+      dashboardApi.getRecentWorkLogs({ pageSize: 5 }),
+      dashboardApi.getTodayPlans({ pageSize: 10 }),
+    ]);
+
+    if (overviewData.status === 'fulfilled') {
+      overview.value = overviewData.value;
+    }
+    if (tasksData.status === 'fulfilled') {
+      recentTasks.value = tasksData.value.items;
+    }
+    if (logsData.status === 'fulfilled') {
+      recentWorkLogs.value = logsData.value.items;
+    }
+    if (plansData.status === 'fulfilled') {
+      todayPlans.value = plansData.value.items;
+    }
+  } catch {
+    // ignore
+  } finally {
+    loading.value = false;
   }
-  if (nav.url?.startsWith('/')) {
-    router.push(nav.url);
-  }
-}
+};
+
+const navTo = (url: string) => {
+  router.push(url);
+};
+
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 6) return '夜深了';
+  if (hour < 9) return '早上好';
+  if (hour < 12) return '上午好';
+  if (hour < 14) return '中午好';
+  if (hour < 18) return '下午好';
+  if (hour < 22) return '晚上好';
+  return '夜深了';
+};
+
+onMounted(() => {
+  fetchData();
+});
 </script>
 
 <template>
-  <div class="p-5">
-    <WorkbenchHeader
-      :avatar="userStore.userInfo?.avatar || preferences.app.defaultAvatar"
-    >
-      <template #title>
-        早安, {{ userStore.userInfo?.realName }}, 开始您一天的工作吧！
-      </template>
-      <template #description> 今日晴，20℃ - 32℃！ </template>
-    </WorkbenchHeader>
+  <Page :title="`${getGreeting()}，${userStore.userInfo?.realName || ''}`" description="开始您一天的工作吧！">
+    <div class="space-y-4">
+      <Row :gutter="[16, 16]">
+        <Col :lg="6" :md="12" :xs="24">
+          <Card :loading="loading">
+            <Statistic title="今日任务" :value="overview.todayTasks" suffix="个" />
+            <div class="mt-2 text-sm text-gray-500">
+              已完成 {{ overview.todayCompletedTasks }}
+            </div>
+          </Card>
+        </Col>
+        <Col :lg="6" :md="12" :xs="24">
+          <Card :loading="loading">
+            <Statistic title="今日工时" :value="overview.todayWorkHours" suffix="小时" :precision="1" />
+          </Card>
+        </Col>
+        <Col :lg="6" :md="12" :xs="24">
+          <Card :loading="loading">
+            <Statistic title="本周任务" :value="overview.weekTasks" suffix="个" />
+            <div class="mt-2 text-sm text-gray-500">
+              已完成 {{ overview.weekCompletedTasks }}
+            </div>
+          </Card>
+        </Col>
+        <Col :lg="6" :md="12" :xs="24">
+          <Card :loading="loading">
+            <Statistic title="本周工时" :value="overview.weekWorkHours" suffix="小时" :precision="1" />
+          </Card>
+        </Col>
+      </Row>
 
-    <div class="mt-5 flex flex-col lg:flex-row">
-      <div class="mr-4 w-full lg:w-3/5">
-        <WorkbenchProject :items="projectItems" title="项目" @click="navTo" />
-        <WorkbenchTrends :items="trendItems" class="mt-5" title="最新动态" />
-      </div>
-      <div class="w-full lg:w-2/5">
-        <WorkbenchQuickNav
-          :items="quickNavItems"
-          class="mt-5 lg:mt-0"
-          title="快捷导航"
-          @click="navTo"
-        />
-        <WorkbenchTodo :items="todoItems" class="mt-5" title="待办事项" />
-      </div>
+      <Row :gutter="[16, 16]">
+        <Col :lg="16" :xs="24">
+          <Card title="今日计划" :loading="loading">
+            <template #extra>
+              <Space>
+                <span class="text-sm text-gray-500">
+                  {{ completedToday }}/{{ todayPlans.length }} 完成 ({{ completionRate }}%)
+                </span>
+                <Button type="link" size="small" @click="navTo('/growth/daily-plans')">查看全部</Button>
+              </Space>
+            </template>
+            <Table
+              v-if="todayPlans.length > 0"
+              :columns="taskColumns"
+              :data-source="todayPlans"
+              :pagination="false"
+              size="small"
+            >
+              <template #bodyCell="{ column, record }">
+                <template v-if="column.key === 'priority'">
+                  <Tag :color="priorityMap[record.priority]?.color">
+                    {{ priorityMap[record.priority]?.label }}
+                  </Tag>
+                </template>
+                <template v-else-if="column.key === 'status'">
+                  <Tag :color="statusMap[record.status]?.color">
+                    {{ statusMap[record.status]?.label }}
+                  </Tag>
+                </template>
+              </template>
+            </Table>
+            <div v-else class="py-8 text-center text-gray-400">
+              今天暂无计划，去创建一个吧！
+            </div>
+          </Card>
+
+          <Card title="最近任务" class="mt-4" :loading="loading">
+            <template #extra>
+              <Button type="link" size="small" @click="navTo('/work/tasks')">查看全部</Button>
+            </template>
+            <Table
+              v-if="recentTasks.length > 0"
+              :columns="taskColumns"
+              :data-source="recentTasks"
+              :pagination="false"
+              size="small"
+            >
+              <template #bodyCell="{ column, record }">
+                <template v-if="column.key === 'priority'">
+                  <Tag :color="priorityMap[record.priority]?.color">
+                    {{ priorityMap[record.priority]?.label }}
+                  </Tag>
+                </template>
+                <template v-else-if="column.key === 'status'">
+                  <Tag :color="statusMap[record.status]?.color">
+                    {{ statusMap[record.status]?.label }}
+                  </Tag>
+                </template>
+              </template>
+            </Table>
+            <div v-else class="py-8 text-center text-gray-400">
+              暂无任务
+            </div>
+          </Card>
+        </Col>
+
+        <Col :lg="8" :xs="24">
+          <Card title="快捷导航">
+            <div class="grid grid-cols-2 gap-3">
+              <div
+                v-for="item in filteredNavItems"
+                :key="item.url"
+                class="flex cursor-pointer items-center gap-3 rounded-lg p-3 transition-colors hover:bg-gray-50"
+                @click="navTo(item.url)"
+              >
+                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-500">
+                  <span :class="`icon-[lucide:${item.icon.replace('lucide:', '')}]`" />
+                </div>
+                <span class="text-sm">{{ item.title }}</span>
+              </div>
+            </div>
+          </Card>
+
+          <Card title="最近工作日志" class="mt-4" :loading="loading">
+            <template #extra>
+              <Button type="link" size="small" @click="navTo('/work/work-log')">查看全部</Button>
+            </template>
+            <List v-if="recentWorkLogs.length > 0" :data-source="recentWorkLogs" :split="false">
+              <template #renderItem="{ item }">
+                <ListItem>
+                  <ListItemMeta
+                    :title="item.title"
+                    :description="`${item.workDate} | ${item.totalHours}h${item.projectName ? ` | ${item.projectName}` : ''}`"
+                  />
+                </ListItem>
+              </template>
+            </List>
+            <div v-else class="py-8 text-center text-gray-400">
+              暂无工作日志
+            </div>
+          </Card>
+        </Col>
+      </Row>
     </div>
-  </div>
+  </Page>
 </template>
