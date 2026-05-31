@@ -39,6 +39,11 @@ import {
   WorkProjectTypeLabel,
 } from '#/enums/workEnum';
 
+const formRef = ref();
+const formRules = {
+  projectName: [{ required: true, message: '请输入项目名称', type: 'string' as const, trigger: 'blur' as const }],
+};
+
 const formOpen = ref(false);
 const detailOpen = ref(false);
 const editingId = ref<null | string>(null);
@@ -153,10 +158,7 @@ async function handleRemove(id: string) {
 }
 
 async function handleSubmit() {
-  if (!formState.value.projectName.trim()) {
-    message.warning('请填写项目名称');
-    return;
-  }
+  try { await formRef.value?.validate(); } catch { return; }
   try {
     if (editingId.value) {
       await updateWorkProjectApi(editingId.value, formState.value);
@@ -213,6 +215,7 @@ onMounted(() => {
           :columns="columns"
           :data-source="items"
           :loading="loading"
+          :locale="{ emptyText: '暂无数据' }"
           :pagination="{
             current: query.page,
             pageSize: query.pageSize,
@@ -260,7 +263,7 @@ onMounted(() => {
       @cancel="formOpen = false"
       @ok="handleSubmit"
     >
-      <Form :model="formState" layout="vertical">
+      <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">
         <Form.Item label="项目名称" required>
           <Input v-model:value="formState.projectName" placeholder="项目名称" />
         </Form.Item>

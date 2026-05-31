@@ -242,6 +242,7 @@ onMounted(async () => {
         :columns="columns"
         :data-source="records"
         :loading="loading"
+        :locale="{ emptyText: '暂无数据' }"
         :pagination="{ pageSize: 10, showTotal: (value: number) => `共 ${value} 条` }"
         :scroll="{ x: 960 }"
         row-key="id"

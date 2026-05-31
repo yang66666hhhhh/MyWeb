@@ -28,6 +28,12 @@ import type { Budget, CreateBudgetInput } from '#/api/assets';
 
 import { createBudgetApi, deleteBudgetApi, getBudgetPageApi, updateBudgetApi } from '#/api/assets';
 
+const formRef = ref();
+const formRules = {
+  category: [{ required: true, message: '请选择分类', type: 'string' as const, trigger: 'change' as const }],
+  plannedAmount: [{ required: true, message: '请输入预算金额', type: 'number' as const, trigger: 'blur' as const }],
+};
+
 const loading = ref(false);
 const dataList = ref<Budget[]>([]);
 const total = ref(0);
@@ -80,7 +86,7 @@ const fetchData = async () => {
     dataList.value = res.items;
     total.value = res.total;
   } catch {
-    // ignore
+    message.error('加载失败，请稍后重试');
   } finally {
     loading.value = false;
   }
@@ -123,10 +129,7 @@ const handleDelete = async (id: string) => {
 };
 
 const handleSubmit = async () => {
-  if (!formState.category || !formState.plannedAmount) {
-    message.warning('请填写必填项');
-    return;
-  }
+  try { await formRef.value?.validate(); } catch { return; }
   submitting.value = true;
   try {
     if (editingId.value) {
@@ -236,7 +239,7 @@ onMounted(() => {
       :confirm-loading="submitting"
       @ok="handleSubmit"
     >
-      <Form layout="vertical">
+      <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">
         <FormItem label="年份" required>
           <InputNumber v-model:value="formState.year" :min="2020" :max="2030" style="width: 100%" />
         </FormItem>

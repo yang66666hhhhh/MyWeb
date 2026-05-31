@@ -17,6 +17,11 @@ const emit = defineEmits<{
   'update:open': [value: boolean];
 }>();
 
+const formRef = ref();
+const formRules = {
+  name: [{ required: true, message: '请输入习惯名称', type: 'string' as const, trigger: 'blur' as const }],
+};
+
 const loading = ref(false);
 const title = computed(() => (props.id ? '编辑习惯' : '新增习惯'));
 const Textarea = Input.TextArea;
@@ -83,10 +88,7 @@ async function loadDetail() {
 }
 
 async function submit() {
-  if (!formState.name.trim()) {
-    message.warning('请填写习惯名称');
-    return;
-  }
+  try { await formRef.value?.validate(); } catch { return; }
 
   loading.value = true;
   try {
@@ -126,7 +128,7 @@ watch(
     @cancel="emit('update:open', false)"
     @ok="submit"
   >
-    <Form :model="formState" layout="vertical">
+    <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">
       <Form.Item label="习惯名称" required>
         <Input v-model:value="formState.name" placeholder="例如：英语阅读" />
       </Form.Item>

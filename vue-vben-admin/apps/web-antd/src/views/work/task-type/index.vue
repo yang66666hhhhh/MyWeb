@@ -30,6 +30,11 @@ import {
 } from '#/api/work/taskType';
 import { usePagedQuery } from '#/composables/usePagedQuery';
 
+const formRef = ref();
+const formRules = {
+  typeName: [{ required: true, message: '请输入类型名称', type: 'string' as const, trigger: 'blur' as const }],
+};
+
 const formOpen = ref(false);
 const detailOpen = ref(false);
 const editingId = ref<null | string>(null);
@@ -108,10 +113,7 @@ async function handleRemove(id: string) {
 }
 
 async function handleSubmit() {
-  if (!formState.value.typeName.trim()) {
-    message.warning('请填写类型名称');
-    return;
-  }
+  try { await formRef.value?.validate(); } catch { return; }
   try {
     if (editingId.value) {
       await updateWorkTaskTypeApi(editingId.value, formState.value);
@@ -224,7 +226,7 @@ onMounted(() => {
       @cancel="formOpen = false"
       @ok="handleSubmit"
     >
-      <Form :model="formState" layout="vertical">
+      <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">
         <div class="grid grid-cols-2 gap-4">
           <Form.Item label="类型名称" required>
             <Input v-model:value="formState.typeName" placeholder="类型名称" />

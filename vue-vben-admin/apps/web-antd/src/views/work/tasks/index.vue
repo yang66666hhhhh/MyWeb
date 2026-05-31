@@ -116,6 +116,11 @@ const priorityOptions = [
   { label: '紧急', value: 4 },
 ];
 
+const formRef = ref();
+const formRules = {
+  title: [{ required: true, message: '请输入任务标题', type: 'string' as const, trigger: 'blur' as const }],
+};
+
 const summaryText = computed(() => {
   const totalCount = items.value.length;
   const completedCount = items.value.filter((item) => Number(item.status) === 2).length;
@@ -150,7 +155,7 @@ async function fetchProjects() {
     const res = await projectApi.getPage({ page: 1, pageSize: 100 });
     projects.value = res.items;
   } catch {
-    // ignore
+    message.error('加载失败，请稍后重试');
   }
 }
 
@@ -232,10 +237,7 @@ function openEdit(record: Record<string, any>) {
 }
 
 async function handleSave() {
-  if (!formState.title) {
-    message.error('请填写任务标题');
-    return;
-  }
+  try { await formRef.value?.validate(); } catch { return; }
 
   try {
     if (editingId.value) {
@@ -326,6 +328,7 @@ onMounted(() => {
           :columns="columns"
           :data-source="items"
           :loading="loading"
+          :locale="{ emptyText: '暂无数据' }"
           :pagination="{ current: query.page, pageSize: query.pageSize, showSizeChanger: true, showTotal: (v: number) => `共 ${v} 条`, total }"
           :scroll="{ x: 1100 }"
           row-key="id"
@@ -371,7 +374,7 @@ onMounted(() => {
       width="600px"
       @ok="handleSave"
     >
-      <Form :model="formState" layout="vertical">
+      <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">
         <Form.Item label="任务标题" required>
           <Input v-model:value="formState.title" placeholder="请输入任务标题" />
         </Form.Item>

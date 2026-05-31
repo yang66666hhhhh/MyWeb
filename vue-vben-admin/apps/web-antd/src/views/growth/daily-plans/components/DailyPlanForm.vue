@@ -24,6 +24,12 @@ const emit = defineEmits<{
   'update:open': [value: boolean];
 }>();
 
+const formRef = ref();
+const formRules = {
+  title: [{ required: true, message: '请输入任务标题', type: 'string' as const, trigger: 'blur' as const }],
+  planDate: [{ required: true, message: '请选择计划日期', type: 'string' as const, trigger: 'change' as const }],
+};
+
 const loading = ref(false);
 const Textarea = Input.TextArea;
 
@@ -132,10 +138,7 @@ async function loadDetail() {
 }
 
 async function submit() {
-  if (!formState.title.trim() || !formState.planDate) {
-    message.warning('请填写计划日期和标题');
-    return;
-  }
+  try { await formRef.value?.validate(); } catch { return; }
 
   loading.value = true;
   try {
@@ -188,7 +191,7 @@ watch(
     @ok="submit"
   >
     <div class="space-y-4">
-      <Form :model="formState" layout="vertical">
+      <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">
         <Form.Item label="任务标题" required>
           <Input v-model:value="formState.title" placeholder="今天最重要的任务" />
         </Form.Item>

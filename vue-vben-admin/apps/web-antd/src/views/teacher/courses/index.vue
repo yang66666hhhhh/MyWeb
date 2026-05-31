@@ -93,7 +93,7 @@ const fetchData = async () => {
     dataList.value = res.items;
     total.value = res.total;
   } catch {
-    // ignore
+    message.error('加载失败，请稍后重试');
   } finally {
     loading.value = false;
   }

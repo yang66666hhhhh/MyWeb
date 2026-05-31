@@ -194,6 +194,7 @@ onMounted(() => {
         :columns="columns"
         :data-source="items"
         :loading="loading"
+        :locale="{ emptyText: '暂无数据' }"
         :pagination="{
           current: query.page,
           pageSize: query.pageSize,

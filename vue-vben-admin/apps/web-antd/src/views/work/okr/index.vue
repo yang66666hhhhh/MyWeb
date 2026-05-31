@@ -32,6 +32,12 @@ import {
 } from '#/api/work/extended';
 import { usePagedQuery } from '#/composables/usePagedQuery';
 
+const formRef = ref();
+const formRules = {
+  title: [{ required: true, message: '请输入标题', type: 'string' as const, trigger: 'blur' as const }],
+  objective: [{ required: true, message: '请输入目标', type: 'string' as const, trigger: 'blur' as const }],
+};
+
 const formOpen = ref(false);
 const detailOpen = ref(false);
 const editingId = ref<null | string>(null);
@@ -143,14 +149,7 @@ async function handleRemove(id: string) {
 }
 
 async function handleSubmit() {
-  if (!formState.value.title.trim()) {
-    message.warning('请填写标题');
-    return;
-  }
-  if (!formState.value.objective.trim()) {
-    message.warning('请填写目标');
-    return;
-  }
+  try { await formRef.value?.validate(); } catch { return; }
   try {
     if (editingId.value) {
       await updateOkrApi(editingId.value, formState.value);
@@ -230,6 +229,7 @@ onMounted(() => {
         :columns="columns"
         :data-source="items"
         :loading="loading"
+        :locale="{ emptyText: '暂无数据' }"
         :pagination="{
           current: query.page,
           pageSize: query.pageSize,
@@ -290,7 +290,7 @@ onMounted(() => {
       @cancel="formOpen = false"
       @ok="handleSubmit"
     >
-      <Form :model="formState" layout="vertical">
+      <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">
         <Form.Item label="标题" required>
           <Input v-model:value="formState.title" placeholder="OKR标题" />
         </Form.Item>

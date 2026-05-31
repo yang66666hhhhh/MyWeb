@@ -212,6 +212,7 @@ onMounted(() => fetchPage());
           :columns="columns"
           :data-source="items"
           :loading="loading"
+          :locale="{ emptyText: '暂无数据' }"
           :pagination="{ current: query.page, pageSize: query.pageSize, showSizeChanger: true, showTotal: (v: number) => `共 ${v} 条`, total }"
           :scroll="{ x: 1100 }"
           row-key="id"

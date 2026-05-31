@@ -24,6 +24,11 @@ import {
 
 import { softwareAssetApi, type CreateSoftwareAssetInput, type SoftwareAsset } from '#/api/work/softwareAsset';
 
+const formRef = ref();
+const formRules = {
+  name: [{ required: true, message: '请输入软件名称', type: 'string' as const, trigger: 'blur' as const }],
+};
+
 const loading = ref(false);
 const formOpen = ref(false);
 const editingId = ref<null | string>(null);
@@ -188,10 +193,7 @@ function openEdit(record: Record<string, any>) {
 }
 
 async function handleSave() {
-  if (!formState.name) {
-    message.error('请填写软件名称');
-    return;
-  }
+  try { await formRef.value?.validate(); } catch { return; }
 
   try {
     if (editingId.value) {
@@ -320,7 +322,7 @@ onMounted(() => {
       width="600px"
       @ok="handleSave"
     >
-      <Form :model="formState" layout="vertical">
+      <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">
         <Row :gutter="16">
           <Col :span="12">
             <Form.Item label="软件名称" required>

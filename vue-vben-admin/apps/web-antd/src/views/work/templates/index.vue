@@ -31,6 +31,12 @@ import {
   updateTemplateApi,
 } from '#/api/work/template';
 
+const formRef = ref();
+const formRules = {
+  name: [{ required: true, message: '请输入模板名称', type: 'string' as const, trigger: 'blur' as const }],
+  industry: [{ required: true, message: '请选择行业', type: 'string' as const, trigger: 'change' as const }],
+};
+
 const templates = ref<IndustryTemplate[]>([]);
 const loading = ref(false);
 const formOpen = ref(false);
@@ -146,14 +152,7 @@ function removeField(index: number) {
 }
 
 async function handleSubmit() {
-  if (!formState.value.name) {
-    message.error('请输入模板名称');
-    return;
-  }
-  if (!formState.value.industry) {
-    message.error('请选择行业');
-    return;
-  }
+  try { await formRef.value?.validate(); } catch { return; }
 
   try {
     if (isEditing.value) {
@@ -240,7 +239,7 @@ onMounted(() => {
       width="800px"
       :footer="null"
     >
-      <Form layout="vertical">
+      <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">
         <Row :gutter="16">
           <Col :span="12">
             <Form.Item label="模板名称" required>

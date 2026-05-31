@@ -27,6 +27,14 @@ import type { CreateInvestmentInput, Investment } from '#/api/assets';
 
 import { createInvestmentApi, deleteInvestmentApi, getInvestmentPageApi, updateInvestmentApi } from '#/api/assets';
 
+const formRef = ref();
+const formRules = {
+  name: [{ required: true, message: '请输入名称', type: 'string' as const, trigger: 'blur' as const }],
+  investmentDate: [{ required: true, message: '请选择日期', type: 'string' as const, trigger: 'change' as const }],
+  type: [{ required: true, message: '请选择类型', type: 'string' as const, trigger: 'change' as const }],
+  amount: [{ required: true, message: '请输入金额', type: 'number' as const, trigger: 'blur' as const }],
+};
+
 const loading = ref(false);
 const dataList = ref<Investment[]>([]);
 const total = ref(0);
@@ -80,7 +88,7 @@ const fetchData = async () => {
     dataList.value = res.items;
     total.value = res.total;
   } catch {
-    // ignore
+    message.error('加载失败，请稍后重试');
   } finally {
     loading.value = false;
   }
@@ -127,10 +135,7 @@ const handleDelete = async (id: string) => {
 };
 
 const handleSubmit = async () => {
-  if (!formState.name || !formState.investmentDate || !formState.amount || !formState.type) {
-    message.warning('请填写必填项');
-    return;
-  }
+  try { await formRef.value?.validate(); } catch { return; }
   submitting.value = true;
   try {
     if (editingId.value) {
@@ -236,7 +241,7 @@ onMounted(() => {
       :confirm-loading="submitting"
       @ok="handleSubmit"
     >
-      <Form layout="vertical">
+      <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">
         <FormItem label="日期" required>
           <DatePicker v-model:value="formState.investmentDate" style="width: 100%" />
         </FormItem>

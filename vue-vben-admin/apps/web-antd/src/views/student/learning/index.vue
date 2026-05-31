@@ -347,6 +347,7 @@ onMounted(() => {
         :columns="columns"
         :data-source="tasks"
         :loading="loading"
+        :locale="{ emptyText: '暂无数据' }"
         :pagination="{ pageSize: 10, showSizeChanger: true, showTotal: (value: number) => `共 ${value} 条` }"
         :scroll="{ x: 980 }"
         row-key="id"

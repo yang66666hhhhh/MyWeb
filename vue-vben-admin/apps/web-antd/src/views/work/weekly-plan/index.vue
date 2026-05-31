@@ -38,6 +38,15 @@ const props = withDefaults(
 );
 
 const router = useRouter();
+const formRef = ref();
+const taskFormRef = ref();
+const formRules = {
+  goals: [{ required: true, message: '请输入目标', type: 'string' as const, trigger: 'blur' as const }],
+};
+const taskFormRules = {
+  title: [{ required: true, message: '请输入任务标题', type: 'string' as const, trigger: 'blur' as const }],
+};
+
 const loading = ref(false);
 const formOpen = ref(false);
 const taskFormOpen = ref(false);
@@ -195,10 +204,7 @@ function openEdit(record: WeeklyPlan) {
 }
 
 async function handleSave() {
-  if (!formState.goals) {
-    message.error('请填写目标');
-    return;
-  }
+  try { await formRef.value?.validate(); } catch { return; }
 
   try {
     if (editingId.value) {
@@ -251,10 +257,7 @@ function openTaskEdit(plan: WeeklyPlan, task: Record<string, any>) {
 }
 
 async function handleTaskSave() {
-  if (!taskFormState.title) {
-    message.error('请填写任务标题');
-    return;
-  }
+  try { await taskFormRef.value?.validate(); } catch { return; }
 
   try {
     if (editingTaskId.value) {
@@ -394,7 +397,7 @@ onMounted(() => {
     </div>
 
     <Modal v-model:open="formOpen" :title="editingId ? '编辑周计划' : createButtonText" @ok="handleSave">
-      <Form :model="formState" layout="vertical">
+      <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">
         <Row :gutter="16">
           <Col :span="12">
             <Form.Item label="年份" required>
@@ -414,7 +417,7 @@ onMounted(() => {
     </Modal>
 
     <Modal v-model:open="taskFormOpen" :title="editingTaskId ? '编辑任务' : '添加任务'" @ok="handleTaskSave">
-      <Form :model="taskFormState" layout="vertical">
+      <Form ref="taskFormRef" :model="taskFormState" :rules="taskFormRules" layout="vertical">
         <Form.Item label="任务标题" required>
           <Input v-model:value="taskFormState.title" placeholder="请输入任务标题" />
         </Form.Item>

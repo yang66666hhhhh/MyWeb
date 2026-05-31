@@ -883,6 +883,58 @@ rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.cspr
 - 前端类型检查：通过
 - 前端构建：成功
 
+### v2.7 (2025-05-31)
+
+**表单验证补充：**
+
+- 为 18 个页面/组件添加了 Ant Design Form `:rules` 验证：
+  - Work: tasks, project, risk-control, files, okr, device, impl-log, weekly-plan, templates, task-type, software-assets, log/WorkLogModal
+  - Assets: expenses, income, investments, budget
+  - Growth: habits/HabitForm, daily-plans/DailyPlanForm
+- 使用 `formRef.value?.validate()` 替代手动 `if` 判断
+- 添加了 `formRules` 定义，包含必填项、格式验证等规则
+- 修复了 TypeScript 类型错误，使用 `as const` 断言
+
+**验证结果：**
+- 后端测试：140 个全部通过
+- 前端类型检查：通过
+- 前端构建：成功
+
+### v2.6 (2025-05-31)
+
+**用户体验优化：**
+
+- **错误处理优化**：为 25 个 catch 块添加错误提示
+  - 将 `catch { // ignore }` 改为 `catch { message.error('加载失败，请稍后重试') }`
+  - 涉及页面：dashboard, ai/assistant, network/contact, content/article, assets/*, teacher/*, design/*, dev/*, network/interaction, content/calendar, content/media, work/tasks, analytics/*
+  
+- **空状态优化**：为 21 个列表页面添加空状态提示
+  - 添加 `:locale="{ emptyText: '暂无数据' }"` 属性
+  - 涉及模块：Work (7个), Growth (4个), Student (5个), Content (3个), Network (2个)
+
+**验证结果：**
+- 后端测试：140 个全部通过
+- 前端类型检查：通过
+- 前端构建：成功
+
+### v2.5 (2025-05-31)
+
+**成长看板页面完善：**
+
+- 重写 `views/growth/dashboard/index.vue` - 消除所有硬编码数据
+- 统计卡片：今日计划/已完成/待处理/完成率（从 API 获取）
+- 今日计划：从 `/api/growth/tasks` 获取今日计划
+- 最近任务：从 `/api/growth/tasks` 获取最近工作任务
+- 最近工作日志：从 `/api/work/logs` 获取最近日志
+- 快捷操作：基于用户权限动态显示
+- 时间问候：根据当前时间显示不同问候语
+- 空状态引导：无数据时显示引导用户创建的提示
+
+**验证结果：**
+- 后端测试：140 个全部通过
+- 前端类型检查：通过
+- 前端构建：成功
+
 ### v2.4 (2025-05-31)
 
 **工作台页面完善：**

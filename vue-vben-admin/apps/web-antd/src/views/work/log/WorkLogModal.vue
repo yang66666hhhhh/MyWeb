@@ -18,6 +18,11 @@ const emit = defineEmits<{
   'update:open': [value: boolean];
 }>();
 
+const formRef = ref();
+const formRules = {
+  title: [{ required: true, message: '请输入标题', type: 'string' as const, trigger: 'blur' as const }],
+};
+
 const loading = ref(false);
 const dynamicValues = ref<DynamicValue[]>([]);
 
@@ -72,9 +77,7 @@ async function loadDetail() {
 }
 
 async function submit() {
-  if (!formState.title.trim()) {
-    return;
-  }
+  try { await formRef.value?.validate(); } catch { return; }
   loading.value = true;
   try {
     const data: any = {
@@ -107,7 +110,7 @@ async function submit() {
     @cancel="emit('update:open', false)"
     @ok="submit"
   >
-    <Form :model="formState" layout="vertical">
+    <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">
       <Form.Item label="工作日期">
         <DatePicker v-model:value="formState.workDate" format="YYYY-MM-DD" class="w-full" />
       </Form.Item>

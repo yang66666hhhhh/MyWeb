@@ -302,6 +302,7 @@ onMounted(() => {
         :columns="columns"
         :data-source="mistakes"
         :loading="loading"
+        :locale="{ emptyText: '暂无数据' }"
         :pagination="{ pageSize: 10, showSizeChanger: true, showTotal: (value: number) => `共 ${value} 条` }"
         :scroll="{ x: 1250 }"
         row-key="id"

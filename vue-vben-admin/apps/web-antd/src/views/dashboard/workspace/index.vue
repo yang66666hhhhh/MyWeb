@@ -12,6 +12,7 @@ import {
   List,
   ListItem,
   ListItemMeta,
+  message,
   Row,
   Space,
   Statistic,
@@ -108,7 +109,7 @@ const fetchData = async () => {
       todayPlans.value = plansData.value.items;
     }
   } catch {
-    // ignore
+    message.error('加载失败，请稍后重试');
   } finally {
     loading.value = false;
   }

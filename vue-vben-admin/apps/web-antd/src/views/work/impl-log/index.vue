@@ -61,6 +61,13 @@ const props = withDefaults(
   },
 );
 
+const formRef = ref();
+const formRules = {
+  title: [{ required: true, message: '请输入项目名称', type: 'string' as const, trigger: 'blur' as const }],
+  workDate: [{ required: true, message: '请选择日期', type: 'string' as const, trigger: 'change' as const }],
+  totalHours: [{ required: true, message: '请输入工时', type: 'number' as const, trigger: 'blur' as const }],
+};
+
 const loading = ref(false);
 const template = ref<WorkLogTemplate | null>(null);
 const projects = ref<WorkProject[]>([]);
@@ -277,10 +284,7 @@ function handleProjectChange(projectId?: unknown) {
 }
 
 async function handleSave() {
-  if (!formState.value.title) {
-    message.error('请填写项目名称');
-    return;
-  }
+  try { await formRef.value?.validate(); } catch { return; }
 
   try {
     if (editingId.value) {
@@ -413,7 +417,7 @@ onMounted(() => {
       width="800px"
       @ok="handleSave"
     >
-      <Form :model="formState" layout="vertical">
+      <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">
         <Row :gutter="16">
           <Col :span="12">
             <Form.Item label="日期" required>

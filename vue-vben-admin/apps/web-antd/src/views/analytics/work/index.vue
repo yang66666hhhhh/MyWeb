@@ -5,7 +5,7 @@ import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Card, Col, Row, Statistic, Table } from 'ant-design-vue';
+import { Card, Col, message, Row, Statistic, Table } from 'ant-design-vue';
 
 import { statisticsApi } from '#/api/work/statistics';
 
@@ -49,7 +49,7 @@ async function fetchData() {
     dailyHours.value = dailyData;
     taskTypeDistribution.value = taskTypeData;
   } catch {
-    // ignore
+    message.error('加载失败，请稍后重试');
   } finally {
     loading.value = false;
   }

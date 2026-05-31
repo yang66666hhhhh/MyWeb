@@ -32,6 +32,11 @@ import {
 } from '#/api/work/extended';
 import { usePagedQuery } from '#/composables/usePagedQuery';
 
+const formRef = ref();
+const formRules = {
+  fileName: [{ required: true, message: '请输入文件名', type: 'string' as const, trigger: 'blur' as const }],
+};
+
 const formOpen = ref(false);
 const detailOpen = ref(false);
 const editingId = ref<null | string>(null);
@@ -154,10 +159,7 @@ async function handleRemove(id: string) {
 }
 
 async function handleSubmit() {
-  if (!formState.value.fileName.trim()) {
-    message.warning('请填写文件名');
-    return;
-  }
+  try { await formRef.value?.validate(); } catch { return; }
   try {
     if (editingId.value) {
       await updateFileApi(editingId.value, formState.value);
@@ -230,6 +232,7 @@ onMounted(() => {
         :columns="columns"
         :data-source="items"
         :loading="loading"
+        :locale="{ emptyText: '暂无数据' }"
         :pagination="{
           current: query.page,
           pageSize: query.pageSize,
@@ -278,7 +281,7 @@ onMounted(() => {
       @cancel="formOpen = false"
       @ok="handleSubmit"
     >
-      <Form :model="formState" layout="vertical">
+      <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">
         <Form.Item label="文件名" required>
           <Input v-model:value="formState.fileName" placeholder="文件名" />
         </Form.Item>

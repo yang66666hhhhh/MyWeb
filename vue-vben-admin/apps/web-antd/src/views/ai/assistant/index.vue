@@ -47,7 +47,7 @@ const loadSessions = async () => {
     const res = await aiApi.getChatSessions({ page: 1, pageSize: 50 });
     sessions.value = res.items;
   } catch {
-    // ignore
+    message.error('加载失败，请稍后重试');
   } finally {
     sessionsLoading.value = false;
   }
@@ -59,7 +59,7 @@ const loadMessages = async (sessionId: string) => {
     messages.value = await aiApi.getChatMessages(sessionId);
     scrollToBottom();
   } catch {
-    // ignore
+    message.error('加载失败，请稍后重试');
   } finally {
     loading.value = false;
   }
