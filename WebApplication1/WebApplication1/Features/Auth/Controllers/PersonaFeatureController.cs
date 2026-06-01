@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -99,12 +100,18 @@ public class PersonaFeatureController(AppDbContext context) : ControllerBase
 
 public class AddPersonaFeatureRequest
 {
+    [Required(ErrorMessage = "Persona编码不能为空")]
+    [StringLength(50)]
     public string PersonaCode { get; set; } = string.Empty;
     public Guid FeatureId { get; set; }
 }
 
 public class BatchPersonaFeatureRequest
 {
+    [Required(ErrorMessage = "Persona编码不能为空")]
+    [StringLength(50)]
     public string PersonaCode { get; set; } = string.Empty;
+
+    [MinLength(1, ErrorMessage = "至少选择一个功能")]
     public List<Guid> FeatureIds { get; set; } = new();
 }

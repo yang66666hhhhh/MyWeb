@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +13,7 @@ namespace WebApplication1.Features.Auth.Controllers;
 [Authorize(Roles = "owner")]
 [Route("api/system/menus")]
 [Tags("Admin - Menus")]
-public class MenuAdminController(AppDbContext db) : ControllerBase
+public class MenuAdminController(AppDbContext db, ILogger<MenuAdminController> logger) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<ApiResult<List<MenuTreeAdminDto>>>> GetAll()
@@ -69,103 +70,130 @@ public class MenuAdminController(AppDbContext db) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ApiResult<MenuItemDto>>> Create([FromBody] CreateMenuItemDto input)
     {
-        if (await db.MenuItems.AnyAsync(m => m.Path == input.Path))
-            return BadRequest(ApiResult<MenuItemDto>.Fail("路径已存在"));
-
-        var menuItem = new MenuItem
+        try
         {
-            Name = input.Name,
-            Path = input.Path,
-            Icon = input.Icon,
-            Sort = input.Sort,
-            ParentId = input.ParentId,
-            IsActive = true
-        };
-        db.MenuItems.Add(menuItem);
-        await db.SaveChangesAsync();
+            if (await db.MenuItems.AnyAsync(m => m.Path == input.Path))
+                return BadRequest(ApiResult<MenuItemDto>.Fail("路径已存在"));
 
-        if (input.TagIds?.Count > 0)
-        {
-            foreach (var tagId in input.TagIds)
+            var menuItem = new MenuItem
             {
-                db.MenuTags.Add(new MenuTag { MenuItemId = menuItem.Id, TagId = tagId });
-            }
+                Name = input.Name,
+                Path = input.Path,
+                Icon = input.Icon,
+                Sort = input.Sort,
+                ParentId = input.ParentId,
+                IsActive = true
+            };
+            db.MenuItems.Add(menuItem);
             await db.SaveChangesAsync();
-        }
 
-        var tags = input.TagIds != null 
-            ? await db.Tags.Where(t => input.TagIds.Contains(t.Id)).Select(t => t.Name).ToListAsync()
-            : new List<string>();
-        return Ok(ApiResult<MenuItemDto>.Success(new MenuItemDto
+            if (input.TagIds?.Count > 0)
+            {
+                foreach (var tagId in input.TagIds)
+                {
+                    db.MenuTags.Add(new MenuTag { MenuItemId = menuItem.Id, TagId = tagId });
+                }
+                await db.SaveChangesAsync();
+            }
+
+            var tags = input.TagIds != null 
+                ? await db.Tags.Where(t => input.TagIds.Contains(t.Id)).Select(t => t.Name).ToListAsync()
+                : new List<string>();
+            logger.LogInformation("创建菜单成功: {Id}", menuItem.Id);
+            return Ok(ApiResult<MenuItemDto>.Success(new MenuItemDto
+            {
+                Id = menuItem.Id,
+                Name = menuItem.Name,
+                Path = menuItem.Path,
+                Icon = menuItem.Icon,
+                Sort = menuItem.Sort,
+                ParentId = menuItem.ParentId,
+                IsActive = menuItem.IsActive,
+                TagIds = input.TagIds ?? new List<Guid>(),
+                TagNames = tags
+            }, "创建成功"));
+        }
+        catch (Exception ex)
         {
-            Id = menuItem.Id,
-            Name = menuItem.Name,
-            Path = menuItem.Path,
-            Icon = menuItem.Icon,
-            Sort = menuItem.Sort,
-            ParentId = menuItem.ParentId,
-            IsActive = menuItem.IsActive,
-            TagIds = input.TagIds ?? new List<Guid>(),
-            TagNames = tags
-        }, "创建成功"));
+            logger.LogError(ex, "创建菜单失败");
+            return StatusCode(500, ApiResult.Fail("创建失败，请稍后重试"));
+        }
     }
 
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<ApiResult<MenuItemDto>>> Update(Guid id, [FromBody] CreateMenuItemDto input)
     {
-        var menuItem = await db.MenuItems
-            .Include(m => m.MenuTags)
-            .FirstOrDefaultAsync(m => m.Id == id);
-
-        if (menuItem == null)
-            return NotFound(ApiResult<MenuItemDto>.Fail("菜单不存在"));
-
-        if (await db.MenuItems.AnyAsync(m => m.Path == input.Path && m.Id != id))
-            return BadRequest(ApiResult<MenuItemDto>.Fail("路径已存在"));
-
-        menuItem.Name = input.Name;
-        menuItem.Path = input.Path;
-        menuItem.Icon = input.Icon;
-        menuItem.Sort = input.Sort;
-        menuItem.ParentId = input.ParentId;
-
-        db.MenuTags.RemoveRange(menuItem.MenuTags);
-        if (input.TagIds?.Count > 0)
+        try
         {
-            foreach (var tagId in input.TagIds)
+            var menuItem = await db.MenuItems
+                .Include(m => m.MenuTags)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (menuItem == null)
+                return NotFound(ApiResult<MenuItemDto>.Fail("菜单不存在"));
+
+            if (await db.MenuItems.AnyAsync(m => m.Path == input.Path && m.Id != id))
+                return BadRequest(ApiResult<MenuItemDto>.Fail("路径已存在"));
+
+            menuItem.Name = input.Name;
+            menuItem.Path = input.Path;
+            menuItem.Icon = input.Icon;
+            menuItem.Sort = input.Sort;
+            menuItem.ParentId = input.ParentId;
+
+            db.MenuTags.RemoveRange(menuItem.MenuTags);
+            if (input.TagIds?.Count > 0)
             {
-                db.MenuTags.Add(new MenuTag { MenuItemId = menuItem.Id, TagId = tagId });
+                foreach (var tagId in input.TagIds)
+                {
+                    db.MenuTags.Add(new MenuTag { MenuItemId = menuItem.Id, TagId = tagId });
+                }
             }
-        }
-        await db.SaveChangesAsync();
+            await db.SaveChangesAsync();
 
-        var tags = input.TagIds != null 
-            ? await db.Tags.Where(t => input.TagIds.Contains(t.Id)).Select(t => t.Name).ToListAsync()
-            : new List<string>();
-        return Ok(ApiResult<MenuItemDto>.Success(new MenuItemDto
+            var tags = input.TagIds != null 
+                ? await db.Tags.Where(t => input.TagIds.Contains(t.Id)).Select(t => t.Name).ToListAsync()
+                : new List<string>();
+            logger.LogInformation("更新菜单成功: {Id}", id);
+            return Ok(ApiResult<MenuItemDto>.Success(new MenuItemDto
+            {
+                Id = menuItem.Id,
+                Name = menuItem.Name,
+                Path = menuItem.Path,
+                Icon = menuItem.Icon,
+                Sort = menuItem.Sort,
+                ParentId = menuItem.ParentId,
+                IsActive = menuItem.IsActive,
+                TagIds = input.TagIds ?? new List<Guid>(),
+                TagNames = tags
+            }, "更新成功"));
+        }
+        catch (Exception ex)
         {
-            Id = menuItem.Id,
-            Name = menuItem.Name,
-            Path = menuItem.Path,
-            Icon = menuItem.Icon,
-            Sort = menuItem.Sort,
-            ParentId = menuItem.ParentId,
-            IsActive = menuItem.IsActive,
-            TagIds = input.TagIds ?? new List<Guid>(),
-            TagNames = tags
-        }, "更新成功"));
+            logger.LogError(ex, "更新菜单失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
+        }
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<ApiResult>> Delete(Guid id)
     {
-        var menuItem = await db.MenuItems.FindAsync([id]);
-        if (menuItem == null)
-            return NotFound(ApiResult.Fail("菜单不存在"));
+        try
+        {
+            var menuItem = await db.MenuItems.FindAsync([id]);
+            if (menuItem == null)
+                return NotFound(ApiResult.Fail("菜单不存在"));
 
-        db.MenuItems.Remove(menuItem);
-        await db.SaveChangesAsync();
-        return Ok(ApiResult.Success("删除成功"));
+            db.MenuItems.Remove(menuItem);
+            await db.SaveChangesAsync();
+            logger.LogInformation("删除菜单成功: {Id}", id);
+            return Ok(ApiResult.Success("删除成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "删除菜单失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("删除失败，请稍后重试"));
+        }
     }
 }
 
@@ -198,9 +226,17 @@ public class MenuItemDto
 
 public class CreateMenuItemDto
 {
+    [Required(ErrorMessage = "菜单名称不能为空")]
+    [StringLength(100, ErrorMessage = "菜单名称不能超过100个字符")]
     public string Name { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "路由路径不能为空")]
+    [StringLength(200, ErrorMessage = "路由路径不能超过200个字符")]
     public string Path { get; set; } = string.Empty;
+
+    [StringLength(50, ErrorMessage = "图标不能超过50个字符")]
     public string? Icon { get; set; }
+
     public int Sort { get; set; }
     public Guid? ParentId { get; set; }
     public List<Guid>? TagIds { get; set; }

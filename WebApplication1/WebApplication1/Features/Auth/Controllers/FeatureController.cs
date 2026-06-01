@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -39,15 +40,23 @@ public class FeatureController(AppDbContext context) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<ApiResult<Feature>>> Create([FromBody] Feature input, CancellationToken ct)
+    public async Task<ActionResult<ApiResult<Feature>>> Create([FromBody] CreateFeatureDto input, CancellationToken ct)
     {
-        context.Features.Add(input);
+        var feature = new Feature
+        {
+            Code = input.Code,
+            Name = input.Name,
+            Category = input.Category,
+            Description = input.Description,
+            IsEnabled = input.IsEnabled
+        };
+        context.Features.Add(feature);
         await context.SaveChangesAsync(ct);
-        return Ok(ApiResult<Feature>.Success(input, "创建成功"));
+        return Ok(ApiResult<Feature>.Success(feature, "创建成功"));
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<ActionResult<ApiResult<Feature>>> Update(Guid id, [FromBody] Feature input, CancellationToken ct)
+    public async Task<ActionResult<ApiResult<Feature>>> Update(Guid id, [FromBody] CreateFeatureDto input, CancellationToken ct)
     {
         var entity = await context.Features.FindAsync([id], ct);
         if (entity == null) return NotFound();
@@ -72,4 +81,24 @@ public class FeatureController(AppDbContext context) : ControllerBase
         await context.SaveChangesAsync(ct);
         return Ok(ApiResult.Success("删除成功"));
     }
+}
+
+public record CreateFeatureDto
+{
+    [Required(ErrorMessage = "功能编码不能为空")]
+    [StringLength(100, ErrorMessage = "编码不能超过100个字符")]
+    public string Code { get; init; } = string.Empty;
+
+    [Required(ErrorMessage = "功能名称不能为空")]
+    [StringLength(100, ErrorMessage = "名称不能超过100个字符")]
+    public string Name { get; init; } = string.Empty;
+
+    [Required(ErrorMessage = "分类不能为空")]
+    [StringLength(50, ErrorMessage = "分类不能超过50个字符")]
+    public string Category { get; init; } = string.Empty;
+
+    [StringLength(500, ErrorMessage = "描述不能超过500个字符")]
+    public string? Description { get; init; }
+
+    public bool IsEnabled { get; init; } = true;
 }
