@@ -4,7 +4,7 @@ using System.Text.Json;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Diagnostics;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
@@ -31,6 +31,7 @@ using WebApplication1.Features.Content.Services;
 using WebApplication1.Features.Content.Services.Interfaces;
 using WebApplication1.Features.Network.Services;
 using WebApplication1.Features.Network.Services.Interfaces;
+using WebApplication1.Features.Persona;
 using WebApplication1.Shared.HealthChecks;
 using WebApplication1.Shared.Localization;
 using WebApplication1.Shared.Services;
@@ -281,6 +282,7 @@ builder.Services.AddScoped<IImplLogService, ImplLogService>();
 builder.Services.AddScoped<IWorkCategoryService, WorkCategoryService>();
 builder.Services.AddScoped<IWeeklyPlanService, WeeklyPlanService>();
 builder.Services.AddScoped<ISoftwareAssetService, SoftwareAssetService>();
+builder.Services.AddScoped<IWorkExtendedService, WorkExtendedService>();
 builder.Services.AddScoped<IHabitService, HabitService>();
 builder.Services.AddScoped<IGrowthProjectService, GrowthProjectService>();
 builder.Services.AddScoped<IKnowledgeArticleService, KnowledgeArticleService>();
@@ -294,14 +296,18 @@ builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
 builder.Services.AddScoped<IAiService, AiService>();
+builder.Services.AddScoped<IAiExtendedService, AiExtendedService>();
 builder.Services.AddScoped<IPersonaService, PersonaService>();
+builder.Services.AddScoped<IPersonaFeatureService, PersonaFeatureService>();
 builder.Services.AddScoped<RoleMenuService>();
 builder.Services.AddScoped<IUserAccessContextService, UserAccessContextService>();
 builder.Services.AddScoped<IFeatureService, FeatureService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddScoped<IAnalyticsExtendedService, AnalyticsExtendedService>();
 builder.Services.AddScoped<IAssetService, AssetService>();
 builder.Services.AddScoped<IContentService, ContentService>();
 builder.Services.AddScoped<INetworkService, NetworkService>();
+builder.Services.AddScoped<IGrowthExtendedService, GrowthExtendedService>();
 
 builder.Services.AddHealthChecks()
     .AddMySql(
@@ -360,28 +366,8 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseExceptionHandler(appError =>
-{
-    appError.Run(async context =>
-    {
-        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-        context.Response.ContentType = "application/json";
-
-        var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
-        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-        logger.LogError(exception, "Unhandled exception occurred");
-
-        var result = new WebApplication1.Shared.Common.ApiResult
-        {
-            Code = 500,
-            Message = app.Environment.IsDevelopment()
-                ? (exception?.Message ?? "Internal server error")
-                : "Internal server error"
-        };
-
-        await context.Response.WriteAsJsonAsync(result);
-    });
-});
+// 全局异常处理中间件（必须在其他中间件之前，捕获所有后续中间件的异常）
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 

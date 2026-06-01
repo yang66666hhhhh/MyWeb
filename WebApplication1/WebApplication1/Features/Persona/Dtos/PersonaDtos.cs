@@ -6,6 +6,7 @@ namespace WebApplication1.Features.Persona.Dtos;
 public record CodeRepositoryDto
 {
     public string Id { get; init; } = string.Empty;
+    public string UserId { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
     public string? Description { get; init; }
     public string Url { get; init; } = string.Empty;
@@ -29,6 +30,7 @@ public record CreateCodeRepositoryInput
 public record IssueDto
 {
     public string Id { get; init; } = string.Empty;
+    public string UserId { get; init; } = string.Empty;
     public string Title { get; init; } = string.Empty;
     public string? Description { get; init; }
     public string Repository { get; init; } = string.Empty;
@@ -52,6 +54,7 @@ public record CreateIssueInput
 public record PipelineDto
 {
     public string Id { get; init; } = string.Empty;
+    public string UserId { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
     public string? Description { get; init; }
     public string Repository { get; init; } = string.Empty;
@@ -77,6 +80,7 @@ public record CreatePipelineInput
 public record DesignAssetDto
 {
     public string Id { get; init; } = string.Empty;
+    public string UserId { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
     public string? Description { get; init; }
     public string Category { get; init; } = string.Empty;
@@ -101,6 +105,7 @@ public record CreateDesignAssetInput
 public record PrototypeDto
 {
     public string Id { get; init; } = string.Empty;
+    public string UserId { get; init; } = string.Empty;
     public string Title { get; init; } = string.Empty;
     public string? Description { get; init; }
     public string Project { get; init; } = string.Empty;
@@ -123,6 +128,7 @@ public record CreatePrototypeInput
 public record TeacherCourseDto
 {
     public string Id { get; init; } = string.Empty;
+    public string UserId { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
     public string? Description { get; init; }
     public string Code { get; init; } = string.Empty;
@@ -147,6 +153,7 @@ public record CreateTeacherCourseInput
 public record TeacherStudentDto
 {
     public string Id { get; init; } = string.Empty;
+    public string UserId { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
     public string? StudentId { get; init; }
     public string? Email { get; init; }
