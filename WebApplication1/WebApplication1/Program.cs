@@ -375,6 +375,7 @@ app.UseCors(CorsPolicyName);
 
 // 安全中间件
 app.UseMiddleware<SecurityHeadersMiddleware>();
+app.UseMiddleware<RequestValidationMiddleware>();
 app.UseMiddleware<XssProtectionMiddleware>();
 app.UseMiddleware<SqlInjectionMiddleware>();
 
