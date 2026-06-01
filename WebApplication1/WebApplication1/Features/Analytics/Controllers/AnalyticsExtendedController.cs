@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Features.Analytics.Dtos;
 using WebApplication1.Shared.Common;
 
@@ -10,143 +9,119 @@ namespace WebApplication1.Features.Analytics;
 [Authorize]
 [Route("api/analytics")]
 [Tags("Analytics")]
-public class AnalyticsExtendedController : BaseApiController
+public class AnalyticsExtendedController(IAnalyticsExtendedService service) : BaseApiController
 {
-    // Time Analytics
     [HttpGet("time/overview")]
     public async Task<ActionResult<ApiResult<TimeAnalyticsOverviewDto>>> GetTimeOverview(CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        // TODO: Implement time analytics service
-        return Ok(ApiResult<TimeAnalyticsOverviewDto>.Success(new TimeAnalyticsOverviewDto
-        {
-            DailyWorkHours = 8.5,
-            DailyLearningHours = 2.5,
-            DailyRestHours = 7,
-            TimeUtilizationRate = 68
-        }));
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var result = await service.GetTimeAnalyticsAsync(userId.Value, ct);
+        return Ok(ApiResult<TimeAnalyticsOverviewDto>.Success(result));
     }
 
     [HttpGet("time/hourly-distribution")]
     public async Task<ActionResult<ApiResult<List<HourlyDistributionDto>>>> GetHourlyDistribution(CancellationToken ct)
     {
-        // TODO: Implement time analytics service
-        return Ok(ApiResult<List<HourlyDistributionDto>>.Success(new List<HourlyDistributionDto>()));
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var result = await service.GetHourlyDistributionAsync(userId.Value, ct);
+        return Ok(ApiResult<List<HourlyDistributionDto>>.Success(result));
     }
 
     [HttpGet("time/weekly-trend")]
     public async Task<ActionResult<ApiResult<List<WeeklyTrendDto>>>> GetWeeklyTrend(CancellationToken ct)
     {
-        // TODO: Implement time analytics service
-        return Ok(ApiResult<List<WeeklyTrendDto>>.Success(new List<WeeklyTrendDto>()));
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var result = await service.GetWeeklyTrendAsync(userId.Value, ct);
+        return Ok(ApiResult<List<WeeklyTrendDto>>.Success(result));
     }
 
-    // Habits Analytics
     [HttpGet("habits/overview")]
     public async Task<ActionResult<ApiResult<HabitsAnalyticsOverviewDto>>> GetHabitsOverview(CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        // TODO: Implement habits analytics service
-        return Ok(ApiResult<HabitsAnalyticsOverviewDto>.Success(new HabitsAnalyticsOverviewDto
-        {
-            ActiveHabits = 5,
-            MonthlyCheckIns = 85,
-            LongestStreak = 21,
-            CompletionRate = 78
-        }));
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var result = await service.GetHabitsAnalyticsAsync(userId.Value, ct);
+        return Ok(ApiResult<HabitsAnalyticsOverviewDto>.Success(result));
     }
 
     [HttpGet("habits/trends")]
     public async Task<ActionResult<ApiResult<List<HabitTrendDto>>>> GetHabitTrends(CancellationToken ct)
     {
-        // TODO: Implement habits analytics service
-        return Ok(ApiResult<List<HabitTrendDto>>.Success(new List<HabitTrendDto>()));
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var result = await service.GetHabitTrendsAsync(userId.Value, ct);
+        return Ok(ApiResult<List<HabitTrendDto>>.Success(result));
     }
 
-    // Finance Analytics
     [HttpGet("finance/overview")]
     public async Task<ActionResult<ApiResult<FinanceAnalyticsOverviewDto>>> GetFinanceOverview(CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        // TODO: Implement finance analytics service
-        return Ok(ApiResult<FinanceAnalyticsOverviewDto>.Success(new FinanceAnalyticsOverviewDto
-        {
-            MonthlyBalance = 6500,
-            SavingsRate = 35,
-            InvestmentReturn = 1550,
-            BudgetExecution = 84
-        }));
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var result = await service.GetFinanceAnalyticsAsync(userId.Value, ct);
+        return Ok(ApiResult<FinanceAnalyticsOverviewDto>.Success(result));
     }
 
     [HttpGet("finance/monthly-trend")]
     public async Task<ActionResult<ApiResult<List<MonthlyFinanceTrendDto>>>> GetMonthlyFinanceTrend(CancellationToken ct)
     {
-        // TODO: Implement finance analytics service
-        return Ok(ApiResult<List<MonthlyFinanceTrendDto>>.Success(new List<MonthlyFinanceTrendDto>()));
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var result = await service.GetMonthlyFinanceTrendAsync(userId.Value, ct);
+        return Ok(ApiResult<List<MonthlyFinanceTrendDto>>.Success(result));
     }
 
     [HttpGet("finance/expense-breakdown")]
     public async Task<ActionResult<ApiResult<List<ExpenseBreakdownDto>>>> GetExpenseBreakdown(CancellationToken ct)
     {
-        // TODO: Implement finance analytics service
-        return Ok(ApiResult<List<ExpenseBreakdownDto>>.Success(new List<ExpenseBreakdownDto>()));
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var result = await service.GetExpenseBreakdownAsync(userId.Value, ct);
+        return Ok(ApiResult<List<ExpenseBreakdownDto>>.Success(result));
     }
 
-    // Custom Reports
     [HttpGet("reports")]
     public async Task<ActionResult<ApiResult<PageResult<CustomReportDto>>>> GetCustomReports(
         [FromQuery] AnalyticsQueryDto query, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        // TODO: Implement custom reports service
-        return Ok(ApiResult<PageResult<CustomReportDto>>.Success(
-            PageResult<CustomReportDto>.Create(new List<CustomReportDto>(), 0, query.Page, query.PageSize)));
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var isPro = IsProOrAbove();
+        var result = await service.GetCustomReportsAsync(query, userId.Value, isPro, ct);
+        return Ok(ApiResult<PageResult<CustomReportDto>>.Success(result));
     }
 
     [HttpPost("reports")]
     public async Task<ActionResult<ApiResult<CustomReportDto>>> CreateCustomReport(
         [FromBody] CreateCustomReportInput input, CancellationToken ct)
     {
-        // TODO: Implement custom reports service
-        return Ok(ApiResult<CustomReportDto>.Success(new CustomReportDto
-        {
-            Id = Guid.NewGuid().ToString(),
-            Title = input.Title
-        }));
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var result = await service.CreateCustomReportAsync(input, userId.Value, ct);
+        return Ok(ApiResult<CustomReportDto>.Success(result));
     }
 
     [HttpDelete("reports/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteCustomReport(Guid id, CancellationToken ct)
     {
-        // TODO: Implement custom reports service
-        return Ok(ApiResult.Success("删除成功"));
-    }
-
-    // AI Insights
-    [HttpGet("ai-insights")]
-    public async Task<ActionResult<ApiResult<PageResult<AiInsightDto>>>> GetAiInsights(
-        [FromQuery] AnalyticsQueryDto query, CancellationToken ct)
-    {
-        var userId = GetCurrentUserId();
-        // TODO: Implement AI insights service
-        return Ok(ApiResult<PageResult<AiInsightDto>>.Success(
-            PageResult<AiInsightDto>.Create(new List<AiInsightDto>(), 0, query.Page, query.PageSize)));
-    }
-
-    [HttpPost("ai-insights/generate")]
-    public async Task<ActionResult<ApiResult<AiInsightDto>>> GenerateAiInsight(CancellationToken ct)
-    {
-        // TODO: Implement AI insights service
-        return Ok(ApiResult<AiInsightDto>.Success(new AiInsightDto
-        {
-            Id = Guid.NewGuid().ToString(),
-            Title = "AI 洞察",
-            Content = "基于您的数据分析..."
-        }));
+        var success = await service.DeleteCustomReportAsync(id, ct);
+        return HandleDeleteResult(success, "报告");
     }
 }
 
-// DTOs
 public record TimeAnalyticsOverviewDto
 {
     public double DailyWorkHours { get; init; }
