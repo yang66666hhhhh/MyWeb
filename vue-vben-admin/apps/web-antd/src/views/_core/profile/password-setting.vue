@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import type { VbenFormSchema } from '#/adapter/form';
 
 import { computed, ref } from 'vue';
@@ -70,8 +70,8 @@ async function handleSubmit(values: Record<string, any>) {
       newPassword: values.newPassword,
     });
     message.success('密码修改成功');
-  } catch (e: any) {
-    message.error(e?.message || '密码修改失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '密码修改失败');
   } finally {
     loading.value = false;
   }

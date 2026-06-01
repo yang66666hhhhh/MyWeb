@@ -54,6 +54,9 @@ const editingId = ref<null | string>(null);
 const keyword = ref('');
 const subject = ref<string | undefined>();
 const mistakes = ref<ExamMistake[]>([]);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
 
 const statusLabels: Record<number, string> = {
   0: '待复习',
@@ -107,7 +110,6 @@ const formRules = {
   subject: [{ required: true, message: '请选择科目', type: 'string' as const }],
   question: [{ required: true, message: '请输入题目', type: 'string' as const }],};
 
-const totalCount = computed(() => mistakes.value.length);
 const pendingCount = computed(() => mistakes.value.filter((item) => item.status === 0).length);
 const reviewingCount = computed(() => mistakes.value.filter((item) => item.status === 1).length);
 const masteredCount = computed(() => mistakes.value.filter((item) => item.status === 2).length);
@@ -119,41 +121,36 @@ const lastReviewDateValue = computed(() =>
   formState.value.lastReviewDate ? dayjs(formState.value.lastReviewDate) : undefined,
 );
 
-async function fetchMistakes() {
+async function fetchMistakes(page = 1) {
   loading.value = true;
   try {
-    const allMistakes: ExamMistake[] = [];
-    let page = 1;
-    const pageSize = 100;
+    const result = await getMistakePageApi({
+      keyword: keyword.value || undefined,
+      page,
+      pageSize: pageSize.value,
+      subject: subject.value,
+    });
 
-    while (true) {
-      const result = await getMistakePageApi({
-        keyword: keyword.value || undefined,
-        page,
-        pageSize,
-        subject: subject.value,
-      });
-
-      allMistakes.push(...result.items);
-      if (allMistakes.length >= result.total || result.items.length < pageSize) {
-        break;
-      }
-
-      page += 1;
-    }
-
-    mistakes.value = allMistakes;
-  } catch (e: any) {
-    message.error(e?.message || '加载错题失败');
+    mistakes.value = result.items;
+    total.value = result.total;
+    currentPage.value = page;
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载错题失败');
   } finally {
     loading.value = false;
   }
 }
 
+function handleTableChange(pagination: { current?: number; pageSize?: number }) {
+  if (pagination.pageSize) pageSize.value = pagination.pageSize;
+  void fetchMistakes(pagination.current ?? 1);
+}
+
 function resetFilters() {
   keyword.value = '';
   subject.value = undefined;
-  void fetchMistakes();
+  currentPage.value = 1;
+  void fetchMistakes(1);
 }
 
 function openCreate() {
@@ -230,8 +227,8 @@ async function handleSave() {
     }
     formOpen.value = false;
     await fetchMistakes();
-  } catch (e: any) {
-    message.error(e?.message || '保存错题失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '保存错题失败');
   } finally {
     submitting.value = false;
   }
@@ -242,8 +239,8 @@ async function handleDelete(id: string) {
     await deleteMistakeApi(id);
     message.success('错题已删除');
     await fetchMistakes();
-  } catch (e: any) {
-    message.error(e?.message || '删除错题失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除错题失败');
   }
 }
 
@@ -252,8 +249,8 @@ async function updateReviewStatus(mistake: ExamMistake, nextStatus: 'mastered' |
     await updateMistakeReviewStatusApi(mistake.id, nextStatus);
     message.success(nextStatus === 'mastered' ? '已标记为掌握' : '已标记为复习中');
     await fetchMistakes();
-  } catch (e: any) {
-    message.error(e?.message || '更新复习状态失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '更新复习状态失败');
   }
 }
 
@@ -266,7 +263,7 @@ onMounted(() => {
   <Page description="记录错题、分析薄弱环节、针对性复习" title="错题本">
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="错题总数" :value="totalCount" /></Card>
+        <Card><Statistic title="错题总数" :value="total" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card><Statistic title="待复习" :value="pendingCount" /></Card>
@@ -287,7 +284,7 @@ onMounted(() => {
             allow-clear
             placeholder="搜索题目/解析"
             style="width: 180px"
-            @press-enter="fetchMistakes"
+            @press-enter="fetchMistakes(1)"
           />
           <Select
             v-model:value="subject"
@@ -296,7 +293,7 @@ onMounted(() => {
             placeholder="科目"
             style="width: 140px"
           />
-          <Button type="primary" @click="fetchMistakes">查询</Button>
+          <Button type="primary" @click="fetchMistakes(1)">查询</Button>
           <Button @click="resetFilters">重置</Button>
           <Button type="primary" @click="openCreate">添加错题</Button>
         </Space>
@@ -307,9 +304,10 @@ onMounted(() => {
         :data-source="mistakes"
         :loading="loading"
         :locale="{ emptyText: '暂无数据' }"
-        :pagination="{ pageSize: 10, showSizeChanger: true, showTotal: (value: number) => `共 ${value} 条` }"
+        :pagination="{ current: currentPage, pageSize: pageSize, total: total, showSizeChanger: true, showTotal: (value: number) => `共 ${value} 条` }"
         :scroll="{ x: 1250 }"
         row-key="id"
+        @change="handleTableChange"
       >
         <template #bodyCell="{ column, record, text }">
           <template v-if="column.key === 'subject'">

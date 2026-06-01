@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -28,10 +29,17 @@ import {
 
 import type { Dayjs } from 'dayjs';
 
+const accessStore = useAccessStore();
+const canReview = computed(() => accessStore.accessCodes.includes('STUDENT_REVIEW'));
+const canMaster = computed(() => accessStore.accessCodes.includes('STUDENT_REVIEW'));
+
 const loading = ref(false);
 const reviewDate = ref(dayjs().format('YYYY-MM-DD'));
 const subject = ref<string | undefined>();
 const mistakes = ref<ExamMistake[]>([]);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
 
 const defaultSubjects = ['数据结构', '操作系统', '计算机网络', '计算机组成原理', '数学', '英语', '政治'];
 
@@ -82,29 +90,20 @@ const unscheduledCount = computed(() =>
 );
 const masteredCount = computed(() => mistakes.value.filter((item) => item.status === 2).length);
 
-async function fetchMistakes() {
+async function fetchMistakes(page = 1) {
   loading.value = true;
   try {
-    const allMistakes: ExamMistake[] = [];
-    let page = 1;
-    const pageSize = 100;
+    const result = await getMistakePageApi({
+      page,
+      pageSize: pageSize.value,
+      subject: subject.value,
+    });
 
-    while (true) {
-      const result = await getMistakePageApi({
-        page,
-        pageSize,
-        subject: subject.value,
-      });
-      allMistakes.push(...result.items);
-      if (allMistakes.length >= result.total || result.items.length < pageSize) {
-        break;
-      }
-      page += 1;
-    }
-
-    mistakes.value = allMistakes;
-  } catch (e: any) {
-    message.error(e?.message || '加载复习清单失败');
+    mistakes.value = result.items;
+    total.value = result.total;
+    currentPage.value = page;
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载复习清单失败');
   } finally {
     loading.value = false;
   }
@@ -135,8 +134,8 @@ async function markReviewed(mistake: ExamMistake) {
     });
     message.success('已安排下一次复习');
     await fetchMistakes();
-  } catch (e: any) {
-    message.error(e?.message || '更新复习进度失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '更新复习进度失败');
   }
 }
 
@@ -145,8 +144,8 @@ async function markMastered(mistake: ExamMistake) {
     await updateMistakeReviewStatusApi(mistake.id, 'mastered');
     message.success('已标记为掌握');
     await fetchMistakes();
-  } catch (e: any) {
-    message.error(e?.message || '标记掌握失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '标记掌握失败');
   }
 }
 
@@ -187,9 +186,9 @@ onMounted(() => {
             allow-clear
             placeholder="科目"
             style="width: 140px"
-            @change="fetchMistakes"
+            @change="fetchMistakes(1)"
           />
-          <Button :loading="loading" type="primary" @click="fetchMistakes">刷新</Button>
+          <Button :loading="loading" type="primary" @click="fetchMistakes(1)">刷新</Button>
         </Space>
       </template>
 
@@ -213,8 +212,8 @@ onMounted(() => {
               {{ mistake.explanation }}
             </div>
             <Space>
-              <Button size="small" type="primary" @click="markReviewed(mistake)">完成本轮</Button>
-              <Button size="small" @click="markMastered(mistake)">标记掌握</Button>
+              <Button v-if="canReview" size="small" type="primary" @click="markReviewed(mistake)">完成本轮</Button>
+              <Button v-if="canMaster" size="small" @click="markMastered(mistake)">标记掌握</Button>
             </Space>
           </div>
         </Timeline.Item>

@@ -53,14 +53,14 @@ const tagOptions = [
   { label: '复盘', value: '复盘' },
 ];
 
-const columns: any[] = [
+const columns = [
   { dataIndex: 'title', key: 'title', title: '标题', minWidth: 220 },
   { dataIndex: 'category', key: 'category', title: '分类', width: 180 },
   { dataIndex: 'tags', key: 'tags', title: '标签', width: 220 },
   { dataIndex: 'summary', key: 'summary', title: '内容摘要', minWidth: 260 },
   { dataIndex: 'favorite', key: 'favorite', title: '收藏', width: 90 },
   { dataIndex: 'createdAt', key: 'createdAt', title: '创建时间', width: 170 },
-  { key: 'action', title: '操作', width: 200, fixed: 'right' },
+  { key: 'action', title: '操作', width: 200, fixed: 'right' as const },
 ];
 
 const { changePage, items, load, loading, query, resetQuery, search, total } = usePagedQuery<
@@ -94,8 +94,8 @@ async function remove(id: string) {
     await deleteKnowledgeArticleApi(id);
     message.success('笔记已删除');
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 

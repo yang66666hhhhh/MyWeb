@@ -177,8 +177,8 @@ async function loadLogs() {
     totalHours.value = summaryResult.totalHours;
     totalDeviceCount.value = summaryResult.uniqueEquipmentCount;
     totalTaskTypeCount.value = summaryResult.uniqueTaskTypeCount;
-  } catch (e: any) {
-    message.error(e?.message || '加载失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载失败');
   } finally {
     loading.value = false;
   }
@@ -312,8 +312,8 @@ async function handleSave() {
     }
     formOpen.value = false;
     await loadLogs();
-  } catch (e: any) {
-    message.error(e?.message || '操作失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '操作失败');
   } finally {
     submitting.value = false;
   }
@@ -324,8 +324,8 @@ async function handleDelete(id: string) {
     await deleteImplLogApi(id);
     message.success('删除成功');
     await loadLogs();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 

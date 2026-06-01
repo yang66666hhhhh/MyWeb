@@ -34,8 +34,8 @@ const fetchSummary = async () => {
   try {
     const data = await assetApi.getSummary();
     summary.value = data;
-  } catch (e: any) {
-    message.error(e?.message || '加载资产数据失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载资产数据失败');
   } finally {
     loading.value = false;
   }
@@ -73,8 +73,8 @@ const fetchRecentTransactions = async () => {
     recentTransactions.value = [...incomes, ...expenses]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 10);
-  } catch (e: any) {
-    message.error(e?.message || '加载交易记录失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载交易记录失败');
   }
 };
 

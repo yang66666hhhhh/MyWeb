@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -25,6 +26,10 @@ import {
 import type { AiReport, GenerateReportRequest } from '#/api/ai';
 
 import { aiApi } from '#/api/ai';
+
+const accessStore = useAccessStore();
+const canGenerateReport = computed(() => accessStore.accessCodes.includes('AI_REPORTS'));
+const canDeleteReport = computed(() => accessStore.accessCodes.includes('AI_REPORTS'));
 
 const loading = ref(false);
 const generating = ref(false);
@@ -84,8 +89,8 @@ const fetchReports = async () => {
     const res = await aiApi.getReports({ page: currentPage.value, pageSize: pageSize.value });
     reports.value = res.items;
     total.value = res.total;
-  } catch (e: any) {
-    message.error(e?.message || '加载失败，请稍后重试');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载失败，请稍后重试');
   } finally {
     loading.value = false;
   }
@@ -111,8 +116,8 @@ const handleGenerateSubmit = async () => {
     message.success('报告生成成功');
     modalVisible.value = false;
     fetchReports();
-  } catch (e: any) {
-    message.error(e?.message || '生成失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '生成失败');
   } finally {
     generating.value = false;
   }
@@ -122,8 +127,8 @@ const handleView = async (id: string) => {
   try {
     currentReport.value = await aiApi.getReportById(id);
     detailModalVisible.value = true;
-  } catch (e: any) {
-    message.error(e?.message || '获取报告详情失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '获取报告详情失败');
   }
 };
 
@@ -132,8 +137,8 @@ const handleDelete = async (id: string) => {
     await aiApi.deleteReport(id);
     message.success('删除成功');
     fetchReports();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 };
 
@@ -174,7 +179,7 @@ onMounted(() => {
 
     <Card title="AI报告列表">
       <template #extra>
-        <Button type="primary" @click="handleGenerate">生成报告</Button>
+        <Button v-if="canGenerateReport" type="primary" @click="handleGenerate">生成报告</Button>
       </template>
       <List
         :data-source="reports"
@@ -204,7 +209,7 @@ onMounted(() => {
               <Tag :color="typeColors[item.type]">{{ typeLabels[item.type] || item.type }}</Tag>
               <Button type="link" @click="handleView(item.id)">查看</Button>
               <Popconfirm title="确认删除?" @confirm="handleDelete(item.id)">
-                <Button type="link" danger>删除</Button>
+                <Button v-if="canDeleteReport" type="link" danger>删除</Button>
               </Popconfirm>
             </Space>
           </List.Item>

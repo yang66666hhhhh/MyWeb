@@ -88,8 +88,8 @@ const fetchData = async () => {
     const res = await getMediaPageApi({ page: currentPage.value, pageSize: pageSize.value });
     dataList.value = res.items;
     total.value = res.total;
-  } catch (e: any) {
-    message.error(e?.message || '加载失败，请稍后重试');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载失败，请稍后重试');
   } finally {
     loading.value = false;
   }
@@ -126,8 +126,8 @@ const handleDelete = async (id: string) => {
     await deleteMediaApi(id);
     message.success('删除成功');
     fetchData();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 };
 
@@ -148,8 +148,8 @@ const handleSubmit = async () => {
     }
     modalVisible.value = false;
     fetchData();
-  } catch (e: any) {
-    message.error(e?.message || '操作失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '操作失败');
   } finally {
     submitting.value = false;
   }

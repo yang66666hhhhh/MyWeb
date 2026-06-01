@@ -53,6 +53,9 @@ const keyword = ref('');
 const status = ref<number | undefined>();
 const type = ref<number | undefined>();
 const tasks = ref<PostgraduateTask[]>([]);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
 
 const accessStore = useAccessStore();
 const canCreateLearning = computed(() => accessStore.accessCodes.includes('STUDENT_LEARNING'));
@@ -136,7 +139,6 @@ const formRef = ref();
 const formRules = {
   title: [{ required: true, message: '请输入任务标题', type: 'string' as const }],};
 
-const totalCount = computed(() => tasks.value.length);
 const inProgressCount = computed(() => tasks.value.filter((item) => item.status === 1).length);
 const completedCount = computed(() => tasks.value.filter((item) => item.status === 2).length);
 const upcomingCount = computed(() => {
@@ -154,42 +156,38 @@ const dueDateValue = computed(() =>
   formState.value.dueDate ? dayjs(formState.value.dueDate) : undefined,
 );
 
-async function fetchTasks() {
+async function fetchTasks(page = 1) {
   loading.value = true;
   try {
-    const allTasks: PostgraduateTask[] = [];
-    let page = 1;
-    const pageSize = 100;
+    const result = await getPostgraduateTaskPageApi({
+      keyword: keyword.value || undefined,
+      page,
+      pageSize: pageSize.value,
+      status: status.value,
+      type: type.value,
+    });
 
-    while (true) {
-      const result = await getPostgraduateTaskPageApi({
-        keyword: keyword.value || undefined,
-        page,
-        pageSize,
-        status: status.value,
-        type: type.value,
-      });
-
-      allTasks.push(...result.items);
-      if (allTasks.length >= result.total || result.items.length < pageSize) {
-        break;
-      }
-      page += 1;
-    }
-
-    tasks.value = allTasks;
-  } catch (e: any) {
-    message.error(e?.message || '加载学习任务失败');
+    tasks.value = result.items;
+    total.value = result.total;
+    currentPage.value = page;
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载学习任务失败');
   } finally {
     loading.value = false;
   }
+}
+
+function handleTableChange(pagination: { current?: number; pageSize?: number }) {
+  if (pagination.pageSize) pageSize.value = pagination.pageSize;
+  void fetchTasks(pagination.current ?? 1);
 }
 
 function resetFilters() {
   keyword.value = '';
   status.value = undefined;
   type.value = undefined;
-  void fetchTasks();
+  currentPage.value = 1;
+  void fetchTasks(1);
 }
 
 function openCreate() {
@@ -253,8 +251,8 @@ async function handleSave() {
     }
     formOpen.value = false;
     await fetchTasks();
-  } catch (e: any) {
-    message.error(e?.message || '保存学习任务失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '保存学习任务失败');
   } finally {
     submitting.value = false;
   }
@@ -265,8 +263,8 @@ async function handleDelete(id: string) {
     await deletePostgraduateTaskApi(id);
     message.success('学习任务已删除');
     await fetchTasks();
-  } catch (e: any) {
-    message.error(e?.message || '删除学习任务失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除学习任务失败');
   }
 }
 
@@ -290,8 +288,8 @@ async function markCompleted(task: PostgraduateTask) {
     });
     message.success('任务已标记为完成');
     await fetchTasks();
-  } catch (e: any) {
-    message.error(e?.message || '更新任务状态失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '更新任务状态失败');
   }
 }
 
@@ -304,7 +302,7 @@ onMounted(() => {
   <Page description="制定学习计划、跟踪学习进度" title="学习计划">
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="学习任务" :value="totalCount" /></Card>
+        <Card><Statistic title="学习任务" :value="total" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card><Statistic title="进行中" :value="inProgressCount" /></Card>
@@ -325,7 +323,7 @@ onMounted(() => {
             allow-clear
             placeholder="搜索任务标题"
             style="width: 180px"
-            @press-enter="fetchTasks"
+            @press-enter="fetchTasks(1)"
           />
           <Select
             v-model:value="status"
@@ -341,7 +339,7 @@ onMounted(() => {
             placeholder="类型"
             style="width: 130px"
           />
-          <Button type="primary" @click="fetchTasks">查询</Button>
+      <Button type="primary" @click="fetchTasks(1)">查询</Button>
           <Button @click="resetFilters">重置</Button>
           <Button v-if="canCreateLearning" type="primary" @click="openCreate">新建计划</Button>
         </Space>
@@ -352,9 +350,10 @@ onMounted(() => {
         :data-source="tasks"
         :loading="loading"
         :locale="{ emptyText: '暂无数据' }"
-        :pagination="{ pageSize: 10, showSizeChanger: true, showTotal: (value: number) => `共 ${value} 条` }"
+        :pagination="{ current: currentPage, pageSize: pageSize, total: total, showSizeChanger: true, showTotal: (value: number) => `共 ${value} 条` }"
         :scroll="{ x: 980 }"
         row-key="id"
+        @change="handleTableChange"
       >
         <template #bodyCell="{ column, record, text }">
           <template v-if="column.key === 'title'">

@@ -111,8 +111,8 @@ async function fetchRecords() {
       subject: subject.value,
     });
     records.value = result.items;
-  } catch (e: any) {
-    message.error(e?.message || '加载学习记录失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载学习记录失败');
   } finally {
     loading.value = false;
   }
@@ -179,8 +179,8 @@ async function handleSave() {
     }
     formOpen.value = false;
     await fetchRecords();
-  } catch (e: any) {
-    message.error(e?.message || '保存学习记录失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '保存学习记录失败');
   } finally {
     submitting.value = false;
   }
@@ -191,8 +191,8 @@ async function handleDelete(id: string) {
     await deleteStudyRecordApi(id);
     message.success('学习记录已删除');
     await fetchRecords();
-  } catch (e: any) {
-    message.error(e?.message || '删除学习记录失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除学习记录失败');
   }
 }
 

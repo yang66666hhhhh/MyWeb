@@ -49,6 +49,9 @@ const keyword = ref('');
 const subject = ref<string | undefined>();
 const type = ref<number | undefined>();
 const materials = ref<ExamMaterial[]>([]);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
 
 const accessStore = useAccessStore();
 const canCreateMaterial = computed(() => accessStore.accessCodes.includes('STUDENT_MATERIALS'));
@@ -110,47 +113,42 @@ const formRules = {
   title: [{ required: true, message: '请输入资料标题', type: 'string' as const }],
   subject: [{ required: true, message: '请选择科目', type: 'string' as const }],};
 
-const totalCount = computed(() => materials.value.length);
 const noteCount = computed(() => materials.value.filter((item) => item.type === 0).length);
 const formulaCount = computed(() => materials.value.filter((item) => item.type === 2).length);
 const subjectCount = computed(() => new Set(materials.value.map((item) => item.subject).filter(Boolean)).size);
 
-async function fetchMaterials() {
+async function fetchMaterials(page = 1) {
   loading.value = true;
   try {
-    const allMaterials: ExamMaterial[] = [];
-    let page = 1;
-    const pageSize = 100;
+    const result = await getMaterialPageApi({
+      keyword: keyword.value || undefined,
+      page,
+      pageSize: pageSize.value,
+      subject: subject.value,
+      type: type.value,
+    });
 
-    while (true) {
-      const result = await getMaterialPageApi({
-        keyword: keyword.value || undefined,
-        page,
-        pageSize,
-        subject: subject.value,
-        type: type.value,
-      });
-
-      allMaterials.push(...result.items);
-      if (allMaterials.length >= result.total || result.items.length < pageSize) {
-        break;
-      }
-      page += 1;
-    }
-
-    materials.value = allMaterials;
-  } catch (e: any) {
-    message.error(e?.message || '加载学习资料失败');
+    materials.value = result.items;
+    total.value = result.total;
+    currentPage.value = page;
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载学习资料失败');
   } finally {
     loading.value = false;
   }
+}
+
+function handleTableChange(pagination: { current?: number; pageSize?: number }) {
+  if (pagination.pageSize) pageSize.value = pagination.pageSize;
+  void fetchMaterials(pagination.current ?? 1);
 }
 
 function resetFilters() {
   keyword.value = '';
   subject.value = undefined;
   type.value = undefined;
-  void fetchMaterials();
+  currentPage.value = 1;
+  void fetchMaterials(1);
 }
 
 function openCreate() {
@@ -219,8 +217,8 @@ async function handleSave() {
     }
     formOpen.value = false;
     await fetchMaterials();
-  } catch (e: any) {
-    message.error(e?.message || '保存学习资料失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '保存学习资料失败');
   } finally {
     submitting.value = false;
   }
@@ -231,8 +229,8 @@ async function handleDelete(id: string) {
     await deleteMaterialApi(id);
     message.success('学习资料已删除');
     await fetchMaterials();
-  } catch (e: any) {
-    message.error(e?.message || '删除学习资料失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除学习资料失败');
   }
 }
 
@@ -245,7 +243,7 @@ onMounted(() => {
   <Page description="沉淀笔记、公式、模板和阶段总结" title="学习资料">
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
-        <Card><Statistic title="资料总数" :value="totalCount" /></Card>
+        <Card><Statistic title="资料总数" :value="total" /></Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card><Statistic title="笔记" :value="noteCount" /></Card>
@@ -266,7 +264,7 @@ onMounted(() => {
             allow-clear
             placeholder="搜索标题/内容"
             style="width: 180px"
-            @press-enter="fetchMaterials"
+            @press-enter="fetchMaterials(1)"
           />
           <Select
             v-model:value="subject"
@@ -282,7 +280,7 @@ onMounted(() => {
             placeholder="类型"
             style="width: 120px"
           />
-          <Button type="primary" @click="fetchMaterials">查询</Button>
+          <Button type="primary" @click="fetchMaterials(1)">查询</Button>
           <Button @click="resetFilters">重置</Button>
           <Button v-if="canCreateMaterial" type="primary" @click="openCreate">新增资料</Button>
         </Space>
@@ -293,9 +291,10 @@ onMounted(() => {
         :data-source="materials"
         :loading="loading"
         :locale="{ emptyText: '暂无数据' }"
-        :pagination="{ pageSize: 10, showSizeChanger: true, showTotal: (value: number) => `共 ${value} 条` }"
+        :pagination="{ current: currentPage, pageSize: pageSize, total: total, showSizeChanger: true, showTotal: (value: number) => `共 ${value} 条` }"
         :scroll="{ x: 1050 }"
         row-key="id"
+        @change="handleTableChange"
       >
         <template #bodyCell="{ column, record, text }">
           <template v-if="column.key === 'title'">

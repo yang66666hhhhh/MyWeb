@@ -27,8 +27,8 @@ async function fetchData() {
     ]);
     if (overviewRes.status === 'fulfilled') overview.value = overviewRes.value;
     if (trendsRes.status === 'fulfilled') habitTrends.value = trendsRes.value;
-  } catch (e: any) {
-    message.error(e?.message || '加载习惯数据失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载习惯数据失败');
   } finally {
     loading.value = false;
   }

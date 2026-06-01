@@ -101,8 +101,8 @@ async function load() {
       totalLogs: logs.total,
       totalProjects: 0,
     };
-  } catch (e: any) {
-    message.error(e?.message || '加载数据失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载数据失败');
   } finally {
     loading.value = false;
   }

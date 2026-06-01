@@ -90,8 +90,8 @@ async function handleFileChange(info: { file: UploadFile }) {
     previewData.value = result.items;
     currentStep.value = 2;
     message.success('文件解析成功，请预览数据');
-  } catch (e: any) {
-    message.error(e?.message || '文件解析失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '文件解析失败');
   } finally {
     previewLoading.value = false;
   }
@@ -113,8 +113,8 @@ async function handleConfirm() {
     };
     currentStep.value = 3;
     message.success('导入完成');
-  } catch (e: any) {
-    message.error(e?.message || '导入失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '导入失败');
   } finally {
     confirmLoading.value = false;
   }

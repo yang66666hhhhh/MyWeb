@@ -80,8 +80,8 @@ async function loadDetail() {
   loading.value = true;
   try {
     fillForm(await getHabitApi(props.id));
-  } catch (e: any) {
-    message.error(e?.message || '加载详情失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载详情失败');
   } finally {
     loading.value = false;
   }
@@ -102,8 +102,8 @@ async function submit() {
 
     emit('update:open', false);
     emit('success');
-  } catch (e: any) {
-    message.error(e?.message || '保存失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '保存失败');
   } finally {
     loading.value = false;
   }

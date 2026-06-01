@@ -72,7 +72,7 @@ const sourceTypeOptions = [
   { label: '计划转换', value: 2 },
 ];
 
-const columns: any[] = [
+const columns = [
   { dataIndex: 'workDate', key: 'workDate', title: '日期', width: 120 },
   { dataIndex: 'weekDay', key: 'weekDay', title: '星期', width: 80 },
   { dataIndex: 'title', key: 'title', title: '标题', minWidth: 180 },
@@ -82,7 +82,7 @@ const columns: any[] = [
   { dataIndex: 'totalHours', key: 'totalHours', title: '耗时', width: 80 },
   { dataIndex: 'status', key: 'status', title: '状态', width: 100 },
   { dataIndex: 'sourceType', key: 'sourceType', title: '来源', width: 100 },
-  { key: 'action', title: '操作', width: 200, fixed: 'right' },
+  { key: 'action', title: '操作', width: 200, fixed: 'right' as const },
 ];
 
 const { changePage, items, load, loading, query, resetQuery, search, total } = usePagedQuery<
@@ -131,8 +131,8 @@ async function handleRemove(id: string) {
     await deleteWorkLogApi(id);
     message.success('工作日志已删除');
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 

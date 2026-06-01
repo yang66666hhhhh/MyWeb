@@ -66,7 +66,7 @@ const projectOptions = computed(() => [
   })),
 ]);
 
-const reportColumns: any[] = [
+const reportColumns = [
   { title: '项目', dataIndex: 'projectName', key: 'projectName', minWidth: 180 },
   { title: '工时', dataIndex: 'totalHours', key: 'totalHours', width: 100 },
   { title: '日志数', dataIndex: 'logCount', key: 'logCount', width: 100 },
@@ -113,8 +113,8 @@ async function loadDashboard() {
     ]);
     overview.value = overviewRes.status === 'fulfilled' ? overviewRes.value : overview.value;
     projectHours.value = projectHourRes.status === 'fulfilled' ? projectHourRes.value : [];
-  } catch (e: any) {
-    message.error(e?.message || '加载实施周报数据失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载实施周报数据失败');
   } finally {
     loading.value = false;
   }
@@ -142,8 +142,8 @@ async function generateWeeklyReport() {
     selectedReport.value = report;
     message.success('实施周报已生成');
     await loadReports();
-  } catch (error: any) {
-    message.error(error?.message || '生成周报失败');
+  } catch (e: unknown) {
+    message.error(e instanceof Error ? e.message : '生成周报失败');
   } finally {
     generating.value = false;
   }
@@ -162,8 +162,8 @@ async function selectReport(report: AiReport) {
   loading.value = true;
   try {
     selectedReport.value = await aiApi.getReportById(report.id);
-  } catch (e: any) {
-    message.error(e?.message || '加载周报详情失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载周报详情失败');
   } finally {
     loading.value = false;
   }
@@ -177,8 +177,8 @@ async function deleteReport(reportId: string) {
     }
     message.success('周报已删除');
     await loadReports();
-  } catch (error: any) {
-    message.error(error?.message || '删除周报失败');
+  } catch (e: unknown) {
+    message.error(e instanceof Error ? e.message : '删除周报失败');
   }
 }
 

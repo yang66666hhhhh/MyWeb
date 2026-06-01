@@ -22,6 +22,8 @@ import {
   Tag,
 } from 'ant-design-vue';
 
+import { useAccessStore } from '@vben/stores';
+
 import {
   createTemplateApi,
   deleteTemplateApi,
@@ -31,6 +33,9 @@ import {
   updateTemplateApi,
 } from '#/api/work/template';
 
+const accessStore = useAccessStore();
+const hasPermission = (code: string) => accessStore.accessCodes.includes(code);
+
 const formRef = ref();
 const formRules = {
   name: [{ required: true, message: '请输入模板名称', type: 'string' as const, trigger: 'blur' as const }],
@@ -39,6 +44,7 @@ const formRules = {
 
 const templates = ref<IndustryTemplate[]>([]);
 const loading = ref(false);
+const submitting = ref(false);
 const formOpen = ref(false);
 const editingId = ref<null | string>(null);
 
@@ -88,6 +94,8 @@ async function load() {
   try {
     const result = await getTemplatePageApi({ page: 1, pageSize: 100 });
     templates.value = result.items;
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载模板失败');
   } finally {
     loading.value = false;
   }
@@ -154,6 +162,7 @@ function removeField(index: number) {
 async function handleSubmit() {
   try { await formRef.value?.validate(); } catch { return; }
 
+  submitting.value = true;
   try {
     if (isEditing.value) {
       await updateTemplateApi(editingId.value!, formState.value);
@@ -164,8 +173,10 @@ async function handleSubmit() {
     }
     formOpen.value = false;
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '操作失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '操作失败');
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -174,8 +185,8 @@ async function handleDelete(id: string) {
     await deleteTemplateApi(id);
     message.success('模板已删除');
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 
@@ -184,8 +195,8 @@ async function handleSetDefault(id: string) {
     await setDefaultTemplateApi(id);
     message.success('已设为默认模板');
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '操作失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '操作失败');
   }
 }
 
@@ -199,7 +210,7 @@ onMounted(() => {
     <Card class="mb-4">
       <div class="mb-4 flex items-center justify-between">
         <span>管理日志模板，支持自定义字段配置</span>
-        <Button type="primary" @click="openCreate">新建模板</Button>
+        <Button v-if="hasPermission('WORK_TASK')" type="primary" @click="openCreate">新建模板</Button>
       </div>
 
       <Table :data-source="templates" :loading="loading" :pagination="false" row-key="id">
@@ -222,9 +233,9 @@ onMounted(() => {
         <Table.Column title="操作" width="200">
           <template #default="{ record }">
             <Space>
-              <Button size="small" type="link" @click="openEdit(record)">编辑</Button>
-              <Button v-if="!record.isDefault" size="small" type="link" @click="handleSetDefault(record.id)">设为默认</Button>
-              <Popconfirm title="确定删除?" @confirm="handleDelete(record.id)">
+              <Button v-if="hasPermission('WORK_TASK')" size="small" type="link" @click="openEdit(record)">编辑</Button>
+              <Button v-if="hasPermission('WORK_TASK') && !record.isDefault" size="small" type="link" @click="handleSetDefault(record.id)">设为默认</Button>
+              <Popconfirm v-if="hasPermission('WORK_TASK')" title="确定删除?" @confirm="handleDelete(record.id)">
                 <Button size="small" type="link" danger>删除</Button>
               </Popconfirm>
             </Space>
@@ -237,22 +248,23 @@ onMounted(() => {
       v-model:open="formOpen"
       :title="isEditing ? '编辑模板' : '新建模板'"
       width="800px"
-      :footer="null"
+      :confirm-loading="submitting"
+      @ok="handleSubmit"
     >
       <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">
         <Row :gutter="16">
           <Col :span="12">
-            <Form.Item label="模板名称" required>
+            <Form.Item label="模板名称" name="name" required>
               <Input v-model:value="formState.name" placeholder="请输入模板名称" />
             </Form.Item>
           </Col>
           <Col :span="12">
-            <Form.Item label="行业" required>
+            <Form.Item label="行业" name="industry" required>
               <Select v-model:value="formState.industry" :options="industryOptions" placeholder="请选择行业" />
             </Form.Item>
           </Col>
         </Row>
-        <Form.Item label="描述">
+        <Form.Item label="描述" name="description">
           <Input.TextArea v-model:value="formState.description" :rows="2" placeholder="请输入描述" />
         </Form.Item>
 
@@ -301,11 +313,6 @@ onMounted(() => {
           </Descriptions>
         </div>
       </Form>
-
-      <div class="mt-4 flex justify-end gap-2">
-        <Button @click="formOpen = false">取消</Button>
-        <Button type="primary" @click="handleSubmit">保存</Button>
-      </div>
     </Modal>
   </Page>
 </template>

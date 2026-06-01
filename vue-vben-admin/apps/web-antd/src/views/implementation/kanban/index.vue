@@ -31,6 +31,9 @@ const loading = ref(false);
 const projects = ref<WorkProject[]>([]);
 const keyword = ref('');
 const status = ref<number | undefined>();
+const currentPage = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
 
 const statusOptions = [
   { label: '全部状态', value: undefined },
@@ -61,41 +64,36 @@ const locationCount = computed(
   () => new Set(projects.value.map((item) => item.location?.trim()).filter((item): item is string => !!item)).size,
 );
 
-async function fetchProjects() {
+async function fetchProjects(page = 1) {
   loading.value = true;
   try {
-    const allProjects: WorkProject[] = [];
-    let page = 1;
-    const pageSize = 100;
+    const result = await projectApi.getPage({
+      keyword: keyword.value || undefined,
+      page,
+      pageSize: pageSize.value,
+      status: status.value,
+    });
 
-    while (true) {
-      const result = await projectApi.getPage({
-        keyword: keyword.value || undefined,
-        page,
-        pageSize,
-        status: status.value,
-      });
-      allProjects.push(...result.items);
-
-      if (allProjects.length >= result.total || result.items.length < pageSize) {
-        break;
-      }
-
-      page += 1;
-    }
-
-    projects.value = allProjects;
-  } catch (e: any) {
-    message.error(e?.message || '加载项目失败');
+    projects.value = result.items;
+    total.value = result.total;
+    currentPage.value = page;
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载项目失败');
   } finally {
     loading.value = false;
   }
 }
 
+function handleTableChange(pagination: { current?: number; pageSize?: number }) {
+  if (pagination.pageSize) pageSize.value = pagination.pageSize;
+  void fetchProjects(pagination.current ?? 1);
+}
+
 function resetFilters() {
   keyword.value = '';
   status.value = undefined;
-  void fetchProjects();
+  currentPage.value = 1;
+  void fetchProjects(1);
 }
 
 function getProgress(project: WorkProject) {
@@ -125,7 +123,7 @@ onMounted(() => {
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
         <Card>
-          <Statistic title="项目总数" :value="projects.length" />
+          <Statistic title="项目总数" :value="total" />
         </Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
@@ -153,7 +151,7 @@ onMounted(() => {
             allow-clear
             placeholder="项目名称/编号/项目地"
             style="width: 180px"
-            @press-enter="fetchProjects"
+            @press-enter="fetchProjects(1)"
           />
           <Select
             v-model:value="status"
@@ -162,7 +160,7 @@ onMounted(() => {
             placeholder="状态"
             style="width: 120px"
           />
-          <Button type="primary" @click="fetchProjects">查询</Button>
+          <Button type="primary" @click="fetchProjects(1)">查询</Button>
           <Button @click="resetFilters">重置</Button>
         </Space>
       </template>
@@ -170,9 +168,10 @@ onMounted(() => {
         :columns="columns"
         :data-source="projects"
         :loading="loading"
-        :pagination="{ pageSize: 10, showSizeChanger: true }"
+        :pagination="{ current: currentPage, pageSize: pageSize, total: total, showSizeChanger: true }"
         :scroll="{ x: 980 }"
         row-key="id"
+        @change="handleTableChange"
       >
         <template #bodyCell="{ column, record, text }">
           <template v-if="column.key === 'projectName'">

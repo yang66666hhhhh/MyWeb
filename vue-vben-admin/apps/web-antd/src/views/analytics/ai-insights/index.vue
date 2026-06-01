@@ -36,8 +36,8 @@ async function handleGenerate() {
     await generateAiInsightApi();
     message.success('洞察生成成功');
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '生成失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '生成失败');
   } finally {
     generating.value = false;
   }

@@ -108,8 +108,8 @@ const fetchData = async () => {
     if (plansData.status === 'fulfilled') {
       todayPlans.value = plansData.value.items;
     }
-  } catch (e: any) {
-    message.error(e?.message || '加载失败，请稍后重试');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载失败，请稍后重试');
   } finally {
     loading.value = false;
   }

@@ -46,8 +46,8 @@ const loadSessions = async () => {
   try {
     const res = await aiApi.getChatSessions({ page: 1, pageSize: 50 });
     sessions.value = res.items;
-  } catch (e: any) {
-    message.error(e?.message || '加载失败，请稍后重试');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载失败，请稍后重试');
   } finally {
     sessionsLoading.value = false;
   }
@@ -58,8 +58,8 @@ const loadMessages = async (sessionId: string) => {
   try {
     messages.value = await aiApi.getChatMessages(sessionId);
     scrollToBottom();
-  } catch (e: any) {
-    message.error(e?.message || '加载失败，请稍后重试');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载失败，请稍后重试');
   } finally {
     loading.value = false;
   }
@@ -84,8 +84,8 @@ const handleDeleteSession = async (sessionId: string) => {
       messages.value = [];
     }
     loadSessions();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 };
 
@@ -126,8 +126,8 @@ const sendMessage = async () => {
     });
 
     scrollToBottom();
-  } catch (e: any) {
-    message.error(e?.message || '发送失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '发送失败');
   } finally {
     sending.value = false;
   }

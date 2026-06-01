@@ -116,8 +116,8 @@ async function checkIn(record: Record<string, any>) {
     await checkInHabitApi(habit.id);
     message.success(`"${habit.name}" 已打卡`);
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '打卡失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '打卡失败');
   }
 }
 
@@ -127,8 +127,8 @@ async function toggleStatus(record: Record<string, any>) {
     await updateHabitStatusApi(habit.id, habit.status === 1 ? 0 : 1);
     message.success(`"${habit.name}" 状态已更新`);
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '状态更新失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '状态更新失败');
   }
 }
 
@@ -137,8 +137,8 @@ async function remove(id: string) {
     await deleteHabitApi(id);
     message.success('习惯已删除');
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 

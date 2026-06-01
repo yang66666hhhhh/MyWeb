@@ -122,8 +122,8 @@ const fetchData = async () => {
     if (logsRes.status === 'fulfilled') {
       recentWorkLogs.value = logsRes.value.items;
     }
-  } catch (e: any) {
-    message.error(e?.message || '加载数据失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载数据失败');
   } finally {
     loading.value = false;
   }

@@ -38,8 +38,8 @@ async function fetchData() {
     if (overviewRes.status === 'fulfilled') overview.value = overviewRes.value;
     if (trendRes.status === 'fulfilled') monthlyTrend.value = trendRes.value;
     if (expenseRes.status === 'fulfilled') expenseBreakdown.value = expenseRes.value;
-  } catch (e: any) {
-    message.error(e?.message || '加载财务数据失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载财务数据失败');
   } finally {
     loading.value = false;
   }

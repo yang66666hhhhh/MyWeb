@@ -38,8 +38,8 @@ async function loadTags() {
   try {
     const res = await tagApi.list();
     if (res) tags.value = res;
-  } catch (e: any) {
-    message.error(e?.message || '加载标签失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载标签失败');
   }
 }
 
@@ -47,8 +47,8 @@ async function loadMenus() {
   try {
     const res = await menuAdminApi.getAll();
     if (res) menuTree.value = res;
-  } catch (e: any) {
-    message.error(e?.message || '加载菜单失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载菜单失败');
   }
 }
 
@@ -56,8 +56,8 @@ async function loadMenuPaths() {
   try {
     const res = await menuAdminApi.getPaths();
     if (res) menuPaths.value = res;
-  } catch (e: any) {
-    message.error(e?.message || '加载菜单路径失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载菜单路径失败');
   }
 }
 
@@ -65,8 +65,8 @@ async function loadUsers() {
   try {
     const res = await userTagApi.getUsers();
     if (res) users.value = res;
-  } catch (e: any) {
-    message.error(e?.message || '加载用户列表失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载用户列表失败');
   }
 }
 
@@ -74,8 +74,8 @@ async function loadUserTypes() {
   try {
     const res = await userTypeApi.list();
     if (res) userTypes.value = res;
-  } catch (e: any) {
-    message.error(e?.message || '加载用户类型失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载用户类型失败');
   }
 }
 
@@ -127,8 +127,8 @@ async function saveTag() {
     }
     tagFormOpen.value = false;
     loadTags();
-  } catch (e: any) {
-    message.error(e?.message || '操作失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '操作失败');
   } finally {
     submitting.value = false;
   }
@@ -139,8 +139,8 @@ async function deleteTag(id: string) {
     await tagApi.delete(id);
     message.success('删除成功');
     loadTags();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 
@@ -196,8 +196,8 @@ async function saveMenu() {
     }
     menuFormOpen.value = false;
     loadMenus();
-  } catch (e: any) {
-    message.error(e?.message || '操作失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '操作失败');
   } finally {
     submitting.value = false;
   }
@@ -208,8 +208,8 @@ async function deleteMenu(id: string) {
     await menuAdminApi.delete(id);
     message.success('删除成功');
     loadMenus();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 
@@ -252,8 +252,8 @@ async function saveUserType() {
     }
     userTypeFormOpen.value = false;
     loadUserTypes();
-  } catch (e: any) {
-    message.error(e?.message || '操作失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '操作失败');
   } finally {
     submitting.value = false;
   }
@@ -264,8 +264,8 @@ async function deleteUserType(id: string) {
     await userTypeApi.delete(id);
     message.success('删除成功');
     loadUserTypes();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 
@@ -288,8 +288,8 @@ async function saveUserAssign() {
     message.success('分配成功');
     userAssignModalOpen.value = false;
     loadUsers();
-  } catch (e: any) {
-    message.error(e?.message || '分配失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '分配失败');
   } finally {
     submitting.value = false;
   }

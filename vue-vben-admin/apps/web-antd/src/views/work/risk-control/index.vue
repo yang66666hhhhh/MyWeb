@@ -54,14 +54,14 @@ const formState = ref({
   title: '',
 });
 
-const columns: any[] = [
+const columns = [
   { dataIndex: 'title', key: 'title', title: '风险', minWidth: 160 },
   { dataIndex: 'category', key: 'category', title: '分类', width: 100 },
   { dataIndex: 'impact', key: 'impact', title: '影响', width: 80 },
   { dataIndex: 'probability', key: 'probability', title: '概率', width: 80 },
   { dataIndex: 'status', key: 'status', title: '状态', width: 90 },
   { dataIndex: 'mitigationPlan', key: 'mitigationPlan', title: '应对措施', minWidth: 160 },
-  { key: 'action', title: '操作', width: 180, fixed: 'right' },
+  { key: 'action', title: '操作', width: 180, fixed: 'right' as const },
 ];
 
 const categoryOptions = [
@@ -164,8 +164,8 @@ async function handleRemove(id: string) {
     await deleteRiskApi(id);
     message.success('风险已删除');
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 
@@ -182,8 +182,8 @@ async function handleSubmit() {
     }
     formOpen.value = false;
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '保存失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '保存失败');
   } finally {
     submitting.value = false;
   }

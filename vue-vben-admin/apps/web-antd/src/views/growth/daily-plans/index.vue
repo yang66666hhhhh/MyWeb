@@ -26,7 +26,7 @@ import DailyPlanForm from './components/DailyPlanForm.vue';
 const loading = ref(false);
 const formOpen = ref(false);
 const editingId = ref<null | string>(null);
-const items = ref<any[]>([]);
+const items = ref<TaskItem[]>([]);
 const total = ref(0);
 
 const accessStore = useAccessStore();
@@ -100,8 +100,8 @@ async function fetchPage() {
     const result = await taskApi.getPage(params);
     items.value = result.items;
     total.value = result.total;
-  } catch (e: any) {
-    message.error(e?.message || '加载失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载失败');
   } finally {
     loading.value = false;
   }
@@ -153,19 +153,19 @@ async function handleRemove(id: string) {
     await taskApi.delete(id);
     message.success('已删除');
     fetchPage();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 
 async function handleChangeStatus(record: Record<string, any>, status: number) {
   const task = record as TaskItem;
   try {
-    await taskApi.update(task.id, { status } as any);
+    await taskApi.update(task.id, { status });
     message.success('状态已更新');
     fetchPage();
-  } catch (e: any) {
-    message.error(e?.message || '更新失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '更新失败');
   }
 }
 

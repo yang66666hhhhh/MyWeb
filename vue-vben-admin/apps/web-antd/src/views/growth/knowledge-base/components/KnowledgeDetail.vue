@@ -6,9 +6,21 @@ import { Descriptions, Space, Tag } from 'ant-design-vue';
 
 defineProps<{ item?: KnowledgeArticle | null }>();
 
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  };
+  return text.replaceAll(/[&<>"']/g, (m) => map[m] || m);
+}
+
 function renderMarkdown(text: string): string {
   if (!text) return '';
-  return text
+  let html = escapeHtml(text);
+  return html
     .replaceAll(/^### (.+)$/gm, '<h3 class="text-lg font-semibold mt-3 mb-1">$1</h3>')
     .replaceAll(/^## (.+)$/gm, '<h2 class="text-xl font-semibold mt-4 mb-2">$1</h2>')
     .replaceAll(/^# (.+)$/gm, '<h1 class="text-2xl font-bold mt-4 mb-2">$1</h1>')

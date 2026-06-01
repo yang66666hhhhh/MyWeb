@@ -69,8 +69,8 @@ async function loadDetail() {
         dynamicValues.value = result.dynamicValues;
       }
     }
-  } catch (e: any) {
-    message.error(e?.message || '加载详情失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载详情失败');
   } finally {
     loading.value = false;
   }
@@ -93,8 +93,8 @@ async function submit() {
     await (props.id ? workLogApi.update(props.id, data) : workLogApi.create(data));
     emit('update:open', false);
     emit('success');
-  } catch (e: any) {
-    message.error(e?.message || '保存失败，请重试');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '保存失败，请重试');
   } finally {
     loading.value = false;
   }

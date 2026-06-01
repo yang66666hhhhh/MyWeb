@@ -55,7 +55,7 @@ const planTypeOptions = [
   { label: '自定义', value: 'Custom' },
 ];
 
-const columns: any[] = [
+const columns = [
   { title: '标题', dataIndex: 'title', key: 'title' },
   { title: '类型', dataIndex: 'type', key: 'type' },
   { title: '状态', dataIndex: 'status', key: 'status' },
@@ -94,8 +94,8 @@ async function generatePlan() {
     generatedPlan.value = plan.generatedContent || '计划已生成';
     message.success('计划生成成功');
     await fetchPlans();
-  } catch (e: any) {
-    message.error(e?.message || '生成失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '生成失败');
   } finally {
     generating.value = false;
   }
@@ -106,8 +106,8 @@ async function fetchPlans() {
   try {
     const result = await aiApi.getPlans({ page: 1, pageSize: 100 });
     plans.value = result.items || [];
-  } catch (e: any) {
-    message.error(e?.message || '加载计划列表失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载计划列表失败');
   } finally {
     loading.value = false;
   }
@@ -123,8 +123,8 @@ async function deletePlan(id: string) {
     await aiApi.deletePlan(id);
     message.success('删除成功');
     await fetchPlans();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 

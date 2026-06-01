@@ -81,13 +81,13 @@ const statusOptions = [
   { label: '维护中', value: 2 },
 ];
 
-const columns: any[] = [
+const columns = [
   { dataIndex: 'deviceName', key: 'deviceName', title: '设备名称', minWidth: 140 },
   { dataIndex: 'deviceCode', key: 'deviceCode', title: '设备编号', width: 120 },
   { dataIndex: 'deviceType', key: 'deviceType', title: '设备类型', width: 100 },
   { dataIndex: 'status', key: 'status', title: '状态', width: 90 },
   { dataIndex: 'projectId', key: 'projectId', title: '所属项目', width: 140 },
-  { key: 'action', title: '操作', width: 180, fixed: 'right' },
+  { key: 'action', title: '操作', width: 180, fixed: 'right' as const },
 ];
 
 const { changePage, items, load, loading, query, resetQuery, search, total } = usePagedQuery<
@@ -127,8 +127,8 @@ async function openEdit(record: Record<string, any>) {
       };
     }
     formOpen.value = true;
-  } catch (e: any) {
-    message.error(e?.message || '加载详情失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载详情失败');
   }
 }
 
@@ -142,8 +142,8 @@ async function handleRemove(id: string) {
     await deleteWorkDeviceApi(id);
     message.success('设备已删除');
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 
@@ -160,8 +160,8 @@ async function handleSubmit() {
     }
     formOpen.value = false;
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '保存失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '保存失败');
   } finally {
     submitting.value = false;
   }

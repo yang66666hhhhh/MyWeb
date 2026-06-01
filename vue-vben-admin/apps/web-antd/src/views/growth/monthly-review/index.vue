@@ -135,8 +135,8 @@ async function handleSubmit() {
     }
     formOpen.value = false;
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '操作失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '操作失败');
   } finally {
     submitting.value = false;
   }
@@ -147,8 +147,8 @@ async function handleDelete(id: string) {
     await deleteMonthlyReviewApi(id);
     message.success('删除成功');
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 

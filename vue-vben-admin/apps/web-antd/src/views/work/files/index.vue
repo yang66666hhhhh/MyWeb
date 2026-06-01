@@ -154,8 +154,8 @@ async function handleRemove(id: string) {
     await deleteFileApi(id);
     message.success('文件已删除');
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 
@@ -172,8 +172,8 @@ async function handleSubmit() {
     }
     formOpen.value = false;
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '保存失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '保存失败');
   } finally {
     submitting.value = false;
   }

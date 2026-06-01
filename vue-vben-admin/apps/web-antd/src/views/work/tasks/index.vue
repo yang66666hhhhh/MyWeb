@@ -155,8 +155,8 @@ async function fetchProjects() {
   try {
     const res = await projectApi.getPage({ page: 1, pageSize: 100 });
     projects.value = res.items;
-  } catch (e: any) {
-    message.error(e?.message || '加载失败，请稍后重试');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载失败，请稍后重试');
   }
 }
 
@@ -169,8 +169,8 @@ async function fetchPage() {
     const result = await taskApi.getPage(params);
     items.value = result.items;
     total.value = result.total;
-  } catch (e: any) {
-    message.error(e?.message || '加载失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载失败');
   } finally {
     loading.value = false;
   }
@@ -262,8 +262,8 @@ async function handleSave() {
     }
     formOpen.value = false;
     await fetchPage();
-  } catch (e: any) {
-    message.error(e?.message || '操作失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '操作失败');
   } finally {
     submitting.value = false;
   }
@@ -274,8 +274,8 @@ async function handleRemove(id: string) {
     await taskApi.delete(id);
     message.success('已删除');
     fetchPage();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 
@@ -284,8 +284,8 @@ async function handleComplete(id: string) {
     await taskApi.complete(id);
     message.success('任务已完成');
     fetchPage();
-  } catch (e: any) {
-    message.error(e?.message || '操作失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '操作失败');
   }
 }
 

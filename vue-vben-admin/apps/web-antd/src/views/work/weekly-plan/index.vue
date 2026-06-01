@@ -104,7 +104,7 @@ const taskStatusMap: Record<number, { color: string; label: string }> = {
   3: { color: 'error', label: '已取消' },
 };
 
-const taskColumns: any[] = [
+const taskColumns = [
   { title: '任务标题', dataIndex: 'title', key: 'title' },
   { title: '优先级', dataIndex: 'priority', key: 'priority', width: 80 },
   { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
@@ -164,8 +164,8 @@ async function fetchPage() {
     const result = await weeklyPlanApi.getPage(query);
     items.value = result.items;
     total.value = result.total;
-  } catch (e: any) {
-    message.error(e?.message || '加载失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载失败');
   } finally {
     loading.value = false;
   }
@@ -218,8 +218,8 @@ async function handleSave() {
     }
     formOpen.value = false;
     await fetchPage();
-  } catch (e: any) {
-    message.error(e?.message || '操作失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '操作失败');
   } finally {
     submitting.value = false;
   }
@@ -230,8 +230,8 @@ async function handleDelete(id: string) {
     await weeklyPlanApi.delete(id);
     message.success('删除成功');
     await fetchPage();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 
@@ -273,8 +273,8 @@ async function handleTaskSave() {
     }
     taskFormOpen.value = false;
     await fetchPage();
-  } catch (e: any) {
-    message.error(e?.message || '操作失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '操作失败');
   } finally {
     taskSubmitting.value = false;
   }
@@ -285,8 +285,8 @@ async function handleTaskDelete(taskId: string) {
     await weeklyPlanApi.deleteTask(taskId);
     message.success('删除成功');
     await fetchPage();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 

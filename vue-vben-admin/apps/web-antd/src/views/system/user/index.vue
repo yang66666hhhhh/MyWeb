@@ -101,8 +101,8 @@ async function loadPersonaOptions() {
       label: `${p.icon} ${p.name}`,
       value: p.id,
     }));
-  } catch (e: any) {
-    message.error(e?.message || '加载身份选项失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载身份选项失败');
   }
 }
 
@@ -139,8 +139,8 @@ async function openEdit(record: Record<string, any>) {
       originalPersonaIds.value = formState.value.personaIds;
     }
     formOpen.value = true;
-  } catch (e: any) {
-    message.error(e?.message || '加载详情失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载详情失败');
   }
 }
 
@@ -152,8 +152,8 @@ async function showDetail(record: Record<string, any>) {
       selectedItem.value = detail;
       detailOpen.value = true;
     }
-  } catch (e: any) {
-    message.error(e?.message || '加载详情失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载详情失败');
   }
 }
 
@@ -216,8 +216,8 @@ async function handleSubmit() {
     }
     formOpen.value = false;
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '保存失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '保存失败');
   }
 }
 
@@ -226,8 +226,8 @@ async function handleRemove(id: string) {
     await deleteUserApi(id);
     message.success('删除成功');
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 

@@ -89,8 +89,8 @@ async function handleSubmit() {
     message.success('创建成功');
     formOpen.value = false;
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '创建失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '创建失败');
   } finally {
     submitting.value = false;
   }
@@ -101,8 +101,8 @@ async function handleDelete(id: string) {
     await deleteCustomReportApi(id);
     message.success('删除成功');
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 

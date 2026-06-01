@@ -76,8 +76,8 @@ async function load() {
     projectHours.value = projectRes.status === 'fulfilled' ? projectRes.value : [];
     taskTypeDistribution.value = taskTypeRes.status === 'fulfilled' ? taskTypeRes.value : [];
     deviceRanking.value = deviceRes.status === 'fulfilled' ? deviceRes.value : [];
-  } catch (e: any) {
-    message.error(e?.message || '加载统计数据失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载统计数据失败');
   } finally {
     loading.value = false;
   }

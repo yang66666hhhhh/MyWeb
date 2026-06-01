@@ -2,8 +2,12 @@
 import { computed, onUnmounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import { Alert, Button, Card, Col, Progress, Row, Space, Statistic } from 'ant-design-vue';
+
+const accessStore = useAccessStore();
+const canUseTimer = computed(() => accessStore.accessCodes.includes('GROWTH_FOCUS'));
 
 const mode = ref<'break' | 'focus'>('focus');
 const timeLeft = ref(25 * 60);
@@ -97,9 +101,9 @@ onUnmounted(() => {
         {{ mode === 'focus' ? '专注时间' : '休息时间' }}
       </div>
       <Space>
-        <Button v-if="!isRunning" type="primary" size="large" @click="startTimer">开始</Button>
-        <Button v-else size="large" @click="stopTimer">暂停</Button>
-        <Button size="large" @click="resetTimer">重置</Button>
+        <Button v-if="canUseTimer && !isRunning" type="primary" size="large" @click="startTimer">开始</Button>
+        <Button v-else-if="canUseTimer" size="large" @click="stopTimer">暂停</Button>
+        <Button v-if="canUseTimer" size="large" @click="resetTimer">重置</Button>
       </Space>
     </Card>
   </Page>

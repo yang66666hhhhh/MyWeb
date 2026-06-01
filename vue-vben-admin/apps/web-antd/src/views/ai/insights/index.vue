@@ -1,7 +1,8 @@
 ﻿<script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -27,6 +28,10 @@ import {
   getInsightsApi,
 } from '#/api/ai/extended';
 import { usePagedQuery } from '#/composables/usePagedQuery';
+
+const accessStore = useAccessStore();
+const canGenerateInsight = computed(() => accessStore.accessCodes.includes('AI_INSIGHTS'));
+const canDeleteInsight = computed(() => accessStore.accessCodes.includes('AI_INSIGHTS'));
 
 const generating = ref(false);
 const generateForm = ref({
@@ -66,8 +71,8 @@ async function handleGenerate() {
     message.success('洞察生成成功');
     generateForm.value = { title: '', category: '', source: '' };
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '生成失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '生成失败');
   } finally {
     generating.value = false;
   }
@@ -78,8 +83,8 @@ async function handleDelete(id: string) {
     await deleteInsightApi(id);
     message.success('删除成功');
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 
@@ -122,7 +127,7 @@ onMounted(() => {
         <Input v-model:value="generateForm.title" placeholder="洞察标题（可选）" style="width: 200px" />
         <Select v-model:value="generateForm.category" :options="categoryOptions.filter(o => o.value)" placeholder="分类" class="w-32" />
         <Input v-model:value="generateForm.source" placeholder="数据来源（可选）" style="width: 200px" />
-        <Button type="primary" :loading="generating" @click="handleGenerate">生成洞察</Button>
+        <Button v-if="canGenerateInsight" type="primary" :loading="generating" @click="handleGenerate">生成洞察</Button>
       </Space>
     </Card>
 
@@ -150,7 +155,7 @@ onMounted(() => {
                   </Tag>
                   <span class="text-gray-400">{{ item.createdAt }}</span>
                   <Popconfirm title="确认删除？" @confirm="handleDelete(item.id)">
-                    <Button danger type="link">删除</Button>
+                    <Button v-if="canDeleteInsight" danger type="link">删除</Button>
                   </Popconfirm>
                 </Space>
               </div>

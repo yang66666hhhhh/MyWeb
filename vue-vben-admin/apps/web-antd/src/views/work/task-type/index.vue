@@ -49,13 +49,13 @@ const formState = ref({
   typeName: '',
 });
 
-const columns: any[] = [
+const columns = [
   { dataIndex: 'typeName', key: 'typeName', title: '类型名称', minWidth: 140 },
   { dataIndex: 'typeCode', key: 'typeCode', title: '类型编码', width: 120 },
   { dataIndex: 'description', key: 'description', title: '描述', minWidth: 160 },
   { dataIndex: 'sort', key: 'sort', title: '排序', width: 80 },
   { dataIndex: 'enabled', key: 'enabled', title: '启用', width: 80 },
-  { key: 'action', title: '操作', width: 180, fixed: 'right' },
+  { key: 'action', title: '操作', width: 180, fixed: 'right' as const },
 ];
 
 const { changePage, items, load, loading, query, resetQuery, search, total } = usePagedQuery<
@@ -93,8 +93,8 @@ async function openEdit(record: Record<string, any>) {
       };
     }
     formOpen.value = true;
-  } catch (e: any) {
-    message.error(e?.message || '加载详情失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载详情失败');
   }
 }
 
@@ -108,8 +108,8 @@ async function handleRemove(id: string) {
     await deleteWorkTaskTypeApi(id);
     message.success('任务类型已删除');
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 
@@ -126,8 +126,8 @@ async function handleSubmit() {
     }
     formOpen.value = false;
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '保存失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '保存失败');
   } finally {
     submitting.value = false;
   }
@@ -139,8 +139,8 @@ async function handleToggleEnabled(record: Record<string, any>) {
     await updateWorkTaskTypeApi(taskType.id, { enabled: !taskType.enabled });
     message.success(`已${taskType.enabled ? '停用' : '启用'}`);
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '状态更新失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '状态更新失败');
   }
 }
 

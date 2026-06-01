@@ -37,6 +37,9 @@ interface CustomerProjectSummary {
 const loading = ref(false);
 const keyword = ref('');
 const projects = ref<WorkProject[]>([]);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
 
 const columns: TableColumnsType<CustomerProjectSummary> = [
   { title: '客户名称', dataIndex: 'customerName', key: 'customerName', minWidth: 180 },
@@ -103,30 +106,24 @@ function formatLocations(locations: string[]) {
   return `${locations.slice(0, 2).join(' / ')} 等 ${locations.length} 地`;
 }
 
-async function fetchProjects() {
+async function fetchProjects(page = 1) {
   loading.value = true;
   try {
-    const allProjects: WorkProject[] = [];
-    let page = 1;
-    const pageSize = 100;
+    const result = await projectApi.getPage({ page, pageSize: pageSize.value });
 
-    while (true) {
-      const result = await projectApi.getPage({ page, pageSize });
-      allProjects.push(...result.items);
-
-      if (allProjects.length >= result.total || result.items.length < pageSize) {
-        break;
-      }
-
-      page += 1;
-    }
-
-    projects.value = allProjects;
-  } catch (e: any) {
-    message.error(e?.message || '加载客户项目失败');
+    projects.value = result.items;
+    total.value = result.total;
+    currentPage.value = page;
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载客户项目失败');
   } finally {
     loading.value = false;
   }
+}
+
+function handleTableChange(pagination: { current?: number; pageSize?: number }) {
+  if (pagination.pageSize) pageSize.value = pagination.pageSize;
+  void fetchProjects(pagination.current ?? 1);
 }
 
 function resetFilters() {
@@ -173,16 +170,17 @@ onMounted(() => {
             style="width: 180px"
           />
           <Button @click="resetFilters">重置</Button>
-          <Button :loading="loading" type="primary" @click="fetchProjects">刷新</Button>
+          <Button :loading="loading" type="primary" @click="fetchProjects(1)">刷新</Button>
         </Space>
       </template>
       <Table
         :columns="columns"
         :data-source="customers"
         :loading="loading"
-        :pagination="{ pageSize: 10, showSizeChanger: true }"
+        :pagination="{ current: currentPage, pageSize: pageSize, total: total, showSizeChanger: true }"
         :scroll="{ x: 900 }"
         row-key="customerName"
+        @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'locations'">

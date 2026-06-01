@@ -99,8 +99,8 @@ async function fetchSubjects() {
       pageSize: 100,
     });
     subjects.value = result.items;
-  } catch (e: any) {
-    message.error(e?.message || '加载科目目标失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载科目目标失败');
   } finally {
     loading.value = false;
   }
@@ -163,8 +163,8 @@ async function handleSave() {
     }
     formOpen.value = false;
     await fetchSubjects();
-  } catch (e: any) {
-    message.error(e?.message || '保存科目目标失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '保存科目目标失败');
   } finally {
     submitting.value = false;
   }
@@ -175,8 +175,8 @@ async function handleDelete(id: string) {
     await deleteStudentSubjectApi(id);
     message.success('科目目标已删除');
     await fetchSubjects();
-  } catch (e: any) {
-    message.error(e?.message || '删除科目目标失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除科目目标失败');
   }
 }
 

@@ -48,8 +48,8 @@ async function fetchData() {
     projectHours.value = projectRes.status === 'fulfilled' ? projectRes.value : [];
     dailyHours.value = dailyRes.status === 'fulfilled' ? dailyRes.value : [];
     taskTypeDistribution.value = taskTypeRes.status === 'fulfilled' ? taskTypeRes.value : [];
-  } catch (e: any) {
-    message.error(e?.message || '加载失败，请稍后重试');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载失败，请稍后重试');
   } finally {
     loading.value = false;
   }

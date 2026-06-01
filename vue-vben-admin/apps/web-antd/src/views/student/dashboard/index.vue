@@ -93,8 +93,8 @@ async function fetchDashboard() {
   loading.value = true;
   try {
     dashboard.value = await getExamDashboardApi();
-  } catch (e: any) {
-    message.error(e?.message || '加载学习总览失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载学习总览失败');
   } finally {
     loading.value = false;
   }
@@ -116,8 +116,8 @@ async function markTaskCompleted(task: PostgraduateTask) {
     });
     message.success('任务已完成');
     await fetchDashboard();
-  } catch (e: any) {
-    message.error(e?.message || '更新任务失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '更新任务失败');
   }
 }
 

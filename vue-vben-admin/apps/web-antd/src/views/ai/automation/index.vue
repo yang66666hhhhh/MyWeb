@@ -1,7 +1,8 @@
 ﻿<script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -33,6 +34,11 @@ import {
   updateWorkflowApi,
 } from '#/api/ai/extended';
 import { usePagedQuery } from '#/composables/usePagedQuery';
+
+const accessStore = useAccessStore();
+const canCreateWorkflow = computed(() => accessStore.accessCodes.includes('AI_AUTOMATION'));
+const canEditWorkflow = computed(() => accessStore.accessCodes.includes('AI_AUTOMATION'));
+const canDeleteWorkflow = computed(() => accessStore.accessCodes.includes('AI_AUTOMATION'));
 
 const formOpen = ref(false);
 const editingId = ref<null | string>(null);
@@ -100,8 +106,8 @@ async function handleSubmit() {
     }
     formOpen.value = false;
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '操作失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '操作失败');
   } finally {
     submitting.value = false;
   }
@@ -112,8 +118,8 @@ async function handleDelete(id: string) {
     await deleteWorkflowApi(id);
     message.success('删除成功');
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 
@@ -122,8 +128,8 @@ async function handleToggleStatus(record: AutomationWorkflow) {
     await updateWorkflowApi(record.id, { isActive: !record.isActive });
     message.success(record.isActive ? '已暂停' : '已启动');
     await load();
-  } catch (e: any) {
-    message.error(e?.message || '操作失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '操作失败');
   }
 }
 
@@ -162,7 +168,7 @@ onMounted(() => {
         <Form.Item>
           <Space>
             <Button type="primary" @click="search">查询</Button>
-            <Button @click="openCreate">创建工作流</Button>
+            <Button v-if="canCreateWorkflow" @click="openCreate">创建工作流</Button>
           </Space>
         </Form.Item>
       </Form>
@@ -202,9 +208,9 @@ onMounted(() => {
                 un-checked-children="暂停"
                 @change="handleToggleStatus(item)"
               />
-              <Button type="link" @click="openEdit(item)">编辑</Button>
+              <Button v-if="canEditWorkflow" type="link" @click="openEdit(item)">编辑</Button>
               <Popconfirm title="确认删除？" @confirm="handleDelete(item.id)">
-                <Button danger type="link">删除</Button>
+                <Button v-if="canDeleteWorkflow" danger type="link">删除</Button>
               </Popconfirm>
             </Space>
           </List.Item>

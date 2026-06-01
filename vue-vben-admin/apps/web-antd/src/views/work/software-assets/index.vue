@@ -84,7 +84,7 @@ const statusMap: Record<number, { color: string; label: string }> = {
   3: { color: 'default', label: '已退役' },
 };
 
-const columns: any[] = [
+const columns = [
   { title: '软件名称', dataIndex: 'name', key: 'name', minWidth: 150 },
   { title: '版本', dataIndex: 'version', key: 'version', width: 100 },
   { title: '类型', dataIndex: 'type', key: 'type', width: 100 },
@@ -93,7 +93,7 @@ const columns: any[] = [
   { title: '使用人', dataIndex: 'assignedTo', key: 'assignedTo', width: 100 },
   { title: '过期日期', dataIndex: 'expireDate', key: 'expireDate', width: 120 },
   { title: '成本', dataIndex: 'cost', key: 'cost', width: 100 },
-  { key: 'action', title: '操作', width: 150, fixed: 'right' },
+  { key: 'action', title: '操作', width: 150, fixed: 'right' as const },
 ];
 
 const typeOptions = Object.entries(typeMap).map(([v, m]) => ({ label: m.label, value: Number(v) }));
@@ -129,8 +129,8 @@ async function fetchPage() {
     const result = await softwareAssetApi.getPage(query);
     items.value = result.items;
     total.value = result.total;
-  } catch (e: any) {
-    message.error(e?.message || '加载失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载失败');
   } finally {
     loading.value = false;
   }
@@ -206,8 +206,8 @@ async function handleSave() {
     }
     formOpen.value = false;
     await fetchPage();
-  } catch (e: any) {
-    message.error(e?.message || '操作失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '操作失败');
   } finally {
     submitting.value = false;
   }
@@ -218,8 +218,8 @@ async function handleDelete(id: string) {
     await softwareAssetApi.delete(id);
     message.success('删除成功');
     await fetchPage();
-  } catch (e: any) {
-    message.error(e?.message || '删除失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '删除失败');
   }
 }
 

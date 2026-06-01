@@ -28,8 +28,8 @@ async function fetchData() {
     if (overviewRes.status === 'fulfilled') overview.value = overviewRes.value;
     if (distRes.status === 'fulfilled') taskDistribution.value = distRes.value;
     if (priorityRes.status === 'fulfilled') priorityDistribution.value = priorityRes.value;
-  } catch (e: any) {
-    message.error(e?.message || '加载成长数据失败');
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载成长数据失败');
   } finally {
     loading.value = false;
   }
