@@ -904,6 +904,26 @@ rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.cspr
 - 前端类型检查：通过
 - 前端构建：成功
 
+### v3.2 (2025-05-31)
+
+**页面优化：**
+
+- **甘特图页面重写**：`work/gantt/index.vue`
+  - 移除硬编码数据，对接 `taskApi.getPage()` 获取真实任务数据
+  - 添加项目筛选和状态筛选功能
+  - 添加项目下拉（从 `projectApi.getPage()` 动态获取）
+  - 使用 Ant Design Table 组件展示任务列表
+
+- **资源中心页面优化**：`assets/resources/index.vue`
+  - 移除硬编码数据和"功能开发中" Alert
+  - 使用 `Empty` 组件展示"功能正在开发中"提示
+  - 统计卡片保留但数值归零
+
+**验证结果：**
+- 后端测试：140 个全部通过
+- 前端类型检查：通过
+- 前端构建：成功
+
 ### v3.1 (2025-05-31)
 
 **P0 修复：**
