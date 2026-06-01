@@ -9,6 +9,8 @@ using WebApplication1.Features.DailyPlans;
 using WebApplication1.Features.Growth.Entities;
 using WebApplication1.Features.Network.Entities;
 using WebApplication1.Features.Tasks;
+using WebApplication1.Features.Persona.Entities;
+using WebApplication1.Features.Analytics.Entities;
 using WebApplication1.Features.Work.Entities;
 using WebApplication1.Shared;
 
@@ -41,6 +43,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<WorkImportBatch> WorkImportBatches => Set<WorkImportBatch>();
     public DbSet<WorkImportRow> WorkImportRows => Set<WorkImportRow>();
     public DbSet<WorkDailyPlan> WorkDailyPlans => Set<WorkDailyPlan>();
+    public DbSet<Okr> Okrs => Set<Okr>();
+    public DbSet<WorkRisk> WorkRisks => Set<WorkRisk>();
+    public DbSet<WorkFile> WorkFiles => Set<WorkFile>();
     public DbSet<ImplLog> ImplLogs => Set<ImplLog>();
     public DbSet<WeeklyPlan> WeeklyPlans => Set<WeeklyPlan>();
     public DbSet<WeeklyPlanTask> WeeklyPlanTasks => Set<WeeklyPlanTask>();
@@ -57,6 +62,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<StudentSubject> StudentSubjects => Set<StudentSubject>();
     public DbSet<StudentStudyRecord> StudentStudyRecords => Set<StudentStudyRecord>();
 
+    public DbSet<Skill> Skills => Set<Skill>();
+    public DbSet<Goal> Goals => Set<Goal>();
+    public DbSet<YearPlan> YearPlans => Set<YearPlan>();
+    public DbSet<MonthlyReview> MonthlyReviews => Set<MonthlyReview>();
+    public DbSet<LearningPath> LearningPaths => Set<LearningPath>();
+    public DbSet<Course> Courses => Set<Course>();
+    public DbSet<FitnessRecord> FitnessRecords => Set<FitnessRecord>();
+    public DbSet<SleepRecord> SleepRecords => Set<SleepRecord>();
+    public DbSet<MoodRecord> MoodRecords => Set<MoodRecord>();
+    public DbSet<ReadingBook> ReadingBooks => Set<ReadingBook>();
+    public DbSet<FocusSession> FocusSessions => Set<FocusSession>();
+
     public DbSet<IndustryTemplate> IndustryTemplates => Set<IndustryTemplate>();
     public DbSet<TemplateField> TemplateFields => Set<TemplateField>();
     public DbSet<WorkLogDynamicValue> WorkLogDynamicValues => Set<WorkLogDynamicValue>();
@@ -66,6 +83,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<AiReport> AiReports => Set<AiReport>();
     public DbSet<AiChatSession> AiChatSessions => Set<AiChatSession>();
     public DbSet<AiChatMessage> AiChatMessages => Set<AiChatMessage>();
+    public DbSet<AutomationWorkflow> AutomationWorkflows => Set<AutomationWorkflow>();
+    public DbSet<AiInsight> AiInsights => Set<AiInsight>();
+    public DbSet<KnowledgeChatSessionItem> KnowledgeChatSessionItems => Set<KnowledgeChatSessionItem>();
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
@@ -95,6 +115,17 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     public DbSet<Contact> Contacts => Set<Contact>();
     public DbSet<Interaction> Interactions => Set<Interaction>();
+
+    // Persona
+    public DbSet<CodeRepository> CodeRepositories => Set<CodeRepository>();
+    public DbSet<Issue> Issues => Set<Issue>();
+    public DbSet<Pipeline> Pipelines => Set<Pipeline>();
+    public DbSet<DesignAsset> DesignAssets => Set<DesignAsset>();
+    public DbSet<Prototype> Prototypes => Set<Prototype>();
+    public DbSet<TeacherCourse> TeacherCourses => Set<TeacherCourse>();
+    public DbSet<TeacherStudent> TeacherStudents => Set<TeacherStudent>();
+
+    public DbSet<CustomReport> CustomReports => Set<CustomReport>();
 
     public override int SaveChanges()
     {
