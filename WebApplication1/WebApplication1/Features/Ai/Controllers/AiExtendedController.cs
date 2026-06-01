@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WebApplication1.Features.Auth.Authorization;
+using WebApplication1.Features.Ai.Services;
 using WebApplication1.Shared.Common;
 
 namespace WebApplication1.Features.Ai;
@@ -11,107 +11,119 @@ namespace WebApplication1.Features.Ai;
 [Tags("AI")]
 public class AiExtendedController : BaseApiController
 {
-    // Automation endpoints
+    private readonly IAiExtendedService _service;
+
+    public AiExtendedController(IAiExtendedService service)
+    {
+        _service = service;
+    }
+
+    // ─── Automation endpoints ────────────────────────────────────
+
     [HttpGet("automation")]
     public async Task<ActionResult<ApiResult<PageResult<AutomationWorkflowDto>>>> GetWorkflows(
         [FromQuery] AiExtendedQueryDto query, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        // TODO: Implement automation service
-        return Ok(ApiResult<PageResult<AutomationWorkflowDto>>.Success(
-            PageResult<AutomationWorkflowDto>.Create(new List<AutomationWorkflowDto>(), 0, query.Page, query.PageSize)));
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var result = await _service.GetWorkflowsAsync(query, userId.Value, ct);
+        return Ok(ApiResult<PageResult<AutomationWorkflowDto>>.Success(result));
     }
 
     [HttpPost("automation")]
     public async Task<ActionResult<ApiResult<AutomationWorkflowDto>>> CreateWorkflow(
         [FromBody] CreateAutomationWorkflowInput input, CancellationToken ct)
     {
-        // TODO: Implement automation service
-        return Ok(ApiResult<AutomationWorkflowDto>.Success(new AutomationWorkflowDto
-        {
-            Id = Guid.NewGuid().ToString(),
-            Name = input.Name
-        }));
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var result = await _service.CreateWorkflowAsync(input, userId.Value, ct);
+        return Ok(ApiResult<AutomationWorkflowDto>.Success(result));
     }
 
     [HttpPut("automation/{id:guid}")]
     public async Task<ActionResult<ApiResult<AutomationWorkflowDto>>> UpdateWorkflow(
         Guid id, [FromBody] UpdateAutomationWorkflowInput input, CancellationToken ct)
     {
-        // TODO: Implement automation service
-        return Ok(ApiResult<AutomationWorkflowDto>.Success(new AutomationWorkflowDto { Id = id.ToString() }));
+        var result = await _service.UpdateWorkflowAsync(id, input, ct);
+        if (result == null)
+            return NotFound(ApiResult<AutomationWorkflowDto>.Fail("工作流不存在", StatusCodes.Status404NotFound));
+        return Ok(ApiResult<AutomationWorkflowDto>.Success(result));
     }
 
     [HttpDelete("automation/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteWorkflow(Guid id, CancellationToken ct)
     {
-        // TODO: Implement automation service
-        return Ok(ApiResult.Success("删除成功"));
+        var success = await _service.DeleteWorkflowAsync(id, ct);
+        return HandleDeleteResult(success, "工作流");
     }
 
-    // Knowledge Chat endpoints
+    // ─── Knowledge Chat endpoints ────────────────────────────────
+
     [HttpGet("knowledge-chat/sessions")]
     public async Task<ActionResult<ApiResult<PageResult<KnowledgeChatSessionDto>>>> GetKnowledgeChatSessions(
         [FromQuery] AiExtendedQueryDto query, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        // TODO: Implement knowledge chat service
-        return Ok(ApiResult<PageResult<KnowledgeChatSessionDto>>.Success(
-            PageResult<KnowledgeChatSessionDto>.Create(new List<KnowledgeChatSessionDto>(), 0, query.Page, query.PageSize)));
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var result = await _service.GetSessionsAsync(query, userId.Value, ct);
+        return Ok(ApiResult<PageResult<KnowledgeChatSessionDto>>.Success(result));
     }
 
     [HttpPost("knowledge-chat")]
     public async Task<ActionResult<ApiResult<KnowledgeChatResponseDto>>> SendKnowledgeChatMessage(
         [FromBody] KnowledgeChatRequest input, CancellationToken ct)
     {
-        // TODO: Implement knowledge chat service
-        return Ok(ApiResult<KnowledgeChatResponseDto>.Success(new KnowledgeChatResponseDto
-        {
-            SessionId = Guid.NewGuid().ToString(),
-            Content = "知识库问答功能正在开发中..."
-        }));
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var result = await _service.SendMessageAsync(input, userId.Value, ct);
+        return Ok(ApiResult<KnowledgeChatResponseDto>.Success(result));
     }
 
     [HttpDelete("knowledge-chat/sessions/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteKnowledgeChatSession(Guid id, CancellationToken ct)
     {
-        // TODO: Implement knowledge chat service
-        return Ok(ApiResult.Success("删除成功"));
+        var success = await _service.DeleteSessionAsync(id, ct);
+        return HandleDeleteResult(success, "会话");
     }
 
-    // Insights endpoints
+    // ─── Insights endpoints ──────────────────────────────────────
+
     [HttpGet("insights")]
     public async Task<ActionResult<ApiResult<PageResult<AiInsightItemDto>>>> GetInsights(
         [FromQuery] AiExtendedQueryDto query, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        // TODO: Implement insights service
-        return Ok(ApiResult<PageResult<AiInsightItemDto>>.Success(
-            PageResult<AiInsightItemDto>.Create(new List<AiInsightItemDto>(), 0, query.Page, query.PageSize)));
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var result = await _service.GetInsightsAsync(query, userId.Value, ct);
+        return Ok(ApiResult<PageResult<AiInsightItemDto>>.Success(result));
     }
 
     [HttpPost("insights/generate")]
     public async Task<ActionResult<ApiResult<AiInsightItemDto>>> GenerateInsight(
         [FromBody] GenerateInsightInput input, CancellationToken ct)
     {
-        // TODO: Implement insights service
-        return Ok(ApiResult<AiInsightItemDto>.Success(new AiInsightItemDto
-        {
-            Id = Guid.NewGuid().ToString(),
-            Title = input.Title ?? "AI 洞察",
-            Content = "基于您的数据分析生成的洞察..."
-        }));
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var result = await _service.GenerateInsightAsync(input, userId.Value, ct);
+        return Ok(ApiResult<AiInsightItemDto>.Success(result));
     }
 
     [HttpDelete("insights/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteInsight(Guid id, CancellationToken ct)
     {
-        // TODO: Implement insights service
-        return Ok(ApiResult.Success("删除成功"));
+        var success = await _service.DeleteInsightAsync(id, ct);
+        return HandleDeleteResult(success, "洞察");
     }
 }
 
-// DTOs
+// ─── DTOs ────────────────────────────────────────────────────────
+
 public record AutomationWorkflowDto
 {
     public string Id { get; init; } = string.Empty;
