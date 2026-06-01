@@ -374,12 +374,16 @@ app.UseHttpsRedirection();
 app.UseCors(CorsPolicyName);
 
 // 安全中间件
+app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseMiddleware<XssProtectionMiddleware>();
 app.UseMiddleware<SqlInjectionMiddleware>();
 
 // 监控中间件
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<PerformanceMonitoringMiddleware>();
+
+// 缓存中间件
+app.UseMiddleware<OutputCacheMiddleware>();
 
 app.UseMiddleware<RateLimitingMiddleware>();
 
