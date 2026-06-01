@@ -17,7 +17,8 @@ namespace WebApplication1.Features.Auth.Controllers;
 public class RoleMenuController(
     RoleMenuService roleMenuService,
     IUserAccessContextService accessContextService,
-    AppDbContext context) : ControllerBase
+    AppDbContext context,
+    ILogger<RoleMenuController> logger) : ControllerBase
 {
     [HttpGet("mine")]
     public async Task<ActionResult<ApiResult<List<RoleMenuDto>>>> GetMyMenus(CancellationToken cancellationToken)
@@ -58,6 +59,7 @@ public class RoleMenuController(
     public async Task<ActionResult<ApiResult<RoleMenuDto>>> Create([FromBody] UpsertRoleMenuDto input, CancellationToken cancellationToken)
     {
         var result = await roleMenuService.CreateAsync(input.ToEntity(), cancellationToken);
+        logger.LogInformation("创建菜单成功: {Id}, {Name}", result.Id, result.Name);
         return Ok(ApiResult<RoleMenuDto>.Success(result.ToDto(), "创建成功"));
     }
 
@@ -67,6 +69,7 @@ public class RoleMenuController(
     {
         var result = await roleMenuService.UpdateAsync(id, input.ToEntity(), cancellationToken);
         if (result is null) return NotFound(ApiResult<RoleMenuDto>.Fail("菜单不存在"));
+        logger.LogInformation("更新菜单成功: {Id}", id);
         return Ok(ApiResult<RoleMenuDto>.Success(result.ToDto(), "更新成功"));
     }
 
@@ -75,7 +78,12 @@ public class RoleMenuController(
     public async Task<ActionResult<ApiResult>> Delete(Guid id, CancellationToken cancellationToken)
     {
         var success = await roleMenuService.DeleteAsync(id, cancellationToken);
-        return success ? Ok(ApiResult.Success("删除成功")) : NotFound(ApiResult.Fail("菜单不存在"));
+        if (success)
+        {
+            logger.LogInformation("删除菜单成功: {Id}", id);
+            return Ok(ApiResult.Success("删除成功"));
+        }
+        return NotFound(ApiResult.Fail("菜单不存在"));
     }
 
     private Guid? GetCurrentUserId()

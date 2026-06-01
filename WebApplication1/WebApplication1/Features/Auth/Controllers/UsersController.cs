@@ -12,7 +12,7 @@ namespace WebApplication1.Features.Auth.Controllers;
 [Route("api/system/users")]
 [Authorize(Roles = "pro,owner")]
 [Tags("Users")]
-public class UsersController(IUserService userService) : ControllerBase
+public class UsersController(IUserService userService, ILogger<UsersController> logger) : ControllerBase
 {
     private bool IsOwner() =>
         User.Claims
@@ -42,12 +42,21 @@ public class UsersController(IUserService userService) : ControllerBase
         [FromBody] CreateUserDto input,
         CancellationToken cancellationToken)
     {
-        if (input.Roles?.Contains("owner", StringComparison.OrdinalIgnoreCase) == true && !IsOwner())
+        try
         {
-            return Forbid();
+            if (input.Roles?.Contains("owner", StringComparison.OrdinalIgnoreCase) == true && !IsOwner())
+            {
+                return Forbid();
+            }
+            var result = await userService.CreateAsync(input, cancellationToken);
+            logger.LogInformation("创建用户成功: {Id}, {Username}", result.Id, result.Username);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResult<UserDto>.Success(result, "创建成功"));
         }
-        var result = await userService.CreateAsync(input, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResult<UserDto>.Success(result, "创建成功"));
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "创建用户失败");
+            return StatusCode(500, ApiResult.Fail("创建失败，请稍后重试"));
+        }
     }
 
     [HttpPut("{id:guid}")]
@@ -56,42 +65,60 @@ public class UsersController(IUserService userService) : ControllerBase
         [FromBody] UpdateUserDto input,
         CancellationToken cancellationToken)
     {
-        var existing = await userService.GetByIdAsync(id, cancellationToken);
-        if (existing == null)
-            return NotFound(ApiResult<UserDto>.Fail("用户不存在", StatusCodes.Status404NotFound));
-
-        if (existing.Roles.Contains("owner", StringComparison.OrdinalIgnoreCase) && !IsOwner())
+        try
         {
-            return Forbid();
-        }
+            var existing = await userService.GetByIdAsync(id, cancellationToken);
+            if (existing == null)
+                return NotFound(ApiResult<UserDto>.Fail("用户不存在", StatusCodes.Status404NotFound));
 
-        if (input.Roles?.Contains("owner", StringComparison.OrdinalIgnoreCase) == true && !IsOwner())
+            if (existing.Roles.Contains("owner", StringComparison.OrdinalIgnoreCase) && !IsOwner())
+            {
+                return Forbid();
+            }
+
+            if (input.Roles?.Contains("owner", StringComparison.OrdinalIgnoreCase) == true && !IsOwner())
+            {
+                return Forbid();
+            }
+
+            var result = await userService.UpdateAsync(id, input, cancellationToken);
+            if (result == null)
+                return NotFound(ApiResult<UserDto>.Fail("用户不存在", StatusCodes.Status404NotFound));
+            logger.LogInformation("更新用户成功: {Id}", id);
+            return Ok(ApiResult<UserDto>.Success(result, "更新成功"));
+        }
+        catch (Exception ex)
         {
-            return Forbid();
+            logger.LogError(ex, "更新用户失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
         }
-
-        var result = await userService.UpdateAsync(id, input, cancellationToken);
-        if (result == null)
-            return NotFound(ApiResult<UserDto>.Fail("用户不存在", StatusCodes.Status404NotFound));
-        return Ok(ApiResult<UserDto>.Success(result, "更新成功"));
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<ApiResult>> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var existing = await userService.GetByIdAsync(id, cancellationToken);
-        if (existing == null)
-            return NotFound(ApiResult.Fail("用户不存在", StatusCodes.Status404NotFound));
-
-        if (existing.Roles.Contains("owner", StringComparison.OrdinalIgnoreCase))
+        try
         {
-            return BadRequest(ApiResult.Fail("无法删除平台所有者账号"));
-        }
+            var existing = await userService.GetByIdAsync(id, cancellationToken);
+            if (existing == null)
+                return NotFound(ApiResult.Fail("用户不存在", StatusCodes.Status404NotFound));
 
-        var deleted = await userService.DeleteAsync(id, cancellationToken);
-        if (!deleted)
-            return NotFound(ApiResult.Fail("用户不存在", StatusCodes.Status404NotFound));
-        return Ok(ApiResult.Success("删除成功"));
+            if (existing.Roles.Contains("owner", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(ApiResult.Fail("无法删除平台所有者账号"));
+            }
+
+            var deleted = await userService.DeleteAsync(id, cancellationToken);
+            if (!deleted)
+                return NotFound(ApiResult.Fail("用户不存在", StatusCodes.Status404NotFound));
+            logger.LogInformation("删除用户成功: {Id}", id);
+            return Ok(ApiResult.Success("删除成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "删除用户失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("删除失败，请稍后重试"));
+        }
     }
 
     [HttpPost("{id:guid}/change-password")]

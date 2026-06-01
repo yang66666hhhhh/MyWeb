@@ -12,7 +12,7 @@ namespace WebApplication1.Features.Network.Controllers;
 [RequireFeature("GROWTH_KNOWLEDGE")]
 [Route("api/network")]
 [Tags("Network")]
-public class NetworkController(INetworkService networkService) : BaseApiController
+public class NetworkController(INetworkService networkService, ILogger<NetworkController> logger) : BaseApiController
 {
     #region Contacts
 
@@ -21,23 +21,39 @@ public class NetworkController(INetworkService networkService) : BaseApiControll
         [FromQuery] NetworkQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = GetUserIdForQuery();
-        var result = await networkService.GetContactPageAsync(query, userId, cancellationToken);
-        return Ok(ApiResult<PageResult<ContactDto>>.Success(result));
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var result = await networkService.GetContactPageAsync(query, userId, cancellationToken);
+            return Ok(ApiResult<PageResult<ContactDto>>.Success(result));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "获取联系人列表失败");
+            return StatusCode(500, ApiResult.Fail("获取数据失败，请稍后重试"));
+        }
     }
 
     [HttpGet("contacts/{id:guid}")]
     public async Task<ActionResult<ApiResult<ContactDto>>> GetContactById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await networkService.GetContactByIdAsync(id, cancellationToken);
-        if (result is null)
-            return NotFound(ApiResult<ContactDto>.Fail("联系人不存在", StatusCodes.Status404NotFound));
+        try
+        {
+            var result = await networkService.GetContactByIdAsync(id, cancellationToken);
+            if (result is null)
+                return NotFound(ApiResult<ContactDto>.Fail("联系人不存在", StatusCodes.Status404NotFound));
 
-        var currentUserId = GetCurrentUserId();
-        if (!IsProOrAbove() && result.UserId != currentUserId?.ToString())
-            return NotFound(ApiResult<ContactDto>.Fail("联系人不存在", StatusCodes.Status404NotFound));
+            var currentUserId = GetCurrentUserId();
+            if (!IsProOrAbove() && result.UserId != currentUserId?.ToString())
+                return NotFound(ApiResult<ContactDto>.Fail("联系人不存在", StatusCodes.Status404NotFound));
 
-        return Ok(ApiResult<ContactDto>.Success(result));
+            return Ok(ApiResult<ContactDto>.Success(result));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "获取联系人详情失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("获取数据失败，请稍后重试"));
+        }
     }
 
     [HttpPost("contacts")]
@@ -45,12 +61,21 @@ public class NetworkController(INetworkService networkService) : BaseApiControll
         [FromBody] CreateContactDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue)
-            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Unauthorized(ApiResult.Fail("无法获取用户信息"));
 
-        var result = await networkService.CreateContactAsync(input, userId.Value, cancellationToken);
-        return CreatedAtAction(nameof(GetContactById), new { id = result.Id }, ApiResult<ContactDto>.Success(result, "创建成功"));
+            var result = await networkService.CreateContactAsync(input, userId.Value, cancellationToken);
+            logger.LogInformation("创建联系人成功: {Id}", result.Id);
+            return CreatedAtAction(nameof(GetContactById), new { id = result.Id }, ApiResult<ContactDto>.Success(result, "创建成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "创建联系人失败");
+            return StatusCode(500, ApiResult.Fail("创建失败，请稍后重试"));
+        }
     }
 
     [HttpPut("contacts/{id:guid}")]
@@ -59,33 +84,51 @@ public class NetworkController(INetworkService networkService) : BaseApiControll
         [FromBody] UpdateContactDto input,
         CancellationToken cancellationToken)
     {
-        var existing = await networkService.GetContactByIdAsync(id, cancellationToken);
-        if (existing is null)
-            return NotFound(ApiResult<ContactDto>.Fail("联系人不存在", StatusCodes.Status404NotFound));
+        try
+        {
+            var existing = await networkService.GetContactByIdAsync(id, cancellationToken);
+            if (existing is null)
+                return NotFound(ApiResult<ContactDto>.Fail("联系人不存在", StatusCodes.Status404NotFound));
 
-        var currentUserId = GetCurrentUserId();
-        if (!IsProOrAbove() && existing.UserId != currentUserId?.ToString())
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改此联系人"));
+            var currentUserId = GetCurrentUserId();
+            if (!IsProOrAbove() && existing.UserId != currentUserId?.ToString())
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改此联系人"));
 
-        var result = await networkService.UpdateContactAsync(id, input, cancellationToken);
-        if (result is null)
-            return NotFound(ApiResult.Fail("联系人不存在"));
-        return Ok(ApiResult<ContactDto>.Success(result, "更新成功"));
+            var result = await networkService.UpdateContactAsync(id, input, cancellationToken);
+            if (result is null)
+                return NotFound(ApiResult.Fail("联系人不存在"));
+            logger.LogInformation("更新联系人成功: {Id}", id);
+            return Ok(ApiResult<ContactDto>.Success(result, "更新成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "更新联系人失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
+        }
     }
 
     [HttpDelete("contacts/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteContact(Guid id, CancellationToken cancellationToken)
     {
-        var existing = await networkService.GetContactByIdAsync(id, cancellationToken);
-        if (existing is null)
-            return NotFound(ApiResult.Fail("联系人不存在"));
+        try
+        {
+            var existing = await networkService.GetContactByIdAsync(id, cancellationToken);
+            if (existing is null)
+                return NotFound(ApiResult.Fail("联系人不存在"));
 
-        var currentUserId = GetCurrentUserId();
-        if (!IsProOrAbove() && existing.UserId != currentUserId?.ToString())
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限删除此联系人"));
+            var currentUserId = GetCurrentUserId();
+            if (!IsProOrAbove() && existing.UserId != currentUserId?.ToString())
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限删除此联系人"));
 
-        var deleted = await networkService.DeleteContactAsync(id, cancellationToken);
-        return Ok(ApiResult.Success("删除成功"));
+            var deleted = await networkService.DeleteContactAsync(id, cancellationToken);
+            logger.LogInformation("删除联系人成功: {Id}", id);
+            return Ok(ApiResult.Success("删除成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "删除联系人失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("删除失败，请稍后重试"));
+        }
     }
 
     #endregion
@@ -98,23 +141,39 @@ public class NetworkController(INetworkService networkService) : BaseApiControll
         [FromQuery] NetworkQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = GetUserIdForQuery();
-        var result = await networkService.GetInteractionPageAsync(contactId, query, userId, cancellationToken);
-        return Ok(ApiResult<PageResult<InteractionDto>>.Success(result));
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var result = await networkService.GetInteractionPageAsync(contactId, query, userId, cancellationToken);
+            return Ok(ApiResult<PageResult<InteractionDto>>.Success(result));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "获取互动记录列表失败");
+            return StatusCode(500, ApiResult.Fail("获取数据失败，请稍后重试"));
+        }
     }
 
     [HttpGet("interactions/{id:guid}")]
     public async Task<ActionResult<ApiResult<InteractionDto>>> GetInteractionById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await networkService.GetInteractionByIdAsync(id, cancellationToken);
-        if (result is null)
-            return NotFound(ApiResult<InteractionDto>.Fail("互动记录不存在", StatusCodes.Status404NotFound));
+        try
+        {
+            var result = await networkService.GetInteractionByIdAsync(id, cancellationToken);
+            if (result is null)
+                return NotFound(ApiResult<InteractionDto>.Fail("互动记录不存在", StatusCodes.Status404NotFound));
 
-        var currentUserId = GetCurrentUserId();
-        if (!IsProOrAbove() && result.UserId != currentUserId?.ToString())
-            return NotFound(ApiResult<InteractionDto>.Fail("互动记录不存在", StatusCodes.Status404NotFound));
+            var currentUserId = GetCurrentUserId();
+            if (!IsProOrAbove() && result.UserId != currentUserId?.ToString())
+                return NotFound(ApiResult<InteractionDto>.Fail("互动记录不存在", StatusCodes.Status404NotFound));
 
-        return Ok(ApiResult<InteractionDto>.Success(result));
+            return Ok(ApiResult<InteractionDto>.Success(result));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "获取互动记录详情失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("获取数据失败，请稍后重试"));
+        }
     }
 
     [HttpPost("interactions")]
@@ -122,12 +181,21 @@ public class NetworkController(INetworkService networkService) : BaseApiControll
         [FromBody] CreateInteractionDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue)
-            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Unauthorized(ApiResult.Fail("无法获取用户信息"));
 
-        var result = await networkService.CreateInteractionAsync(input, userId.Value, cancellationToken);
-        return CreatedAtAction(nameof(GetInteractionById), new { id = result.Id }, ApiResult<InteractionDto>.Success(result, "创建成功"));
+            var result = await networkService.CreateInteractionAsync(input, userId.Value, cancellationToken);
+            logger.LogInformation("创建互动记录成功: {Id}", result.Id);
+            return CreatedAtAction(nameof(GetInteractionById), new { id = result.Id }, ApiResult<InteractionDto>.Success(result, "创建成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "创建互动记录失败");
+            return StatusCode(500, ApiResult.Fail("创建失败，请稍后重试"));
+        }
     }
 
     [HttpPut("interactions/{id:guid}")]
@@ -136,33 +204,51 @@ public class NetworkController(INetworkService networkService) : BaseApiControll
         [FromBody] UpdateInteractionDto input,
         CancellationToken cancellationToken)
     {
-        var existing = await networkService.GetInteractionByIdAsync(id, cancellationToken);
-        if (existing is null)
-            return NotFound(ApiResult<InteractionDto>.Fail("互动记录不存在", StatusCodes.Status404NotFound));
+        try
+        {
+            var existing = await networkService.GetInteractionByIdAsync(id, cancellationToken);
+            if (existing is null)
+                return NotFound(ApiResult<InteractionDto>.Fail("互动记录不存在", StatusCodes.Status404NotFound));
 
-        var currentUserId = GetCurrentUserId();
-        if (!IsProOrAbove() && existing.UserId != currentUserId?.ToString())
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改此互动记录"));
+            var currentUserId = GetCurrentUserId();
+            if (!IsProOrAbove() && existing.UserId != currentUserId?.ToString())
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改此互动记录"));
 
-        var result = await networkService.UpdateInteractionAsync(id, input, cancellationToken);
-        if (result is null)
-            return NotFound(ApiResult.Fail("互动记录不存在"));
-        return Ok(ApiResult<InteractionDto>.Success(result, "更新成功"));
+            var result = await networkService.UpdateInteractionAsync(id, input, cancellationToken);
+            if (result is null)
+                return NotFound(ApiResult.Fail("互动记录不存在"));
+            logger.LogInformation("更新互动记录成功: {Id}", id);
+            return Ok(ApiResult<InteractionDto>.Success(result, "更新成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "更新互动记录失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
+        }
     }
 
     [HttpDelete("interactions/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteInteraction(Guid id, CancellationToken cancellationToken)
     {
-        var existing = await networkService.GetInteractionByIdAsync(id, cancellationToken);
-        if (existing is null)
-            return NotFound(ApiResult.Fail("互动记录不存在"));
+        try
+        {
+            var existing = await networkService.GetInteractionByIdAsync(id, cancellationToken);
+            if (existing is null)
+                return NotFound(ApiResult.Fail("互动记录不存在"));
 
-        var currentUserId = GetCurrentUserId();
-        if (!IsProOrAbove() && existing.UserId != currentUserId?.ToString())
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限删除此互动记录"));
+            var currentUserId = GetCurrentUserId();
+            if (!IsProOrAbove() && existing.UserId != currentUserId?.ToString())
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限删除此互动记录"));
 
-        var deleted = await networkService.DeleteInteractionAsync(id, cancellationToken);
-        return Ok(ApiResult.Success("删除成功"));
+            var deleted = await networkService.DeleteInteractionAsync(id, cancellationToken);
+            logger.LogInformation("删除互动记录成功: {Id}", id);
+            return Ok(ApiResult.Success("删除成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "删除互动记录失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("删除失败，请稍后重试"));
+        }
     }
 
     #endregion

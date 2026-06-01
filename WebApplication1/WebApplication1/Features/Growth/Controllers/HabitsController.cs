@@ -12,30 +12,46 @@ namespace WebApplication1.Features.Growth.Controllers;
 [RequireFeature("GROWTH_HABIT")]
 [Route("api/growth/habits")]
 [Tags("Growth - Habits")]
-public class HabitsController(IHabitService habitService) : BaseApiController
+public class HabitsController(IHabitService habitService, ILogger<HabitsController> logger) : BaseApiController
 {
     [HttpGet]
     public async Task<ActionResult<ApiResult<PageResult<HabitDto>>>> GetPage(
         [FromQuery] HabitQueryDto query,
         CancellationToken cancellationToken)
     {
-        var userId = GetUserIdForQuery();
-        var result = await habitService.GetPageAsync(query, userId, cancellationToken);
-        return Ok(ApiResult<PageResult<HabitDto>>.Success(result));
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var result = await habitService.GetPageAsync(query, userId, cancellationToken);
+            return Ok(ApiResult<PageResult<HabitDto>>.Success(result));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "获取习惯列表失败");
+            return StatusCode(500, ApiResult.Fail("获取数据失败，请稍后重试"));
+        }
     }
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ApiResult<HabitDetailDto>>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await habitService.GetByIdAsync(id, cancellationToken);
-        if (result is null)
-            return NotFound(ApiResult<HabitDetailDto>.Fail("习惯不存在", StatusCodes.Status404NotFound));
+        try
+        {
+            var result = await habitService.GetByIdAsync(id, cancellationToken);
+            if (result is null)
+                return NotFound(ApiResult<HabitDetailDto>.Fail("习惯不存在", StatusCodes.Status404NotFound));
 
-        var currentUserId = GetCurrentUserId();
-        if (!IsProOrAbove() && result.UserId != currentUserId)
-            return NotFound(ApiResult<HabitDetailDto>.Fail("习惯不存在", StatusCodes.Status404NotFound));
+            var currentUserId = GetCurrentUserId();
+            if (!IsProOrAbove() && result.UserId != currentUserId)
+                return NotFound(ApiResult<HabitDetailDto>.Fail("习惯不存在", StatusCodes.Status404NotFound));
 
-        return Ok(ApiResult<HabitDetailDto>.Success(result));
+            return Ok(ApiResult<HabitDetailDto>.Success(result));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "获取习惯详情失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("获取数据失败，请稍后重试"));
+        }
     }
 
     [HttpPost]
@@ -43,12 +59,21 @@ public class HabitsController(IHabitService habitService) : BaseApiController
         [FromBody] CreateHabitDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue)
-            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Unauthorized(ApiResult.Fail("无法获取用户信息"));
 
-        var result = await habitService.CreateAsync(input, userId.Value, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResult<HabitDto>.Success(result, "创建成功"));
+            var result = await habitService.CreateAsync(input, userId.Value, cancellationToken);
+            logger.LogInformation("创建习惯成功: {Id}", result.Id);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResult<HabitDto>.Success(result, "创建成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "创建习惯失败");
+            return StatusCode(500, ApiResult.Fail("创建失败，请稍后重试"));
+        }
     }
 
     [HttpPut("{id:guid}")]
@@ -57,33 +82,51 @@ public class HabitsController(IHabitService habitService) : BaseApiController
         [FromBody] UpdateHabitDto input,
         CancellationToken cancellationToken)
     {
-        var existing = await habitService.GetByIdAsync(id, cancellationToken);
-        if (existing is null)
-            return NotFound(ApiResult<HabitDto>.Fail("习惯不存在", StatusCodes.Status404NotFound));
+        try
+        {
+            var existing = await habitService.GetByIdAsync(id, cancellationToken);
+            if (existing is null)
+                return NotFound(ApiResult<HabitDto>.Fail("习惯不存在", StatusCodes.Status404NotFound));
 
-        var currentUserId = GetCurrentUserId();
-        if (!IsProOrAbove() && existing.UserId != currentUserId)
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改此习惯"));
+            var currentUserId = GetCurrentUserId();
+            if (!IsProOrAbove() && existing.UserId != currentUserId)
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改此习惯"));
 
-        var result = await habitService.UpdateAsync(id, input, cancellationToken);
-        if (result is null)
-            return NotFound(ApiResult.Fail("习惯不存在"));
-        return Ok(ApiResult<HabitDto>.Success(result, "更新成功"));
+            var result = await habitService.UpdateAsync(id, input, cancellationToken);
+            if (result is null)
+                return NotFound(ApiResult.Fail("习惯不存在"));
+            logger.LogInformation("更新习惯成功: {Id}", id);
+            return Ok(ApiResult<HabitDto>.Success(result, "更新成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "更新习惯失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
+        }
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<ApiResult>> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var existing = await habitService.GetByIdAsync(id, cancellationToken);
-        if (existing is null)
-            return NotFound(ApiResult.Fail("习惯不存在"));
+        try
+        {
+            var existing = await habitService.GetByIdAsync(id, cancellationToken);
+            if (existing is null)
+                return NotFound(ApiResult.Fail("习惯不存在"));
 
-        var currentUserId = GetCurrentUserId();
-        if (!IsProOrAbove() && existing.UserId != currentUserId)
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限删除此习惯"));
+            var currentUserId = GetCurrentUserId();
+            if (!IsProOrAbove() && existing.UserId != currentUserId)
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限删除此习惯"));
 
-        var deleted = await habitService.DeleteAsync(id, cancellationToken);
-        return Ok(ApiResult.Success("删除成功"));
+            var deleted = await habitService.DeleteAsync(id, cancellationToken);
+            logger.LogInformation("删除习惯成功: {Id}", id);
+            return Ok(ApiResult.Success("删除成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "删除习惯失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("删除失败，请稍后重试"));
+        }
     }
 
     [HttpPost("{id:guid}/check-in")]
@@ -92,18 +135,27 @@ public class HabitsController(IHabitService habitService) : BaseApiController
         [FromBody] CheckInDto input,
         CancellationToken cancellationToken)
     {
-        var existing = await habitService.GetByIdAsync(id, cancellationToken);
-        if (existing is null)
-            return NotFound(ApiResult<HabitDto>.Fail("习惯不存在", StatusCodes.Status404NotFound));
+        try
+        {
+            var existing = await habitService.GetByIdAsync(id, cancellationToken);
+            if (existing is null)
+                return NotFound(ApiResult<HabitDto>.Fail("习惯不存在", StatusCodes.Status404NotFound));
 
-        var currentUserId = GetCurrentUserId();
-        if (!IsProOrAbove() && existing.UserId != currentUserId)
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限打卡"));
+            var currentUserId = GetCurrentUserId();
+            if (!IsProOrAbove() && existing.UserId != currentUserId)
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限打卡"));
 
-        var result = await habitService.CheckInAsync(id, input, cancellationToken);
-        if (result is null)
-            return NotFound(ApiResult.Fail("习惯不存在"));
-        return Ok(ApiResult<HabitDto>.Success(result, "打卡成功"));
+            var result = await habitService.CheckInAsync(id, input, cancellationToken);
+            if (result is null)
+                return NotFound(ApiResult.Fail("习惯不存在"));
+            logger.LogInformation("习惯打卡成功: {Id}", id);
+            return Ok(ApiResult<HabitDto>.Success(result, "打卡成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "习惯打卡失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("打卡失败，请稍后重试"));
+        }
     }
 
     [HttpPut("{id:guid}/status")]
@@ -112,20 +164,29 @@ public class HabitsController(IHabitService habitService) : BaseApiController
         [FromBody] UpdateHabitDto input,
         CancellationToken cancellationToken)
     {
-        var existing = await habitService.GetByIdAsync(id, cancellationToken);
-        if (existing is null)
-            return NotFound(ApiResult<HabitDto>.Fail("习惯不存在", StatusCodes.Status404NotFound));
+        try
+        {
+            var existing = await habitService.GetByIdAsync(id, cancellationToken);
+            if (existing is null)
+                return NotFound(ApiResult<HabitDto>.Fail("习惯不存在", StatusCodes.Status404NotFound));
 
-        var currentUserId = GetCurrentUserId();
-        if (!IsProOrAbove() && existing.UserId != currentUserId)
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改"));
+            var currentUserId = GetCurrentUserId();
+            if (!IsProOrAbove() && existing.UserId != currentUserId)
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改"));
 
-        if (!input.Status.HasValue)
-            return BadRequest(ApiResult.Fail("状态值不能为空"));
+            if (!input.Status.HasValue)
+                return BadRequest(ApiResult.Fail("状态值不能为空"));
 
-        var result = await habitService.UpdateStatusAsync(id, input.Status.Value, cancellationToken);
-        if (result is null)
-            return NotFound(ApiResult.Fail("习惯不存在"));
-        return Ok(ApiResult<HabitDto>.Success(result, "状态更新成功"));
+            var result = await habitService.UpdateStatusAsync(id, input.Status.Value, cancellationToken);
+            if (result is null)
+                return NotFound(ApiResult.Fail("习惯不存在"));
+            logger.LogInformation("更新习惯状态成功: {Id}", id);
+            return Ok(ApiResult<HabitDto>.Success(result, "状态更新成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "更新习惯状态失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
+        }
     }
 }

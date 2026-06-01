@@ -8,7 +8,7 @@ namespace WebApplication1.Features.Auth;
 [ApiController]
 [Route("api/auth")]
 [Tags("Authentication")]
-public class AuthController(IAuthService authService) : ControllerBase
+public class AuthController(IAuthService authService, ILogger<AuthController> logger) : ControllerBase
 {
     [AllowAnonymous]
     [HttpPost("login")]
@@ -17,6 +17,7 @@ public class AuthController(IAuthService authService) : ControllerBase
         var userInfo = await authService.ValidateUserAsync(input.Username, input.Password);
         if (userInfo is null)
         {
+            logger.LogWarning("用户 {Username} 登录失败: {Reason}", input.Username, "用户名或密码错误");
             return Unauthorized(ApiResult<LoginResponseDto>.Fail("用户名或密码错误", StatusCodes.Status401Unauthorized));
         }
 
@@ -24,6 +25,8 @@ public class AuthController(IAuthService authService) : ControllerBase
         var userId = Guid.Parse(userInfo.UserId);
         var refreshToken = await authService.CreateRefreshTokenAsync(userId, HttpContext.Connection.RemoteIpAddress?.ToString());
         var expireMinutes = 15;
+
+        logger.LogInformation("用户 {Username} 登录成功", input.Username);
 
         return Ok(ApiResult<LoginResponseDto>.Success(new LoginResponseDto
         {
@@ -86,6 +89,7 @@ public class AuthController(IAuthService authService) : ControllerBase
             }
         }
 
+        logger.LogInformation("用户登出");
         return Ok(ApiResult.Success("退出成功"));
     }
 
