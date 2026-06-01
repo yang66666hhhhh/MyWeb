@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -48,6 +48,7 @@ interface MistakeFormState {
 }
 
 const loading = ref(false);
+const submitting = ref(false);
 const formOpen = ref(false);
 const editingId = ref<null | string>(null);
 const keyword = ref('');
@@ -142,8 +143,8 @@ async function fetchMistakes() {
     }
 
     mistakes.value = allMistakes;
-  } catch {
-    message.error('加载错题失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载错题失败');
   } finally {
     loading.value = false;
   }
@@ -218,6 +219,7 @@ async function handleSave() {
     tags: formState.value.tags || undefined,
   };
 
+  submitting.value = true;
   try {
     if (editingId.value) {
       await updateMistakeApi(editingId.value, payload);
@@ -228,8 +230,10 @@ async function handleSave() {
     }
     formOpen.value = false;
     await fetchMistakes();
-  } catch {
-    message.error('保存错题失败');
+  } catch (e: any) {
+    message.error(e?.message || '保存错题失败');
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -238,8 +242,8 @@ async function handleDelete(id: string) {
     await deleteMistakeApi(id);
     message.success('错题已删除');
     await fetchMistakes();
-  } catch {
-    message.error('删除错题失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除错题失败');
   }
 }
 
@@ -248,8 +252,8 @@ async function updateReviewStatus(mistake: ExamMistake, nextStatus: 'mastered' |
     await updateMistakeReviewStatusApi(mistake.id, nextStatus);
     message.success(nextStatus === 'mastered' ? '已标记为掌握' : '已标记为复习中');
     await fetchMistakes();
-  } catch {
-    message.error('更新复习状态失败');
+  } catch (e: any) {
+    message.error(e?.message || '更新复习状态失败');
   }
 }
 
@@ -345,6 +349,7 @@ onMounted(() => {
 
     <Modal
       v-model:open="formOpen"
+      :confirm-loading="submitting"
       :title="editingId ? '编辑错题' : '添加错题'"
       width="720px"
       @ok="handleSave"

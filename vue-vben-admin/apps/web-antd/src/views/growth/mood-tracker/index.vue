@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -33,6 +33,7 @@ import {
 import { usePagedQuery } from '#/composables/usePagedQuery';
 
 const formOpen = ref(false);
+const submitting = ref(false);
 const editingId = ref<null | string>(null);
 const formData = ref<CreateMoodRecordInput & UpdateMoodRecordInput>({
   moodLevel: 5,
@@ -116,6 +117,7 @@ function openEdit(record: MoodRecord) {
 
 async function handleSubmit() {
     try { await formRef.value?.validate(); } catch { return; }
+  submitting.value = true;
   try {
     if (editingId.value) {
       await updateMoodRecordApi(editingId.value, formData.value);
@@ -126,8 +128,10 @@ async function handleSubmit() {
     }
     formOpen.value = false;
     await load();
-  } catch {
-    message.error('操作失败');
+  } catch (e: any) {
+    message.error(e?.message || '操作失败');
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -136,8 +140,8 @@ async function handleDelete(id: string) {
     await deleteMoodRecordApi(id);
     message.success('删除成功');
     await load();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 }
 
@@ -214,6 +218,7 @@ onMounted(() => {
 
     <Modal
       v-model:open="formOpen"
+      :confirm-loading="submitting"
       :title="editingId ? '编辑心情记录' : '记录心情'"
       @ok="handleSubmit"
     >

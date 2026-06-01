@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import type { DailyPlan } from '#/api/growth';
 
 import { computed, onMounted, ref } from 'vue';
@@ -122,8 +122,8 @@ const fetchData = async () => {
     if (logsRes.status === 'fulfilled') {
       recentWorkLogs.value = logsRes.value.items;
     }
-  } catch {
-    message.error('加载数据失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载数据失败');
   } finally {
     loading.value = false;
   }

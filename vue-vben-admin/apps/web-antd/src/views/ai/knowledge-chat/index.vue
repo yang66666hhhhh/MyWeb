@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -54,8 +54,8 @@ async function handleSendMessage() {
     message.success('发送成功');
     chatInput.value = '';
     await load();
-  } catch {
-    message.error('发送失败');
+  } catch (e: any) {
+    message.error(e?.message || '发送失败');
   } finally {
     sending.value = false;
   }
@@ -69,8 +69,8 @@ async function handleDeleteSession(id: string) {
       selectedSessionId.value = null;
     }
     await load();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 }
 

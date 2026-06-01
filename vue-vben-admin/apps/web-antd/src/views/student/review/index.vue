@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -103,8 +103,8 @@ async function fetchMistakes() {
     }
 
     mistakes.value = allMistakes;
-  } catch {
-    message.error('加载复习清单失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载复习清单失败');
   } finally {
     loading.value = false;
   }
@@ -135,8 +135,8 @@ async function markReviewed(mistake: ExamMistake) {
     });
     message.success('已安排下一次复习');
     await fetchMistakes();
-  } catch {
-    message.error('更新复习进度失败');
+  } catch (e: any) {
+    message.error(e?.message || '更新复习进度失败');
   }
 }
 
@@ -145,8 +145,8 @@ async function markMastered(mistake: ExamMistake) {
     await updateMistakeReviewStatusApi(mistake.id, 'mastered');
     message.success('已标记为掌握');
     await fetchMistakes();
-  } catch {
-    message.error('标记掌握失败');
+  } catch (e: any) {
+    message.error(e?.message || '标记掌握失败');
   }
 }
 

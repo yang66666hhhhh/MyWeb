@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -38,8 +38,8 @@ async function fetchData() {
     if (overviewRes.status === 'fulfilled') overview.value = overviewRes.value;
     if (hourlyRes.status === 'fulfilled') hourlyDistribution.value = hourlyRes.value;
     if (trendRes.status === 'fulfilled') weeklyTrend.value = trendRes.value;
-  } catch {
-    message.error('加载时间数据失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载时间数据失败');
   } finally {
     loading.value = false;
   }

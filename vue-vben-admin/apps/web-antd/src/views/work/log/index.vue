@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -26,6 +26,7 @@ import {
   deleteWorkLogApi,
   getWorkLogPageApi,
 } from '#/api/work/workLog';
+import { projectApi } from '#/api/work/project';
 import { usePagedQuery } from '#/composables/usePagedQuery';
 import {
   WorkLogSourceType,
@@ -46,11 +47,16 @@ const canCreateLog = computed(() => accessStore.accessCodes.includes('WORK_LOG')
 const canEditLog = computed(() => accessStore.accessCodes.includes('WORK_LOG'));
 const canDeleteLog = computed(() => accessStore.accessCodes.includes('WORK_LOG'));
 
-const projectOptions = [
-  { label: '生产线升级项目', value: 'project-1' },
-  { label: '质量改进项目', value: 'project-2' },
-  { label: '设备维护项目', value: 'project-3' },
-];
+const projectOptions = ref<Array<{ label: string; value: string }>>([]);
+
+async function loadProjects() {
+  try {
+    const res = await projectApi.getPage({ page: 1, pageSize: 100 });
+    projectOptions.value = res.items.map(p => ({ label: p.projectName, value: p.id }));
+  } catch {
+    // ignore
+  }
+}
 
 const statusOptions = [
   { label: '全部状态', value: undefined },
@@ -125,8 +131,8 @@ async function handleRemove(id: string) {
     await deleteWorkLogApi(id);
     message.success('工作日志已删除');
     await load();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 }
 
@@ -146,6 +152,7 @@ function handleFormOpenChange(value: boolean) {
 }
 
 onMounted(() => {
+  void loadProjects();
   void load();
 });
 </script>

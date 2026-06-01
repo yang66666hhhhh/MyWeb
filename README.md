@@ -248,12 +248,26 @@ vue-vben-admin/apps/web-antd/.env.production
 
 ## 更新日志
 
-### v2.9 (2025-05-31)
+### v3.1 (2025-05-31)
 
-**P0 修复：**
+**功能优化：**
 
-- system/menu-tag：修复 4 个 Modal 缺少 confirm-loading、7 个操作函数缺少 try/catch
-- analytics/custom-reports：修复"查看"按钮无事件绑定，添加详情弹窗
+- 项目下拉改为 API 获取（3个页面）
+- 密码修改对接真实 API
+- Promise.allSettled 容错（5个页面）
+- AI 规划器代码规范化
+- AI 自动化表单验证
+
+**测试结果：** 140 个后端测试全部通过，前端类型检查和构建成功
+
+### v3.0 (2025-05-31)
+
+**代码质量优化：**
+
+- 为 25 个页面的 Modal 添加 confirm-loading
+- 统一 172 处错误提示为 e?.message 模式
+- 修复 system/menu-tag 错误处理
+- 修复 analytics/custom-reports 无效按钮
 
 **测试结果：** 140 个后端测试全部通过，前端类型检查和构建成功
 

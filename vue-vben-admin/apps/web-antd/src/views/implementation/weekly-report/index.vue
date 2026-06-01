@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import type { Dayjs } from 'dayjs';
 
 import { computed, onMounted, ref } from 'vue';
@@ -107,15 +107,14 @@ async function loadDashboard() {
       startDate: query.value.startDate,
     };
 
-    const [overviewData, projectHourData] = await Promise.all([
+    const [overviewRes, projectHourRes] = await Promise.allSettled([
       getWorkStatisticsOverviewApi(params),
       getWorkStatisticsProjectHoursApi(params),
     ]);
-
-    overview.value = overviewData;
-    projectHours.value = projectHourData;
-  } catch {
-    message.error('加载实施周报数据失败');
+    overview.value = overviewRes.status === 'fulfilled' ? overviewRes.value : overview.value;
+    projectHours.value = projectHourRes.status === 'fulfilled' ? projectHourRes.value : [];
+  } catch (e: any) {
+    message.error(e?.message || '加载实施周报数据失败');
   } finally {
     loading.value = false;
   }
@@ -124,7 +123,7 @@ async function loadDashboard() {
 async function refreshAll() {
   loading.value = true;
   try {
-    await Promise.all([loadProjects(), loadReports(), loadDashboard()]);
+    await Promise.allSettled([loadProjects(), loadReports(), loadDashboard()]);
   } finally {
     loading.value = false;
   }
@@ -163,8 +162,8 @@ async function selectReport(report: AiReport) {
   loading.value = true;
   try {
     selectedReport.value = await aiApi.getReportById(report.id);
-  } catch {
-    message.error('加载周报详情失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载周报详情失败');
   } finally {
     loading.value = false;
   }

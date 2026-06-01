@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -34,6 +34,7 @@ const formOpen = ref(false);
 const editingId = ref<null | string>(null);
 const items = ref<SoftwareAsset[]>([]);
 const total = ref(0);
+const submitting = ref(false);
 
 const query = reactive({
   page: 1,
@@ -128,8 +129,8 @@ async function fetchPage() {
     const result = await softwareAssetApi.getPage(query);
     items.value = result.items;
     total.value = result.total;
-  } catch {
-    message.error('加载失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载失败');
   } finally {
     loading.value = false;
   }
@@ -194,7 +195,7 @@ function openEdit(record: Record<string, any>) {
 
 async function handleSave() {
   try { await formRef.value?.validate(); } catch { return; }
-
+  submitting.value = true;
   try {
     if (editingId.value) {
       await softwareAssetApi.update(editingId.value, formState);
@@ -205,8 +206,10 @@ async function handleSave() {
     }
     formOpen.value = false;
     await fetchPage();
-  } catch {
-    message.error('操作失败');
+  } catch (e: any) {
+    message.error(e?.message || '操作失败');
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -215,8 +218,8 @@ async function handleDelete(id: string) {
     await softwareAssetApi.delete(id);
     message.success('删除成功');
     await fetchPage();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 }
 
@@ -320,6 +323,7 @@ onMounted(() => {
       v-model:open="formOpen"
       :title="editingId ? '编辑软件' : '添加软件'"
       width="600px"
+      :confirm-loading="submitting"
       @ok="handleSave"
     >
       <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">

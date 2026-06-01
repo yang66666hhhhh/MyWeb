@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -87,8 +87,8 @@ const fetchData = async () => {
     const res = await getInvestmentPageApi({ page: currentPage.value, pageSize: pageSize.value });
     dataList.value = res.items;
     total.value = res.total;
-  } catch {
-    message.error('加载失败，请稍后重试');
+  } catch (e: any) {
+    message.error(e?.message || '加载失败，请稍后重试');
   } finally {
     loading.value = false;
   }
@@ -129,8 +129,8 @@ const handleDelete = async (id: string) => {
     await deleteInvestmentApi(id);
     message.success('删除成功');
     fetchData();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 };
 
@@ -147,8 +147,8 @@ const handleSubmit = async () => {
     }
     modalVisible.value = false;
     fetchData();
-  } catch {
-    message.error('操作失败');
+  } catch (e: any) {
+    message.error(e?.message || '操作失败');
   } finally {
     submitting.value = false;
   }

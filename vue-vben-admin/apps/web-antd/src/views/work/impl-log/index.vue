@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -78,6 +78,7 @@ const totalCount = ref(0);
 const totalHours = ref(0);
 const totalDeviceCount = ref(0);
 const totalTaskTypeCount = ref(0);
+const submitting = ref(false);
 const pageLogs = computed<ImplLogTableRow[]>(() =>
   logs.value.map((log) => ({
     ...log,
@@ -165,17 +166,19 @@ async function loadProjects() {
 async function loadLogs() {
   loading.value = true;
   try {
-    const [pageResult, summaryResult] = await Promise.all([
+    const [pageRes, summaryRes] = await Promise.allSettled([
       getImplLogsApi(queryParams.value),
       getImplLogSummaryApi(queryParams.value),
     ]);
+    const pageResult = pageRes.status === 'fulfilled' ? pageRes.value : { items: [] };
+    const summaryResult = summaryRes.status === 'fulfilled' ? summaryRes.value : { totalCount: 0, totalHours: 0, uniqueEquipmentCount: 0, uniqueTaskTypeCount: 0 };
     logs.value = pageResult.items;
     totalCount.value = summaryResult.totalCount;
     totalHours.value = summaryResult.totalHours;
     totalDeviceCount.value = summaryResult.uniqueEquipmentCount;
     totalTaskTypeCount.value = summaryResult.uniqueTaskTypeCount;
-  } catch {
-    message.error('加载失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载失败');
   } finally {
     loading.value = false;
   }
@@ -285,7 +288,7 @@ function handleProjectChange(projectId?: unknown) {
 
 async function handleSave() {
   try { await formRef.value?.validate(); } catch { return; }
-
+  submitting.value = true;
   try {
     if (editingId.value) {
       await updateImplLogApi(editingId.value, {
@@ -309,8 +312,10 @@ async function handleSave() {
     }
     formOpen.value = false;
     await loadLogs();
-  } catch {
-    message.error('操作失败');
+  } catch (e: any) {
+    message.error(e?.message || '操作失败');
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -319,8 +324,8 @@ async function handleDelete(id: string) {
     await deleteImplLogApi(id);
     message.success('删除成功');
     await loadLogs();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 }
 
@@ -415,6 +420,7 @@ onMounted(() => {
       v-model:open="formOpen"
       :title="editingId ? '编辑日志' : createButtonText"
       width="800px"
+      :confirm-loading="submitting"
       @ok="handleSave"
     >
       <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">

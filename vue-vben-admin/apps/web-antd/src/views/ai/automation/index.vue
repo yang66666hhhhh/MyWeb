@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -36,6 +36,7 @@ import { usePagedQuery } from '#/composables/usePagedQuery';
 
 const formOpen = ref(false);
 const editingId = ref<null | string>(null);
+const submitting = ref(false);
 const formData = ref<CreateAutomationWorkflowInput>({
   name: '',
   description: '',
@@ -87,7 +88,8 @@ function openEdit(record: AutomationWorkflow) {
 }
 
 async function handleSubmit() {
-    try { await formRef.value?.validate(); } catch { return; }
+  try { await formRef.value?.validate(); } catch { return; }
+  submitting.value = true;
   try {
     if (editingId.value) {
       await updateWorkflowApi(editingId.value, formData.value);
@@ -98,8 +100,10 @@ async function handleSubmit() {
     }
     formOpen.value = false;
     await load();
-  } catch {
-    message.error('操作失败');
+  } catch (e: any) {
+    message.error(e?.message || '操作失败');
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -108,8 +112,8 @@ async function handleDelete(id: string) {
     await deleteWorkflowApi(id);
     message.success('删除成功');
     await load();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 }
 
@@ -118,8 +122,8 @@ async function handleToggleStatus(record: AutomationWorkflow) {
     await updateWorkflowApi(record.id, { isActive: !record.isActive });
     message.success(record.isActive ? '已暂停' : '已启动');
     await load();
-  } catch {
-    message.error('操作失败');
+  } catch (e: any) {
+    message.error(e?.message || '操作失败');
   }
 }
 
@@ -211,6 +215,7 @@ onMounted(() => {
     <Modal
       v-model:open="formOpen"
       :title="editingId ? '编辑工作流' : '创建工作流'"
+      :confirm-loading="submitting"
       @ok="handleSubmit"
     >
       <Form ref="formRef" layout="vertical" :model="formData" :rules="formRules">

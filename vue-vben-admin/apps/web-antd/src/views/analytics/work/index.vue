@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import type { WorkStatisticsOverview } from '#/api/work/statistics';
 
 import { onMounted, ref } from 'vue';
@@ -38,18 +38,18 @@ const dailyColumns = [
 async function fetchData() {
   loading.value = true;
   try {
-    const [overviewData, projectData, dailyData, taskTypeData] = await Promise.all([
+    const [overviewRes, projectRes, dailyRes, taskTypeRes] = await Promise.allSettled([
       statisticsApi.getOverview(),
       statisticsApi.getProjectHours(),
       statisticsApi.getDailyHours(),
       statisticsApi.getTaskTypeDistribution(),
     ]);
-    overview.value = overviewData;
-    projectHours.value = projectData;
-    dailyHours.value = dailyData;
-    taskTypeDistribution.value = taskTypeData;
-  } catch {
-    message.error('加载失败，请稍后重试');
+    overview.value = overviewRes.status === 'fulfilled' ? overviewRes.value : null;
+    projectHours.value = projectRes.status === 'fulfilled' ? projectRes.value : [];
+    dailyHours.value = dailyRes.status === 'fulfilled' ? dailyRes.value : [];
+    taskTypeDistribution.value = taskTypeRes.status === 'fulfilled' ? taskTypeRes.value : [];
+  } catch (e: any) {
+    message.error(e?.message || '加载失败，请稍后重试');
   } finally {
     loading.value = false;
   }

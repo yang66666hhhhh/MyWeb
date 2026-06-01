@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -41,6 +41,7 @@ const formOpen = ref(false);
 const detailOpen = ref(false);
 const editingId = ref<null | string>(null);
 const selectedItem = ref<WorkFile | null>(null);
+const submitting = ref(false);
 
 const formState = ref({
   category: '',
@@ -153,13 +154,14 @@ async function handleRemove(id: string) {
     await deleteFileApi(id);
     message.success('文件已删除');
     await load();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 }
 
 async function handleSubmit() {
   try { await formRef.value?.validate(); } catch { return; }
+  submitting.value = true;
   try {
     if (editingId.value) {
       await updateFileApi(editingId.value, formState.value);
@@ -170,8 +172,10 @@ async function handleSubmit() {
     }
     formOpen.value = false;
     await load();
-  } catch {
-    message.error('保存失败');
+  } catch (e: any) {
+    message.error(e?.message || '保存失败');
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -278,6 +282,7 @@ onMounted(() => {
       :open="formOpen"
       :title="editingId ? '编辑文件' : '上传文件'"
       width="560px"
+      :confirm-loading="submitting"
       @cancel="formOpen = false"
       @ok="handleSubmit"
     >

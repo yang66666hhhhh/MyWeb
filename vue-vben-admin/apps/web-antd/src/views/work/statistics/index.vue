@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import type { Dayjs } from 'dayjs';
 
 import type {
@@ -16,6 +16,7 @@ import { Page } from '@vben/common-ui';
 import { Card, Col, DatePicker, Form, message, Row, Select, Space, Statistic, Table, Tag } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
+import { projectApi } from '#/api/work/project';
 import {
   getWorkStatisticsDailyHoursApi,
   getWorkStatisticsDeviceRankingApi,
@@ -46,29 +47,37 @@ const queryParams = ref({
   startDate: dayjs().subtract(7, 'day').format('YYYY-MM-DD'),
 });
 
-const projectOptions = [
-  { label: '全部项目', value: undefined },
-  { label: '生产线升级项目', value: 'project-1' },
-  { label: '质量改进项目', value: 'project-2' },
-];
+const projectOptions = ref<Array<{ label: string; value: string | undefined }>>([{ label: '全部项目', value: undefined }]);
+
+async function loadProjects() {
+  try {
+    const res = await projectApi.getPage({ page: 1, pageSize: 100 });
+    projectOptions.value = [
+      { label: '全部项目', value: undefined },
+      ...res.items.map(p => ({ label: p.projectName, value: p.id })),
+    ];
+  } catch {
+    // ignore
+  }
+}
 
 async function load() {
   loading.value = true;
   try {
-    const [overviewData, dailyData, projectData, taskTypeData, deviceData] = await Promise.all([
+    const [overviewRes, dailyRes, projectRes, taskTypeRes, deviceRes] = await Promise.allSettled([
       getWorkStatisticsOverviewApi(queryParams.value),
       getWorkStatisticsDailyHoursApi(queryParams.value),
       getWorkStatisticsProjectHoursApi(queryParams.value),
       getWorkStatisticsTaskTypeDistributionApi(queryParams.value),
       getWorkStatisticsDeviceRankingApi(queryParams.value),
     ]);
-    overview.value = overviewData;
-    dailyHours.value = dailyData;
-    projectHours.value = projectData;
-    taskTypeDistribution.value = taskTypeData;
-    deviceRanking.value = deviceData;
-  } catch {
-    message.error('加载统计数据失败');
+    overview.value = overviewRes.status === 'fulfilled' ? overviewRes.value : overview.value;
+    dailyHours.value = dailyRes.status === 'fulfilled' ? dailyRes.value : [];
+    projectHours.value = projectRes.status === 'fulfilled' ? projectRes.value : [];
+    taskTypeDistribution.value = taskTypeRes.status === 'fulfilled' ? taskTypeRes.value : [];
+    deviceRanking.value = deviceRes.status === 'fulfilled' ? deviceRes.value : [];
+  } catch (e: any) {
+    message.error(e?.message || '加载统计数据失败');
   } finally {
     loading.value = false;
   }
@@ -82,6 +91,7 @@ function onDateRangeChange(values: [Dayjs, Dayjs] | [string, string] | null) {
 }
 
 onMounted(() => {
+  void loadProjects();
   void load();
 });
 </script>

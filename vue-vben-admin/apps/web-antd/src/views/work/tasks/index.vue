@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -39,6 +39,7 @@ const props = withDefaults(
 const router = useRouter();
 const accessStore = useAccessStore();
 const loading = ref(false);
+const submitting = ref(false);
 const formOpen = ref(false);
 const editingId = ref<null | string>(null);
 const items = ref<TaskItem[]>([]);
@@ -154,8 +155,8 @@ async function fetchProjects() {
   try {
     const res = await projectApi.getPage({ page: 1, pageSize: 100 });
     projects.value = res.items;
-  } catch {
-    message.error('加载失败，请稍后重试');
+  } catch (e: any) {
+    message.error(e?.message || '加载失败，请稍后重试');
   }
 }
 
@@ -168,8 +169,8 @@ async function fetchPage() {
     const result = await taskApi.getPage(params);
     items.value = result.items;
     total.value = result.total;
-  } catch {
-    message.error('加载失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载失败');
   } finally {
     loading.value = false;
   }
@@ -239,6 +240,7 @@ function openEdit(record: Record<string, any>) {
 async function handleSave() {
   try { await formRef.value?.validate(); } catch { return; }
 
+  submitting.value = true;
   try {
     if (editingId.value) {
       const data: UpdateTaskItemInput = {
@@ -260,8 +262,10 @@ async function handleSave() {
     }
     formOpen.value = false;
     await fetchPage();
-  } catch {
-    message.error('操作失败');
+  } catch (e: any) {
+    message.error(e?.message || '操作失败');
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -270,8 +274,8 @@ async function handleRemove(id: string) {
     await taskApi.delete(id);
     message.success('已删除');
     fetchPage();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 }
 
@@ -280,8 +284,8 @@ async function handleComplete(id: string) {
     await taskApi.complete(id);
     message.success('任务已完成');
     fetchPage();
-  } catch {
-    message.error('操作失败');
+  } catch (e: any) {
+    message.error(e?.message || '操作失败');
   }
 }
 
@@ -372,6 +376,7 @@ onMounted(() => {
       v-model:open="formOpen"
       :title="editingId ? '编辑任务' : createButtonText"
       width="600px"
+      :confirm-loading="submitting"
       @ok="handleSave"
     >
       <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">

@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -40,6 +40,7 @@ interface MaterialFormState {
 }
 
 const loading = ref(false);
+const submitting = ref(false);
 const formOpen = ref(false);
 const detailOpen = ref(false);
 const editingId = ref<null | string>(null);
@@ -138,8 +139,8 @@ async function fetchMaterials() {
     }
 
     materials.value = allMaterials;
-  } catch {
-    message.error('加载学习资料失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载学习资料失败');
   } finally {
     loading.value = false;
   }
@@ -207,6 +208,7 @@ async function handleSave() {
     type: formState.value.type,
   };
 
+  submitting.value = true;
   try {
     if (editingId.value) {
       await updateMaterialApi(editingId.value, payload);
@@ -217,8 +219,10 @@ async function handleSave() {
     }
     formOpen.value = false;
     await fetchMaterials();
-  } catch {
-    message.error('保存学习资料失败');
+  } catch (e: any) {
+    message.error(e?.message || '保存学习资料失败');
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -227,8 +231,8 @@ async function handleDelete(id: string) {
     await deleteMaterialApi(id);
     message.success('学习资料已删除');
     await fetchMaterials();
-  } catch {
-    message.error('删除学习资料失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除学习资料失败');
   }
 }
 
@@ -334,6 +338,7 @@ onMounted(() => {
 
     <Modal
       v-model:open="formOpen"
+      :confirm-loading="submitting"
       :title="editingId ? '编辑学习资料' : '新增学习资料'"
       width="760px"
       @ok="handleSave"

@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -38,8 +38,8 @@ async function fetchData() {
     if (overviewRes.status === 'fulfilled') overview.value = overviewRes.value;
     if (trendRes.status === 'fulfilled') monthlyTrend.value = trendRes.value;
     if (expenseRes.status === 'fulfilled') expenseBreakdown.value = expenseRes.value;
-  } catch {
-    message.error('加载财务数据失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载财务数据失败');
   } finally {
     loading.value = false;
   }

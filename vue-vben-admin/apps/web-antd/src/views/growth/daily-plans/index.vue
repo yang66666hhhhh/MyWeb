@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -100,8 +100,8 @@ async function fetchPage() {
     const result = await taskApi.getPage(params);
     items.value = result.items;
     total.value = result.total;
-  } catch {
-    message.error('加载失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载失败');
   } finally {
     loading.value = false;
   }
@@ -153,8 +153,8 @@ async function handleRemove(id: string) {
     await taskApi.delete(id);
     message.success('已删除');
     fetchPage();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 }
 
@@ -164,8 +164,8 @@ async function handleChangeStatus(record: Record<string, any>, status: number) {
     await taskApi.update(task.id, { status } as any);
     message.success('状态已更新');
     fetchPage();
-  } catch {
-    message.error('更新失败');
+  } catch (e: any) {
+    message.error(e?.message || '更新失败');
   }
 }
 

@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -42,6 +42,7 @@ interface SubjectFormState {
 }
 
 const loading = ref(false);
+const submitting = ref(false);
 const formOpen = ref(false);
 const editingId = ref<null | string>(null);
 const keyword = ref('');
@@ -98,8 +99,8 @@ async function fetchSubjects() {
       pageSize: 100,
     });
     subjects.value = result.items;
-  } catch {
-    message.error('加载科目目标失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载科目目标失败');
   } finally {
     loading.value = false;
   }
@@ -151,6 +152,7 @@ async function handleSave() {
     targetHours: formState.value.targetHours,
   };
 
+  submitting.value = true;
   try {
     if (editingId.value) {
       await updateStudentSubjectApi(editingId.value, payload);
@@ -161,8 +163,10 @@ async function handleSave() {
     }
     formOpen.value = false;
     await fetchSubjects();
-  } catch {
-    message.error('保存科目目标失败');
+  } catch (e: any) {
+    message.error(e?.message || '保存科目目标失败');
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -171,8 +175,8 @@ async function handleDelete(id: string) {
     await deleteStudentSubjectApi(id);
     message.success('科目目标已删除');
     await fetchSubjects();
-  } catch {
-    message.error('删除科目目标失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除科目目标失败');
   }
 }
 
@@ -249,6 +253,7 @@ onMounted(() => {
 
     <Modal
       v-model:open="formOpen"
+      :confirm-loading="submitting"
       :title="editingId ? '编辑科目目标' : '新增科目目标'"
       width="620px"
       @ok="handleSave"

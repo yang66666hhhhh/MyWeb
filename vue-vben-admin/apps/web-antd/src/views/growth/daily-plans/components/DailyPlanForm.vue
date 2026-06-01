@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, reactive, ref, watch } from 'vue';
 
 import {
@@ -130,8 +130,8 @@ async function loadDetail() {
   try {
     const result = await taskApi.getById(props.id);
     fillForm(result);
-  } catch {
-    message.error('加载详情失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载详情失败');
   } finally {
     loading.value = false;
   }
@@ -164,8 +164,8 @@ async function submit() {
 
     emit('update:open', false);
     emit('success');
-  } catch {
-    message.error('保存失败');
+  } catch (e: any) {
+    message.error(e?.message || '保存失败');
   } finally {
     loading.value = false;
   }

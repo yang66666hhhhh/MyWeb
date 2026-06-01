@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -28,6 +28,7 @@ import {
   getWorkDevicePageApi,
   updateWorkDeviceApi,
 } from '#/api/work/device';
+import { projectApi } from '#/api/work/project';
 import { usePagedQuery } from '#/composables/usePagedQuery';
 import { WorkDeviceStatus, WorkDeviceStatusColor, WorkDeviceStatusLabel, WorkDeviceType, WorkDeviceTypeLabel } from '#/enums/workEnum';
 
@@ -40,6 +41,7 @@ const formOpen = ref(false);
 const detailOpen = ref(false);
 const editingId = ref<null | string>(null);
 const selectedItem = ref<WorkDevice | null>(null);
+const submitting = ref(false);
 
 const accessStore = useAccessStore();
 const canCreateDevice = computed(() => accessStore.accessCodes.includes('WORK_DEVICE'));
@@ -55,10 +57,16 @@ const formState = ref({
   status: 0,
 });
 
-const projectOptions = [
-  { label: '生产线升级项目', value: 'project-1' },
-  { label: '质量改进项目', value: 'project-2' },
-];
+const projectOptions = ref<Array<{ label: string; value: string }>>([]);
+
+async function loadProjects() {
+  try {
+    const res = await projectApi.getPage({ page: 1, pageSize: 100 });
+    projectOptions.value = res.items.map(p => ({ label: p.projectName, value: p.id }));
+  } catch {
+    // ignore
+  }
+}
 
 const typeOptions = [
   { label: '生产线', value: 0 },
@@ -119,8 +127,8 @@ async function openEdit(record: Record<string, any>) {
       };
     }
     formOpen.value = true;
-  } catch {
-    message.error('加载详情失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载详情失败');
   }
 }
 
@@ -134,13 +142,14 @@ async function handleRemove(id: string) {
     await deleteWorkDeviceApi(id);
     message.success('设备已删除');
     await load();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 }
 
 async function handleSubmit() {
   try { await formRef.value?.validate(); } catch { return; }
+  submitting.value = true;
   try {
     if (editingId.value) {
       await updateWorkDeviceApi(editingId.value, formState.value);
@@ -151,8 +160,10 @@ async function handleSubmit() {
     }
     formOpen.value = false;
     await load();
-  } catch {
-    message.error('保存失败');
+  } catch (e: any) {
+    message.error(e?.message || '保存失败');
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -162,6 +173,7 @@ function resetFilters() {
 }
 
 onMounted(() => {
+  void loadProjects();
   void load();
 });
 </script>
@@ -242,6 +254,7 @@ onMounted(() => {
       :open="formOpen"
       :title="editingId ? '编辑设备' : '新增设备'"
       width="560px"
+      :confirm-loading="submitting"
       @cancel="formOpen = false"
       @ok="handleSubmit"
     >

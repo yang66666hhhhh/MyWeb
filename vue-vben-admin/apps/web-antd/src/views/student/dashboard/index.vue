@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -93,8 +93,8 @@ async function fetchDashboard() {
   loading.value = true;
   try {
     dashboard.value = await getExamDashboardApi();
-  } catch {
-    message.error('加载学习总览失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载学习总览失败');
   } finally {
     loading.value = false;
   }
@@ -116,8 +116,8 @@ async function markTaskCompleted(task: PostgraduateTask) {
     });
     message.success('任务已完成');
     await fetchDashboard();
-  } catch {
-    message.error('更新任务失败');
+  } catch (e: any) {
+    message.error(e?.message || '更新任务失败');
   }
 }
 

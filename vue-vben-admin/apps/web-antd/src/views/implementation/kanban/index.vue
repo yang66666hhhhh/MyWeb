@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -85,8 +85,8 @@ async function fetchProjects() {
     }
 
     projects.value = allProjects;
-  } catch {
-    message.error('加载项目失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载项目失败');
   } finally {
     loading.value = false;
   }

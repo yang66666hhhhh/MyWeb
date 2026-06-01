@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -53,6 +53,8 @@ const taskFormOpen = ref(false);
 const editingId = ref<null | string>(null);
 const editingTaskId = ref<null | string>(null);
 const currentPlanId = ref<null | string>(null);
+const submitting = ref(false);
+const taskSubmitting = ref(false);
 const items = ref<WeeklyPlan[]>([]);
 const total = ref(0);
 
@@ -162,8 +164,8 @@ async function fetchPage() {
     const result = await weeklyPlanApi.getPage(query);
     items.value = result.items;
     total.value = result.total;
-  } catch {
-    message.error('加载失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载失败');
   } finally {
     loading.value = false;
   }
@@ -205,7 +207,7 @@ function openEdit(record: WeeklyPlan) {
 
 async function handleSave() {
   try { await formRef.value?.validate(); } catch { return; }
-
+  submitting.value = true;
   try {
     if (editingId.value) {
       await weeklyPlanApi.update(editingId.value, { goals: formState.goals, status: formState.status });
@@ -218,6 +220,8 @@ async function handleSave() {
     await fetchPage();
   } catch (e: any) {
     message.error(e?.message || '操作失败');
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -226,8 +230,8 @@ async function handleDelete(id: string) {
     await weeklyPlanApi.delete(id);
     message.success('删除成功');
     await fetchPage();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 }
 
@@ -258,7 +262,7 @@ function openTaskEdit(plan: WeeklyPlan, task: Record<string, any>) {
 
 async function handleTaskSave() {
   try { await taskFormRef.value?.validate(); } catch { return; }
-
+  taskSubmitting.value = true;
   try {
     if (editingTaskId.value) {
       await weeklyPlanApi.updateTask(editingTaskId.value, taskFormState);
@@ -269,8 +273,10 @@ async function handleTaskSave() {
     }
     taskFormOpen.value = false;
     await fetchPage();
-  } catch {
-    message.error('操作失败');
+  } catch (e: any) {
+    message.error(e?.message || '操作失败');
+  } finally {
+    taskSubmitting.value = false;
   }
 }
 
@@ -279,8 +285,8 @@ async function handleTaskDelete(taskId: string) {
     await weeklyPlanApi.deleteTask(taskId);
     message.success('删除成功');
     await fetchPage();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 }
 
@@ -396,7 +402,7 @@ onMounted(() => {
       </Card>
     </div>
 
-    <Modal v-model:open="formOpen" :title="editingId ? '编辑周计划' : createButtonText" @ok="handleSave">
+    <Modal v-model:open="formOpen" :title="editingId ? '编辑周计划' : createButtonText" :confirm-loading="submitting" @ok="handleSave">
       <Form ref="formRef" :model="formState" :rules="formRules" layout="vertical">
         <Row :gutter="16">
           <Col :span="12">
@@ -416,7 +422,7 @@ onMounted(() => {
       </Form>
     </Modal>
 
-    <Modal v-model:open="taskFormOpen" :title="editingTaskId ? '编辑任务' : '添加任务'" @ok="handleTaskSave">
+    <Modal v-model:open="taskFormOpen" :title="editingTaskId ? '编辑任务' : '添加任务'" :confirm-loading="taskSubmitting" @ok="handleTaskSave">
       <Form ref="taskFormRef" :model="taskFormState" :rules="taskFormRules" layout="vertical">
         <Form.Item label="任务标题" required>
           <Input v-model:value="taskFormState.title" placeholder="请输入任务标题" />

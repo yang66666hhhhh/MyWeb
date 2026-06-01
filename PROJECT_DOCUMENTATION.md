@@ -904,6 +904,53 @@ rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.cspr
 - 前端类型检查：通过
 - 前端构建：成功
 
+### v3.1 (2025-05-31)
+
+**P0 修复：**
+
+- **项目下拉改为 API 获取**：work/statistics, work/log, work/device 3 个页面的项目下拉从 `projectApi.getPage()` 动态获取
+- **密码修改对接真实 API**：`_core/profile/password-setting` 调用 `changePasswordApi` 实现真实密码修改
+
+**P1 优化：**
+
+- **Promise.allSettled**：work/statistics, work/impl-log, work/dashboard, implementation/weekly-report, analytics/work 5 个页面改为 `Promise.allSettled`
+- **AI 规划器代码规范化**：重写 `ai/planner/index.vue`
+  - 添加 `Page` 组件包裹
+  - 添加 `formRef/formRules` 表单验证
+  - 添加 `useAccessStore` 权限控制
+  - 使用 `Form.Item` 替代 `FormItem`
+  - 使用 `Input.TextArea` 替代 `Textarea`
+  - 使用 Tailwind 替代自定义 CSS
+- **AI 自动化表单验证**：为 `ai/automation/index.vue` 添加 `submitting` 状态和 `confirm-loading`
+- **知识库描述修正**：移除过时的 "mock/预留接口" 描述
+
+**验证结果：**
+- 后端测试：140 个全部通过
+- 前端类型检查：通过
+- 前端构建：成功
+
+### v3.0 (2025-05-31)
+
+**代码质量优化：**
+
+- **Modal confirm-loading**：为 25 个页面的 Modal 添加 `:confirm-loading` 属性
+  - Work: tasks, project, okr, weekly-plan, impl-log, software-assets, task-type, device, files, risk-control
+  - Student: mistakes, materials, subjects, records, learning
+  - Growth: skills, reading-list, mood-tracker, sleep, fitness, courses, learning-path, monthly-review, year-plans, goals
+
+- **错误提示优化**：统一 172 处错误提示为 `e?.message || '默认消息'` 模式
+  - 涉及 75 个 .vue 文件
+  - 所有 `catch { message.error('xxx') }` 改为 `catch (e: any) { message.error(e?.message || 'xxx') }`
+
+- **system/menu-tag 修复**：修复 4 个 Modal 缺少 confirm-loading、7 个操作函数缺少 try/catch 错误处理
+
+- **analytics/custom-reports 修复**：修复"查看"按钮无事件绑定，添加详情弹窗
+
+**验证结果：**
+- 后端测试：140 个全部通过
+- 前端类型检查：通过
+- 前端构建：成功
+
 ### v2.8 (2025-05-31)
 
 **代码质量优化：**

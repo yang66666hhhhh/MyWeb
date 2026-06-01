@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import type { WorkStatisticsOverview } from '#/api/work';
 
 import { computed, onMounted, ref } from 'vue';
@@ -82,11 +82,14 @@ async function load() {
     }
 
     const today = getToday();
-    const [logs, todayLogs, todayPlans] = await Promise.all([
+    const [logsRes, todayLogsRes, todayPlansRes] = await Promise.allSettled([
       getWorkLogPageApi({ page: 1, pageSize: 100 }),
       getWorkLogPageApi({ page: 1, pageSize: 100, workDate: today }),
       getWorkDailyPlanPageApi({ page: 1, pageSize: 1, planDate: today }),
     ]);
+    const logs = logsRes.status === 'fulfilled' ? logsRes.value : { items: [], total: 0 };
+    const todayLogs = todayLogsRes.status === 'fulfilled' ? todayLogsRes.value : { items: [], total: 0 };
+    const todayPlans = todayPlansRes.status === 'fulfilled' ? todayPlansRes.value : { total: 0 };
 
     overview.value = {
       missingDataCount: 0,
@@ -98,8 +101,8 @@ async function load() {
       totalLogs: logs.total,
       totalProjects: 0,
     };
-  } catch {
-    message.error('加载数据失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载数据失败');
   } finally {
     loading.value = false;
   }

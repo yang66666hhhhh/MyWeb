@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -47,6 +47,7 @@ interface RecordFormState {
 }
 
 const loading = ref(false);
+const submitting = ref(false);
 const accessStore = useAccessStore();
 const formOpen = ref(false);
 const editingId = ref<null | string>(null);
@@ -110,8 +111,8 @@ async function fetchRecords() {
       subject: subject.value,
     });
     records.value = result.items;
-  } catch {
-    message.error('加载学习记录失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载学习记录失败');
   } finally {
     loading.value = false;
   }
@@ -167,6 +168,7 @@ async function handleSave() {
     taskTitle: formState.value.taskTitle || undefined,
   };
 
+  submitting.value = true;
   try {
     if (editingId.value) {
       await updateStudyRecordApi(editingId.value, payload);
@@ -177,8 +179,10 @@ async function handleSave() {
     }
     formOpen.value = false;
     await fetchRecords();
-  } catch {
-    message.error('保存学习记录失败');
+  } catch (e: any) {
+    message.error(e?.message || '保存学习记录失败');
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -187,8 +191,8 @@ async function handleDelete(id: string) {
     await deleteStudyRecordApi(id);
     message.success('学习记录已删除');
     await fetchRecords();
-  } catch {
-    message.error('删除学习记录失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除学习记录失败');
   }
 }
 
@@ -277,6 +281,7 @@ onMounted(async () => {
 
     <Modal
       v-model:open="formOpen"
+      :confirm-loading="submitting"
       :title="editingId ? '编辑学习记录' : '新增学习记录'"
       width="680px"
       @ok="handleSave"

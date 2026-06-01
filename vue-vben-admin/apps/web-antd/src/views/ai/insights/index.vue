@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -66,8 +66,8 @@ async function handleGenerate() {
     message.success('洞察生成成功');
     generateForm.value = { title: '', category: '', source: '' };
     await load();
-  } catch {
-    message.error('生成失败');
+  } catch (e: any) {
+    message.error(e?.message || '生成失败');
   } finally {
     generating.value = false;
   }
@@ -78,8 +78,8 @@ async function handleDelete(id: string) {
     await deleteInsightApi(id);
     message.success('删除成功');
     await load();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 }
 

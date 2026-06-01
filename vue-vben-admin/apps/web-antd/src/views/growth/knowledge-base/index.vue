@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import type { KnowledgeArticle } from '#/api/growth';
 
 import { computed, onMounted, ref } from 'vue';
@@ -94,8 +94,8 @@ async function remove(id: string) {
     await deleteKnowledgeArticleApi(id);
     message.success('笔记已删除');
     await load();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 }
 
@@ -120,7 +120,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <Page description="管理知识笔记、标签和 Markdown 内容，当前使用 mock/预留接口。" title="知识库">
+  <Page description="管理知识笔记、标签和 Markdown 内容" title="知识库">
     <div class="space-y-4">
       <Card>
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

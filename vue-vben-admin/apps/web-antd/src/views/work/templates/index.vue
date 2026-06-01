@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import type { CreateTemplateFieldInput, CreateTemplateInput, IndustryTemplate } from '#/api/work/template';
 
 import { computed, onMounted, ref } from 'vue';
@@ -164,8 +164,8 @@ async function handleSubmit() {
     }
     formOpen.value = false;
     await load();
-  } catch {
-    message.error('操作失败');
+  } catch (e: any) {
+    message.error(e?.message || '操作失败');
   }
 }
 
@@ -174,8 +174,8 @@ async function handleDelete(id: string) {
     await deleteTemplateApi(id);
     message.success('模板已删除');
     await load();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 }
 
@@ -184,8 +184,8 @@ async function handleSetDefault(id: string) {
     await setDefaultTemplateApi(id);
     message.success('已设为默认模板');
     await load();
-  } catch {
-    message.error('操作失败');
+  } catch (e: any) {
+    message.error(e?.message || '操作失败');
   }
 }
 

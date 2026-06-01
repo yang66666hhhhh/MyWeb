@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -32,6 +32,7 @@ import {
 import { usePagedQuery } from '#/composables/usePagedQuery';
 
 const formOpen = ref(false);
+const submitting = ref(false);
 const editingId = ref<null | string>(null);
 const formRef = ref();
 const formData = ref<CreateSkillInput & UpdateSkillInput>({
@@ -125,6 +126,7 @@ async function handleSubmit() {
   } catch {
     return;
   }
+  submitting.value = true;
   try {
     if (editingId.value) {
       await updateSkillApi(editingId.value, formData.value);
@@ -135,8 +137,10 @@ async function handleSubmit() {
     }
     formOpen.value = false;
     await load();
-  } catch {
-    message.error('操作失败');
+  } catch (e: any) {
+    message.error(e?.message || '操作失败');
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -145,8 +149,8 @@ async function handleDelete(id: string) {
     await deleteSkillApi(id);
     message.success('删除成功');
     await load();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 }
 
@@ -236,6 +240,7 @@ onMounted(() => {
 
     <Modal
       v-model:open="formOpen"
+      :confirm-loading="submitting"
       :title="editingId ? '编辑技能' : '新增技能'"
       @ok="handleSubmit"
     >

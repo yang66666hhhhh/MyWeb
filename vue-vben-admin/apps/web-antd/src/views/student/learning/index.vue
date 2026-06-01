@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -46,6 +46,7 @@ interface TaskFormState {
 }
 
 const loading = ref(false);
+const submitting = ref(false);
 const formOpen = ref(false);
 const editingId = ref<null | string>(null);
 const keyword = ref('');
@@ -177,8 +178,8 @@ async function fetchTasks() {
     }
 
     tasks.value = allTasks;
-  } catch {
-    message.error('加载学习任务失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载学习任务失败');
   } finally {
     loading.value = false;
   }
@@ -241,6 +242,7 @@ async function handleSave() {
     type: formState.value.type,
   };
 
+  submitting.value = true;
   try {
     if (editingId.value) {
       await updatePostgraduateTaskApi(editingId.value, payload);
@@ -251,8 +253,10 @@ async function handleSave() {
     }
     formOpen.value = false;
     await fetchTasks();
-  } catch {
-    message.error('保存学习任务失败');
+  } catch (e: any) {
+    message.error(e?.message || '保存学习任务失败');
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -261,8 +265,8 @@ async function handleDelete(id: string) {
     await deletePostgraduateTaskApi(id);
     message.success('学习任务已删除');
     await fetchTasks();
-  } catch {
-    message.error('删除学习任务失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除学习任务失败');
   }
 }
 
@@ -286,8 +290,8 @@ async function markCompleted(task: PostgraduateTask) {
     });
     message.success('任务已标记为完成');
     await fetchTasks();
-  } catch {
-    message.error('更新任务状态失败');
+  } catch (e: any) {
+    message.error(e?.message || '更新任务状态失败');
   }
 }
 
@@ -393,6 +397,7 @@ onMounted(() => {
 
     <Modal
       v-model:open="formOpen"
+      :confirm-loading="submitting"
       :title="editingId ? '编辑学习任务' : '新建学习任务'"
       width="620px"
       @ok="handleSave"

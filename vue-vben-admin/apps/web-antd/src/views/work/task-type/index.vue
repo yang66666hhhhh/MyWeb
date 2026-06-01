@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
@@ -39,6 +39,7 @@ const formOpen = ref(false);
 const detailOpen = ref(false);
 const editingId = ref<null | string>(null);
 const selectedItem = ref<WorkTaskType | null>(null);
+const submitting = ref(false);
 
 const formState = ref({
   description: '',
@@ -92,8 +93,8 @@ async function openEdit(record: Record<string, any>) {
       };
     }
     formOpen.value = true;
-  } catch {
-    message.error('加载详情失败');
+  } catch (e: any) {
+    message.error(e?.message || '加载详情失败');
   }
 }
 
@@ -107,13 +108,14 @@ async function handleRemove(id: string) {
     await deleteWorkTaskTypeApi(id);
     message.success('任务类型已删除');
     await load();
-  } catch {
-    message.error('删除失败');
+  } catch (e: any) {
+    message.error(e?.message || '删除失败');
   }
 }
 
 async function handleSubmit() {
   try { await formRef.value?.validate(); } catch { return; }
+  submitting.value = true;
   try {
     if (editingId.value) {
       await updateWorkTaskTypeApi(editingId.value, formState.value);
@@ -124,8 +126,10 @@ async function handleSubmit() {
     }
     formOpen.value = false;
     await load();
-  } catch {
-    message.error('保存失败');
+  } catch (e: any) {
+    message.error(e?.message || '保存失败');
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -135,8 +139,8 @@ async function handleToggleEnabled(record: Record<string, any>) {
     await updateWorkTaskTypeApi(taskType.id, { enabled: !taskType.enabled });
     message.success(`已${taskType.enabled ? '停用' : '启用'}`);
     await load();
-  } catch {
-    message.error('状态更新失败');
+  } catch (e: any) {
+    message.error(e?.message || '状态更新失败');
   }
 }
 
@@ -223,6 +227,7 @@ onMounted(() => {
       :open="formOpen"
       :title="editingId ? '编辑类型' : '新增类型'"
       width="480px"
+      :confirm-loading="submitting"
       @cancel="formOpen = false"
       @ok="handleSubmit"
     >
