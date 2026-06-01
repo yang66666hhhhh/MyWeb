@@ -385,6 +385,9 @@ app.UseMiddleware<PerformanceMonitoringMiddleware>();
 // 缓存中间件
 app.UseMiddleware<OutputCacheMiddleware>();
 
+// API 版本和请求ID
+app.UseMiddleware<ApiVersionMiddleware>();
+
 app.UseMiddleware<RateLimitingMiddleware>();
 
 app.UseAuthentication();
