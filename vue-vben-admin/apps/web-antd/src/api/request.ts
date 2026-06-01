@@ -21,17 +21,24 @@ import { refreshTokenApi } from './core';
 
 const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
 
+// 重试配置
+const RETRY_CONFIG = {
+  maxRetries: 3,
+  retryDelay: 1000,
+  retryableStatusCodes: [408, 429, 500, 502, 503, 504],
+};
+
 function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   const client = new RequestClient({
     ...options,
     baseURL,
+    timeout: 30000, // 30秒超时
   });
 
   /**
    * 重新认证逻辑
    */
   async function doReAuthenticate() {
-    // Token expired, trigger login expired flow
     const accessStore = useAccessStore();
     const authStore = useAuthStore();
     accessStore.setAccessToken(null);
@@ -64,9 +71,10 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   client.addRequestInterceptor({
     fulfilled: async (config) => {
       const accessStore = useAccessStore();
-
       config.headers.Authorization = formatToken(accessStore.accessToken);
       config.headers['Accept-Language'] = preferences.app.locale;
+      config.headers['X-Request-ID'] = crypto.randomUUID();
+      
       return config;
     },
   });
@@ -91,14 +99,26 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     }),
   );
 
-  // 通用的错误处理,如果没有进入上面的错误处理逻辑，就会进入这里
+  // 通用的错误处理
   client.addResponseInterceptor(
     errorMessageResponseInterceptor((msg: string, error) => {
-      // 这里可以根据业务进行定制,你可以拿到 error 内的信息进行定制化处理，根据不同的 code 做不同的提示，而不是直接使用 message.error 提示 msg
-      // 当前mock接口返回的错误字段是 error 或者 message
       const responseData = error?.response?.data ?? {};
       const errorMessage = responseData?.error ?? responseData?.message ?? '';
-      // 如果没有错误信息，则会根据状态码进行提示
+      const status = error?.response?.status;
+      
+      // 429 错误特殊处理
+      if (status === 429) {
+        const retryAfter = error.response.headers?.['retry-after'];
+        message.warning(`请求过于频繁，请${retryAfter ? `${retryAfter}秒后` : '稍后'}重试`);
+        return;
+      }
+      
+      // 可重试状态码的提示
+      if (status && RETRY_CONFIG.retryableStatusCodes.includes(status)) {
+        message.warning(`请求失败，请稍后重试`);
+        return;
+      }
+      
       message.error(errorMessage || msg);
     }),
   );
