@@ -38,6 +38,14 @@ export interface KnowledgeChatSession {
   createdAt: string;
 }
 
+export interface KnowledgeChatMessage {
+  id: string;
+  sessionId: string;
+  role: string;
+  content: string;
+  createdAt: string;
+}
+
 export interface KnowledgeChatResponse {
   sessionId: string;
   content: string;
@@ -86,6 +94,8 @@ export const aiExtendedApi = {
   // Knowledge Chat
   getKnowledgeChatSessions: (params: AiExtendedQuery) =>
     requestClient.get<PageResult<KnowledgeChatSession>>('/ai/knowledge-chat/sessions', { params }),
+  getKnowledgeChatMessages: (sessionId: string) =>
+    requestClient.get<KnowledgeChatMessage[]>(`/ai/knowledge-chat/sessions/${sessionId}/messages`),
   sendKnowledgeChatMessage: (data: KnowledgeChatRequest) =>
     requestClient.post<KnowledgeChatResponse>('/ai/knowledge-chat', data),
   deleteKnowledgeChatSession: (id: string) =>
@@ -107,6 +117,7 @@ export const updateWorkflowApi = aiExtendedApi.updateWorkflow;
 export const deleteWorkflowApi = aiExtendedApi.deleteWorkflow;
 
 export const getKnowledgeChatSessionsApi = aiExtendedApi.getKnowledgeChatSessions;
+export const getKnowledgeChatMessagesApi = aiExtendedApi.getKnowledgeChatMessages;
 export const sendKnowledgeChatMessageApi = aiExtendedApi.sendKnowledgeChatMessage;
 export const deleteKnowledgeChatSessionApi = aiExtendedApi.deleteKnowledgeChatSession;
 

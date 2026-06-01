@@ -53,3 +53,5 @@ export const analyticsApi = {
   getPriorityDistribution: () =>
     requestClient.get<TaskPriorityDistribution[]>('/growth/analytics/priority-distribution'),
 };
+
+export * from './extended';

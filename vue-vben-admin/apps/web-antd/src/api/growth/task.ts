@@ -12,8 +12,8 @@ export interface TaskItem {
   source: 'Growth' | 'Work';
   projectId?: string;
   projectName?: string;
-  priority: string;
-  status: string;
+  priority: number;
+  status: number;
   startTime?: string;
   endTime?: string;
   estimatedHours?: number;
