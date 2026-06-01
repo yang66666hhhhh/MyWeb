@@ -120,6 +120,27 @@ public class AnalyticsExtendedController(IAnalyticsExtendedService service) : Ba
         var success = await service.DeleteCustomReportAsync(id, ct);
         return HandleDeleteResult(success, "报告");
     }
+
+    [HttpGet("ai-insights")]
+    public async Task<ActionResult<ApiResult<PageResult<AiInsightDto>>>> GetAiInsights(
+        [FromQuery] AnalyticsQueryDto query, CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var result = await service.GetAiInsightsAsync(query, userId.Value, ct);
+        return Ok(ApiResult<PageResult<AiInsightDto>>.Success(result));
+    }
+
+    [HttpPost("ai-insights/generate")]
+    public async Task<ActionResult<ApiResult<AiInsightDto>>> GenerateAiInsight(CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        var result = await service.GenerateAiInsightAsync(userId.Value, ct);
+        return Ok(ApiResult<AiInsightDto>.Success(result));
+    }
 }
 
 public record TimeAnalyticsOverviewDto

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Ai.Entities;
 using WebApplication1.Features.Analytics.Dtos;
 using WebApplication1.Features.Analytics.Entities;
 using WebApplication1.Shared.Common;
@@ -20,6 +21,8 @@ public interface IAnalyticsExtendedService
     Task<CustomReportDto?> GetCustomReportByIdAsync(Guid id, CancellationToken ct = default);
     Task<CustomReportDto> CreateCustomReportAsync(CreateCustomReportInput input, Guid userId, CancellationToken ct = default);
     Task<bool> DeleteCustomReportAsync(Guid id, CancellationToken ct = default);
+    Task<PageResult<AiInsightDto>> GetAiInsightsAsync(AnalyticsQueryDto query, Guid userId, CancellationToken ct = default);
+    Task<AiInsightDto> GenerateAiInsightAsync(Guid userId, CancellationToken ct = default);
 }
 
 public class AnalyticsExtendedService(AppDbContext context) : IAnalyticsExtendedService
@@ -313,5 +316,83 @@ public class AnalyticsExtendedService(AppDbContext context) : IAnalyticsExtended
         context.CustomReports.Remove(entity);
         await context.SaveChangesAsync(ct);
         return true;
+    }
+
+    public async Task<PageResult<AiInsightDto>> GetAiInsightsAsync(AnalyticsQueryDto query, Guid userId, CancellationToken ct = default)
+    {
+        var q = context.AiInsights.AsNoTracking().Where(x => x.UserId == userId);
+
+        var total = await q.CountAsync(ct);
+        var items = await q.OrderByDescending(x => x.CreatedAt)
+            .Skip((query.Page - 1) * query.PageSize).Take(query.PageSize)
+            .Select(x => new AiInsightDto
+            {
+                Id = x.Id.ToString(),
+                Title = x.Title,
+                Content = x.Content,
+                Category = x.Category,
+                CreatedAt = x.CreatedAt.ToString("yyyy-MM-dd HH:mm")
+            }).ToListAsync(ct);
+
+        return PageResult<AiInsightDto>.Create(items, total, query.Page, query.PageSize);
+    }
+
+    public async Task<AiInsightDto> GenerateAiInsightAsync(Guid userId, CancellationToken ct = default)
+    {
+        // 获取用户数据进行分析
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var thirtyDaysAgo = today.AddDays(-30);
+
+        var workLogs = await context.WorkLogs
+            .AsNoTracking()
+            .Where(x => x.UserId == userId && x.WorkDate >= thirtyDaysAgo)
+            .ToListAsync(ct);
+
+        var habits = await context.Habits
+            .AsNoTracking()
+            .Where(x => x.UserId == userId)
+            .ToListAsync(ct);
+
+        var totalWorkHours = workLogs.Sum(x => (double)x.TotalHours);
+        var avgDailyHours = workLogs.Count > 0 ? Math.Round(totalWorkHours / 30, 1) : 0;
+        var activeHabits = habits.Count(x => x.Status == 1);
+
+        // 生成洞察内容
+        var insightTitle = $"工作与习惯分析 - {today:yyyy年MM月}";
+        var insightContent = $"""
+            ## 过去30天数据分析
+
+            ### 工作情况
+            - 总工时: {totalWorkHours:F1} 小时
+            - 日均工时: {avgDailyHours} 小时
+            - 工作天数: {workLogs.Select(x => x.WorkDate).Distinct().Count()} 天
+
+            ### 习惯养成
+            - 活跃习惯数: {activeHabits} 个
+
+            ### 建议
+            {(avgDailyHours > 8 ? "- 工作强度较高，注意劳逸结合" : "- 可以适当提升工作效率")}
+            {(activeHabits < 3 ? "- 建议增加更多好习惯来提升自我" : "- 习惯养成良好，继续保持")}
+            """;
+
+        var entity = new AiInsight
+        {
+            UserId = userId,
+            Title = insightTitle,
+            Content = insightContent,
+            Category = "效率"
+        };
+
+        context.AiInsights.Add(entity);
+        await context.SaveChangesAsync(ct);
+
+        return new AiInsightDto
+        {
+            Id = entity.Id.ToString(),
+            Title = entity.Title,
+            Content = entity.Content,
+            Category = entity.Category,
+            CreatedAt = entity.CreatedAt.ToString("yyyy-MM-dd HH:mm")
+        };
     }
 }
