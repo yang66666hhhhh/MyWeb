@@ -48,7 +48,6 @@ public class AnalyticsExtendedService(AppDbContext context) : IAnalyticsExtended
         var dailyWork = days > 0 ? Math.Round(totalHours / days, 1) : 0;
 
         // 从实际学习记录计算学习时长
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var monthStart = new DateOnly(today.Year, today.Month, 1);
         var totalStudyMinutes = await context.StudentStudyRecords
             .AsNoTracking()
