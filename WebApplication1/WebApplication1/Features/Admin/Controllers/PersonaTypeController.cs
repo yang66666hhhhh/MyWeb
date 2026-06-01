@@ -10,38 +10,55 @@ namespace WebApplication1.Features.Admin.Controllers;
 [Route("api/system/persona-types")]
 [Authorize]
 [Tags("Admin - Personas")]
-public class PersonaTypeController : ControllerBase
+public class PersonaTypeController(IPersonaService personaService, ILogger<PersonaTypeController> logger) : BaseApiController
 {
-    private readonly IPersonaService _personaService;
-
-    public PersonaTypeController(IPersonaService personaService)
-    {
-        _personaService = personaService;
-    }
-
     [HttpGet]
     [Authorize(Roles = "pro,owner")]
     public async Task<ActionResult<ApiResult<PageResult<PersonaTypeDto>>>> GetPage([FromQuery] PersonaTypeQueryDto query, CancellationToken cancellationToken)
     {
-        var result = await _personaService.GetPageAsync(query, cancellationToken);
-        return Ok(ApiResult<PageResult<PersonaTypeDto>>.Success(result));
+        try
+        {
+            var result = await personaService.GetPageAsync(query, cancellationToken);
+            return Ok(ApiResult<PageResult<PersonaTypeDto>>.Success(result));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "获取身份类型列表失败");
+            return StatusCode(500, ApiResult.Fail("获取数据失败，请稍后重试"));
+        }
     }
 
     [HttpGet("all")]
     [Authorize(Roles = "pro,owner")]
     public async Task<ActionResult<ApiResult<List<PersonaTypeDto>>>> GetAll([FromQuery] bool? isActive = true, CancellationToken cancellationToken = default)
     {
-        var result = await _personaService.GetAllAsync(isActive, cancellationToken);
-        return Ok(ApiResult<List<PersonaTypeDto>>.Success(result));
+        try
+        {
+            var result = await personaService.GetAllAsync(isActive, cancellationToken);
+            return Ok(ApiResult<List<PersonaTypeDto>>.Success(result));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "获取全部身份类型失败");
+            return StatusCode(500, ApiResult.Fail("获取数据失败，请稍后重试"));
+        }
     }
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ApiResult<PersonaTypeDto>>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await _personaService.GetByIdAsync(id, cancellationToken);
-        if (result == null)
-            return NotFound(ApiResult<PersonaTypeDto>.Fail("Identity type not found"));
-        return Ok(ApiResult<PersonaTypeDto>.Success(result));
+        try
+        {
+            var result = await personaService.GetByIdAsync(id, cancellationToken);
+            if (result == null)
+                return NotFound(ApiResult<PersonaTypeDto>.Fail("身份类型不存在"));
+            return Ok(ApiResult<PersonaTypeDto>.Success(result));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "获取身份类型详情失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("获取数据失败，请稍后重试"));
+        }
     }
 
     [HttpPost]
@@ -50,12 +67,18 @@ public class PersonaTypeController : ControllerBase
     {
         try
         {
-            var result = await _personaService.CreateAsync(input, cancellationToken);
-            return Ok(ApiResult<PersonaTypeDto>.Success(result, "Created successfully"));
+            var result = await personaService.CreateAsync(input, cancellationToken);
+            logger.LogInformation("创建身份类型成功: {Code}", result.Code);
+            return Ok(ApiResult<PersonaTypeDto>.Success(result, "创建成功"));
         }
         catch (InvalidOperationException ex)
         {
             return BadRequest(ApiResult<PersonaTypeDto>.Fail(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "创建身份类型失败");
+            return StatusCode(500, ApiResult.Fail("创建失败，请稍后重试"));
         }
     }
 
@@ -63,10 +86,19 @@ public class PersonaTypeController : ControllerBase
     [Authorize(Roles = "owner")]
     public async Task<ActionResult<ApiResult<PersonaTypeDto>>> Update(Guid id, [FromBody] UpdatePersonaTypeDto input, CancellationToken cancellationToken)
     {
-        var result = await _personaService.UpdateAsync(id, input, cancellationToken);
-        if (result == null)
-            return NotFound(ApiResult<PersonaTypeDto>.Fail("Identity type not found"));
-        return Ok(ApiResult<PersonaTypeDto>.Success(result, "Updated successfully"));
+        try
+        {
+            var result = await personaService.UpdateAsync(id, input, cancellationToken);
+            if (result == null)
+                return NotFound(ApiResult<PersonaTypeDto>.Fail("身份类型不存在"));
+            logger.LogInformation("更新身份类型成功: {Id}", id);
+            return Ok(ApiResult<PersonaTypeDto>.Success(result, "更新成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "更新身份类型失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
+        }
     }
 
     [HttpDelete("{id:guid}")]
@@ -75,14 +107,20 @@ public class PersonaTypeController : ControllerBase
     {
         try
         {
-            var success = await _personaService.DeleteAsync(id, cancellationToken);
+            var success = await personaService.DeleteAsync(id, cancellationToken);
             if (!success)
-                return NotFound(ApiResult.Fail("Identity type not found"));
-            return Ok(ApiResult.Success("Deleted successfully"));
+                return NotFound(ApiResult.Fail("身份类型不存在"));
+            logger.LogInformation("删除身份类型成功: {Id}", id);
+            return Ok(ApiResult.Success("删除成功"));
         }
         catch (InvalidOperationException ex)
         {
             return BadRequest(ApiResult.Fail(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "删除身份类型失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("删除失败，请稍后重试"));
         }
     }
 
@@ -90,15 +128,32 @@ public class PersonaTypeController : ControllerBase
     [Authorize(Roles = "owner")]
     public async Task<ActionResult<ApiResult<List<PersonaMenuItemDto>>>> GetMenuItems(Guid id, CancellationToken cancellationToken)
     {
-        var result = await _personaService.GetMenuItemsAsync(id, cancellationToken);
-        return Ok(ApiResult<List<PersonaMenuItemDto>>.Success(result));
+        try
+        {
+            var result = await personaService.GetMenuItemsAsync(id, cancellationToken);
+            return Ok(ApiResult<List<PersonaMenuItemDto>>.Success(result));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "获取身份菜单项失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("获取数据失败，请稍后重试"));
+        }
     }
 
     [HttpPut("{id:guid}/menu-items")]
     [Authorize(Roles = "owner")]
     public async Task<ActionResult<ApiResult>> SetMenuItems(Guid id, [FromBody] List<PersonaMenuItemDto> items, CancellationToken cancellationToken)
     {
-        await _personaService.SetMenuItemsAsync(id, items, cancellationToken);
-        return Ok(ApiResult.Success("Menu items updated successfully"));
+        try
+        {
+            await personaService.SetMenuItemsAsync(id, items, cancellationToken);
+            logger.LogInformation("更新身份菜单项成功: {Id}", id);
+            return Ok(ApiResult.Success("菜单项更新成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "更新身份菜单项失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
+        }
     }
 }

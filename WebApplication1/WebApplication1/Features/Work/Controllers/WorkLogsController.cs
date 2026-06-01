@@ -12,7 +12,7 @@ namespace WebApplication1.Features.Work.Controllers;
 [RequireFeature("WORK_LOG")]
 [Route("api/work/logs")]
 [Tags("Work - Logs")]
-public class WorkLogsController(IWorkLogService logService) : BaseApiController
+public class WorkLogsController(IWorkLogService logService, ILogger<WorkLogsController> logger) : BaseApiController
 {
     [HttpGet]
     public async Task<ActionResult<ApiResult<PageResult<WorkLogDto>>>> GetPage(
@@ -51,12 +51,21 @@ public class WorkLogsController(IWorkLogService logService) : BaseApiController
         [FromBody] CreateWorkLogDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue)
-            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Unauthorized(ApiResult.Fail("无法获取用户信息"));
 
-        var result = await logService.CreateAsync(input, userId.Value, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResult<WorkLogDto>.Success(result, "创建成功"));
+            var result = await logService.CreateAsync(input, userId.Value, cancellationToken);
+            logger.LogInformation("创建工作日志成功: {Id}", result.Id);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResult<WorkLogDto>.Success(result, "创建成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "创建工作日志失败");
+            return StatusCode(500, ApiResult.Fail("创建失败，请稍后重试"));
+        }
     }
 
     [HttpPut("{id:guid}")]
@@ -65,38 +74,56 @@ public class WorkLogsController(IWorkLogService logService) : BaseApiController
         [FromBody] UpdateWorkLogDto input,
         CancellationToken cancellationToken)
     {
-        var existing = await logService.GetByIdAsync(id, cancellationToken);
-        if (existing == null)
-            return NotFound(ApiResult.Fail("工作日志不存在", StatusCodes.Status404NotFound));
-
-        var currentUserId = GetCurrentUserId();
-        if (!IsProOrAbove() && existing.UserId != currentUserId)
+        try
         {
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改此日志"));
-        }
+            var existing = await logService.GetByIdAsync(id, cancellationToken);
+            if (existing == null)
+                return NotFound(ApiResult.Fail("工作日志不存在", StatusCodes.Status404NotFound));
 
-        var result = await logService.UpdateAsync(id, input, cancellationToken);
-        if (result == null)
-            return NotFound(ApiResult.Fail("工作日志不存在", StatusCodes.Status404NotFound));
-        return Ok(ApiResult<WorkLogDto>.Success(result, "更新成功"));
+            var currentUserId = GetCurrentUserId();
+            if (!IsProOrAbove() && existing.UserId != currentUserId)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改此日志"));
+            }
+
+            var result = await logService.UpdateAsync(id, input, cancellationToken);
+            if (result == null)
+                return NotFound(ApiResult.Fail("工作日志不存在", StatusCodes.Status404NotFound));
+            logger.LogInformation("更新工作日志成功: {Id}", id);
+            return Ok(ApiResult<WorkLogDto>.Success(result, "更新成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "更新工作日志失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
+        }
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<ApiResult>> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var existing = await logService.GetByIdAsync(id, cancellationToken);
-        if (existing == null)
-            return NotFound(ApiResult.Fail("工作日志不存在", StatusCodes.Status404NotFound));
-
-        var currentUserId = GetCurrentUserId();
-        if (!IsProOrAbove() && existing.UserId != currentUserId)
+        try
         {
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限删除此日志"));
-        }
+            var existing = await logService.GetByIdAsync(id, cancellationToken);
+            if (existing == null)
+                return NotFound(ApiResult.Fail("工作日志不存在", StatusCodes.Status404NotFound));
 
-        var deleted = await logService.DeleteAsync(id, cancellationToken);
-        if (!deleted)
-            return NotFound(ApiResult.Fail("工作日志不存在", StatusCodes.Status404NotFound));
-        return Ok(ApiResult.Success("删除成功"));
+            var currentUserId = GetCurrentUserId();
+            if (!IsProOrAbove() && existing.UserId != currentUserId)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限删除此日志"));
+            }
+
+            var deleted = await logService.DeleteAsync(id, cancellationToken);
+            if (!deleted)
+                return NotFound(ApiResult.Fail("工作日志不存在", StatusCodes.Status404NotFound));
+            logger.LogInformation("删除工作日志成功: {Id}", id);
+            return Ok(ApiResult.Success("删除成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "删除工作日志失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("删除失败，请稍后重试"));
+        }
     }
 }

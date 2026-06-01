@@ -10,7 +10,7 @@ namespace WebApplication1.Features.Tasks;
 [RequireFeature("WORK_TASK")]
 [Route("api/growth/tasks")]
 [Tags("Tasks")]
-public class TasksController(ITaskItemService taskService) : BaseApiController
+public class TasksController(ITaskItemService taskService, ILogger<TasksController> logger) : BaseApiController
 {
     [HttpGet]
     public async Task<ActionResult<ApiResult<PageResult<TaskItemDto>>>> GetPage(
@@ -51,12 +51,21 @@ public class TasksController(ITaskItemService taskService) : BaseApiController
         [FromBody] CreateTaskItemDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue)
-            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Unauthorized(ApiResult.Fail("无法获取用户信息"));
 
-        var result = await taskService.CreateAsync(input, userId.Value, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResult<TaskItemDto>.Success(result, "创建成功"));
+            var result = await taskService.CreateAsync(input, userId.Value, cancellationToken);
+            logger.LogInformation("创建任务成功: {Id}", result.Id);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResult<TaskItemDto>.Success(result, "创建成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "创建任务失败");
+            return StatusCode(500, ApiResult.Fail("创建失败，请稍后重试"));
+        }
     }
 
     [HttpPut("{id:guid}")]
@@ -65,61 +74,88 @@ public class TasksController(ITaskItemService taskService) : BaseApiController
         [FromBody] UpdateTaskItemDto input,
         CancellationToken cancellationToken)
     {
-        var existing = await taskService.GetByIdAsync(id, cancellationToken);
-        if (existing is null)
+        try
         {
-            return NotFound(ApiResult<TaskItemDto>.Fail("任务不存在", StatusCodes.Status404NotFound));
-        }
+            var existing = await taskService.GetByIdAsync(id, cancellationToken);
+            if (existing is null)
+            {
+                return NotFound(ApiResult<TaskItemDto>.Fail("任务不存在", StatusCodes.Status404NotFound));
+            }
 
-        var currentUserId = GetCurrentUserId();
-        if (!IsProOrAbove() && existing.UserId != currentUserId)
+            var currentUserId = GetCurrentUserId();
+            if (!IsProOrAbove() && existing.UserId != currentUserId)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改此任务"));
+            }
+
+            var result = await taskService.UpdateAsync(id, input, cancellationToken);
+            if (result is null)
+            {
+                return NotFound(ApiResult<TaskItemDto>.Fail("任务不存在", StatusCodes.Status404NotFound));
+            }
+
+            logger.LogInformation("更新任务成功: {Id}", id);
+            return Ok(ApiResult<TaskItemDto>.Success(result, "更新成功"));
+        }
+        catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改此任务"));
+            logger.LogError(ex, "更新任务失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
         }
-
-        var result = await taskService.UpdateAsync(id, input, cancellationToken);
-        if (result is null)
-        {
-            return NotFound(ApiResult<TaskItemDto>.Fail("任务不存在", StatusCodes.Status404NotFound));
-        }
-
-        return Ok(ApiResult<TaskItemDto>.Success(result, "更新成功"));
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<ApiResult>> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var existing = await taskService.GetByIdAsync(id, cancellationToken);
-        if (existing is null)
+        try
         {
-            return NotFound(ApiResult.Fail("任务不存在", StatusCodes.Status404NotFound));
-        }
+            var existing = await taskService.GetByIdAsync(id, cancellationToken);
+            if (existing is null)
+            {
+                return NotFound(ApiResult.Fail("任务不存在", StatusCodes.Status404NotFound));
+            }
 
-        var currentUserId = GetCurrentUserId();
-        if (!IsProOrAbove() && existing.UserId != currentUserId)
+            var currentUserId = GetCurrentUserId();
+            if (!IsProOrAbove() && existing.UserId != currentUserId)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限删除此任务"));
+            }
+
+            var deleted = await taskService.DeleteAsync(id, cancellationToken);
+            if (!deleted)
+            {
+                return NotFound(ApiResult.Fail("任务不存在", StatusCodes.Status404NotFound));
+            }
+
+            logger.LogInformation("删除任务成功: {Id}", id);
+            return Ok(ApiResult.Success("删除成功"));
+        }
+        catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限删除此任务"));
+            logger.LogError(ex, "删除任务失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("删除失败，请稍后重试"));
         }
-
-        var deleted = await taskService.DeleteAsync(id, cancellationToken);
-        if (!deleted)
-        {
-            return NotFound(ApiResult.Fail("任务不存在", StatusCodes.Status404NotFound));
-        }
-
-        return Ok(ApiResult.Success("删除成功"));
     }
 
     [HttpPost("{id:guid}/complete")]
     public async Task<ActionResult<ApiResult<TaskItemDto>>> Complete(Guid id, CancellationToken cancellationToken)
     {
-        var result = await taskService.CompleteAsync(id, cancellationToken);
-        if (result is null)
+        try
         {
-            return NotFound(ApiResult<TaskItemDto>.Fail("任务不存在", StatusCodes.Status404NotFound));
-        }
+            var result = await taskService.CompleteAsync(id, cancellationToken);
+            if (result is null)
+            {
+                return NotFound(ApiResult<TaskItemDto>.Fail("任务不存在", StatusCodes.Status404NotFound));
+            }
 
-        return Ok(ApiResult<TaskItemDto>.Success(result, "已完成"));
+            logger.LogInformation("完成任务成功: {Id}", id);
+            return Ok(ApiResult<TaskItemDto>.Success(result, "已完成"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "完成任务失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("操作失败，请稍后重试"));
+        }
     }
 
     [HttpPost("convert-to-log")]

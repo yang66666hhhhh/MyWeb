@@ -12,7 +12,7 @@ namespace WebApplication1.Features.Work.Controllers;
 [RequireFeature("WORK_PROJECT")]
 [Route("api/work/projects")]
 [Tags("Work - Projects")]
-public class WorkProjectsController(IWorkProjectService projectService) : ControllerBase
+public class WorkProjectsController(IWorkProjectService projectService, ILogger<WorkProjectsController> logger) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<ApiResult<PageResult<WorkProjectDto>>>> GetPage(
@@ -37,8 +37,17 @@ public class WorkProjectsController(IWorkProjectService projectService) : Contro
         [FromBody] CreateWorkProjectDto input,
         CancellationToken cancellationToken)
     {
-        var result = await projectService.CreateAsync(input, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResult<WorkProjectDto>.Success(result, "创建成功"));
+        try
+        {
+            var result = await projectService.CreateAsync(input, cancellationToken);
+            logger.LogInformation("创建工作项目成功: {Id}", result.Id);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResult<WorkProjectDto>.Success(result, "创建成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "创建工作项目失败");
+            return StatusCode(500, ApiResult.Fail("创建失败，请稍后重试"));
+        }
     }
 
     [HttpPut("{id:guid}")]
@@ -47,18 +56,36 @@ public class WorkProjectsController(IWorkProjectService projectService) : Contro
         [FromBody] UpdateWorkProjectDto input,
         CancellationToken cancellationToken)
     {
-        var result = await projectService.UpdateAsync(id, input, cancellationToken);
-        if (result == null)
-            return NotFound(ApiResult.Fail("项目不存在", StatusCodes.Status404NotFound));
-        return Ok(ApiResult<WorkProjectDto>.Success(result, "更新成功"));
+        try
+        {
+            var result = await projectService.UpdateAsync(id, input, cancellationToken);
+            if (result == null)
+                return NotFound(ApiResult.Fail("项目不存在", StatusCodes.Status404NotFound));
+            logger.LogInformation("更新工作项目成功: {Id}", id);
+            return Ok(ApiResult<WorkProjectDto>.Success(result, "更新成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "更新工作项目失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
+        }
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<ApiResult>> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var deleted = await projectService.DeleteAsync(id, cancellationToken);
-        if (!deleted)
-            return NotFound(ApiResult.Fail("项目不存在", StatusCodes.Status404NotFound));
-        return Ok(ApiResult.Success("删除成功"));
+        try
+        {
+            var deleted = await projectService.DeleteAsync(id, cancellationToken);
+            if (!deleted)
+                return NotFound(ApiResult.Fail("项目不存在", StatusCodes.Status404NotFound));
+            logger.LogInformation("删除工作项目成功: {Id}", id);
+            return Ok(ApiResult.Success("删除成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "删除工作项目失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("删除失败，请稍后重试"));
+        }
     }
 }

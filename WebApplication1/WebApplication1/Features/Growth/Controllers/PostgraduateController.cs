@@ -16,7 +16,8 @@ public class PostgraduateController(
     IExamMistakeService mistakeService,
     IExamMaterialService materialService,
     IStudentSubjectService subjectService,
-    IStudentStudyRecordService recordService) : BaseApiController
+    IStudentStudyRecordService recordService,
+    ILogger<PostgraduateController> logger) : BaseApiController
 {
     [RequireFeature("STUDENT_LEARNING")]
     [HttpGet("tasks")]
@@ -142,12 +143,21 @@ public class PostgraduateController(
         [FromBody] CreatePostgraduateTaskDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue)
-            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Unauthorized(ApiResult.Fail("无法获取用户信息"));
 
-        var result = await taskService.CreateAsync(input, userId.Value, cancellationToken);
-        return CreatedAtAction(nameof(GetTaskById), new { id = result.Id }, ApiResult<PostgraduateTaskDto>.Success(result, "创建成功"));
+            var result = await taskService.CreateAsync(input, userId.Value, cancellationToken);
+            logger.LogInformation("创建考研任务成功: {Id}", result.Id);
+            return CreatedAtAction(nameof(GetTaskById), new { id = result.Id }, ApiResult<PostgraduateTaskDto>.Success(result, "创建成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "创建考研任务失败");
+            return StatusCode(500, ApiResult.Fail("创建失败，请稍后重试"));
+        }
     }
 
     [RequireFeature("STUDENT_LEARNING")]
@@ -157,22 +167,40 @@ public class PostgraduateController(
         [FromBody] UpdatePostgraduateTaskDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetUserIdForQuery();
-        var result = await taskService.UpdateAsync(id, input, userId, cancellationToken);
-        if (result is null)
-            return NotFound(ApiResult<PostgraduateTaskDto>.Fail("任务不存在", StatusCodes.Status404NotFound));
-        return Ok(ApiResult<PostgraduateTaskDto>.Success(result, "更新成功"));
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var result = await taskService.UpdateAsync(id, input, userId, cancellationToken);
+            if (result is null)
+                return NotFound(ApiResult<PostgraduateTaskDto>.Fail("任务不存在", StatusCodes.Status404NotFound));
+            logger.LogInformation("更新考研任务成功: {Id}", id);
+            return Ok(ApiResult<PostgraduateTaskDto>.Success(result, "更新成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "更新考研任务失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
+        }
     }
 
     [RequireFeature("STUDENT_LEARNING")]
     [HttpDelete("tasks/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteTask(Guid id, CancellationToken cancellationToken)
     {
-        var userId = GetUserIdForQuery();
-        var deleted = await taskService.DeleteAsync(id, userId, cancellationToken);
-        if (!deleted)
-            return NotFound(ApiResult.Fail("任务不存在"));
-        return Ok(ApiResult.Success("删除成功"));
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var deleted = await taskService.DeleteAsync(id, userId, cancellationToken);
+            if (!deleted)
+                return NotFound(ApiResult.Fail("任务不存在"));
+            logger.LogInformation("删除考研任务成功: {Id}", id);
+            return Ok(ApiResult.Success("删除成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "删除考研任务失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("删除失败，请稍后重试"));
+        }
     }
 
     [RequireFeature("STUDENT_MISTAKES")]
@@ -203,12 +231,21 @@ public class PostgraduateController(
         [FromBody] CreateExamMistakeDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue)
-            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Unauthorized(ApiResult.Fail("无法获取用户信息"));
 
-        var result = await mistakeService.CreateAsync(input, userId.Value, cancellationToken);
-        return CreatedAtAction(nameof(GetMistakeById), new { id = result.Id }, ApiResult<ExamMistakeDto>.Success(result, "创建成功"));
+            var result = await mistakeService.CreateAsync(input, userId.Value, cancellationToken);
+            logger.LogInformation("创建错题成功: {Id}", result.Id);
+            return CreatedAtAction(nameof(GetMistakeById), new { id = result.Id }, ApiResult<ExamMistakeDto>.Success(result, "创建成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "创建错题失败");
+            return StatusCode(500, ApiResult.Fail("创建失败，请稍后重试"));
+        }
     }
 
     [RequireFeature("STUDENT_MISTAKES")]
@@ -218,22 +255,40 @@ public class PostgraduateController(
         [FromBody] UpdateExamMistakeDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetUserIdForQuery();
-        var result = await mistakeService.UpdateAsync(id, input, userId, cancellationToken);
-        if (result is null)
-            return NotFound(ApiResult<ExamMistakeDto>.Fail("错题不存在", StatusCodes.Status404NotFound));
-        return Ok(ApiResult<ExamMistakeDto>.Success(result, "更新成功"));
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var result = await mistakeService.UpdateAsync(id, input, userId, cancellationToken);
+            if (result is null)
+                return NotFound(ApiResult<ExamMistakeDto>.Fail("错题不存在", StatusCodes.Status404NotFound));
+            logger.LogInformation("更新错题成功: {Id}", id);
+            return Ok(ApiResult<ExamMistakeDto>.Success(result, "更新成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "更新错题失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
+        }
     }
 
     [RequireFeature("STUDENT_MISTAKES")]
     [HttpDelete("mistakes/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteMistake(Guid id, CancellationToken cancellationToken)
     {
-        var userId = GetUserIdForQuery();
-        var deleted = await mistakeService.DeleteAsync(id, userId, cancellationToken);
-        if (!deleted)
-            return NotFound(ApiResult.Fail("错题不存在"));
-        return Ok(ApiResult.Success("删除成功"));
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var deleted = await mistakeService.DeleteAsync(id, userId, cancellationToken);
+            if (!deleted)
+                return NotFound(ApiResult.Fail("错题不存在"));
+            logger.LogInformation("删除错题成功: {Id}", id);
+            return Ok(ApiResult.Success("删除成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "删除错题失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("删除失败，请稍后重试"));
+        }
     }
 
     [RequireFeature("STUDENT_MATERIALS")]
@@ -264,12 +319,21 @@ public class PostgraduateController(
         [FromBody] CreateExamMaterialDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue)
-            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Unauthorized(ApiResult.Fail("无法获取用户信息"));
 
-        var result = await materialService.CreateAsync(input, userId.Value, cancellationToken);
-        return CreatedAtAction(nameof(GetMaterialById), new { id = result.Id }, ApiResult<ExamMaterialDto>.Success(result, "创建成功"));
+            var result = await materialService.CreateAsync(input, userId.Value, cancellationToken);
+            logger.LogInformation("创建学习资料成功: {Id}", result.Id);
+            return CreatedAtAction(nameof(GetMaterialById), new { id = result.Id }, ApiResult<ExamMaterialDto>.Success(result, "创建成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "创建学习资料失败");
+            return StatusCode(500, ApiResult.Fail("创建失败，请稍后重试"));
+        }
     }
 
     [RequireFeature("STUDENT_MATERIALS")]
@@ -279,22 +343,40 @@ public class PostgraduateController(
         [FromBody] UpdateExamMaterialDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetUserIdForQuery();
-        var result = await materialService.UpdateAsync(id, input, userId, cancellationToken);
-        if (result is null)
-            return NotFound(ApiResult<ExamMaterialDto>.Fail("资料不存在", StatusCodes.Status404NotFound));
-        return Ok(ApiResult<ExamMaterialDto>.Success(result, "更新成功"));
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var result = await materialService.UpdateAsync(id, input, userId, cancellationToken);
+            if (result is null)
+                return NotFound(ApiResult<ExamMaterialDto>.Fail("资料不存在", StatusCodes.Status404NotFound));
+            logger.LogInformation("更新学习资料成功: {Id}", id);
+            return Ok(ApiResult<ExamMaterialDto>.Success(result, "更新成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "更新学习资料失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
+        }
     }
 
     [RequireFeature("STUDENT_MATERIALS")]
     [HttpDelete("materials/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteMaterial(Guid id, CancellationToken cancellationToken)
     {
-        var userId = GetUserIdForQuery();
-        var deleted = await materialService.DeleteAsync(id, userId, cancellationToken);
-        if (!deleted)
-            return NotFound(ApiResult.Fail("资料不存在"));
-        return Ok(ApiResult.Success("删除成功"));
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var deleted = await materialService.DeleteAsync(id, userId, cancellationToken);
+            if (!deleted)
+                return NotFound(ApiResult.Fail("资料不存在"));
+            logger.LogInformation("删除学习资料成功: {Id}", id);
+            return Ok(ApiResult.Success("删除成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "删除学习资料失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("删除失败，请稍后重试"));
+        }
     }
 
     [RequireFeature("STUDENT_SUBJECTS")]
@@ -325,12 +407,21 @@ public class PostgraduateController(
         [FromBody] CreateStudentSubjectDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue)
-            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Unauthorized(ApiResult.Fail("无法获取用户信息"));
 
-        var result = await subjectService.CreateAsync(input, userId.Value, cancellationToken);
-        return CreatedAtAction(nameof(GetSubjectById), new { id = result.Id }, ApiResult<StudentSubjectDto>.Success(result, "创建成功"));
+            var result = await subjectService.CreateAsync(input, userId.Value, cancellationToken);
+            logger.LogInformation("创建科目成功: {Id}", result.Id);
+            return CreatedAtAction(nameof(GetSubjectById), new { id = result.Id }, ApiResult<StudentSubjectDto>.Success(result, "创建成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "创建科目失败");
+            return StatusCode(500, ApiResult.Fail("创建失败，请稍后重试"));
+        }
     }
 
     [RequireFeature("STUDENT_SUBJECTS")]
@@ -340,22 +431,40 @@ public class PostgraduateController(
         [FromBody] UpdateStudentSubjectDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetUserIdForQuery();
-        var result = await subjectService.UpdateAsync(id, input, userId, cancellationToken);
-        if (result is null)
-            return NotFound(ApiResult<StudentSubjectDto>.Fail("科目不存在", StatusCodes.Status404NotFound));
-        return Ok(ApiResult<StudentSubjectDto>.Success(result, "更新成功"));
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var result = await subjectService.UpdateAsync(id, input, userId, cancellationToken);
+            if (result is null)
+                return NotFound(ApiResult<StudentSubjectDto>.Fail("科目不存在", StatusCodes.Status404NotFound));
+            logger.LogInformation("更新科目成功: {Id}", id);
+            return Ok(ApiResult<StudentSubjectDto>.Success(result, "更新成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "更新科目失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
+        }
     }
 
     [RequireFeature("STUDENT_SUBJECTS")]
     [HttpDelete("subjects/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteSubject(Guid id, CancellationToken cancellationToken)
     {
-        var userId = GetUserIdForQuery();
-        var deleted = await subjectService.DeleteAsync(id, userId, cancellationToken);
-        if (!deleted)
-            return NotFound(ApiResult.Fail("科目不存在"));
-        return Ok(ApiResult.Success("删除成功"));
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var deleted = await subjectService.DeleteAsync(id, userId, cancellationToken);
+            if (!deleted)
+                return NotFound(ApiResult.Fail("科目不存在"));
+            logger.LogInformation("删除科目成功: {Id}", id);
+            return Ok(ApiResult.Success("删除成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "删除科目失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("删除失败，请稍后重试"));
+        }
     }
 
     [RequireFeature("STUDENT_RECORDS")]
@@ -386,12 +495,21 @@ public class PostgraduateController(
         [FromBody] CreateStudentStudyRecordDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue)
-            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Unauthorized(ApiResult.Fail("无法获取用户信息"));
 
-        var result = await recordService.CreateAsync(input, userId.Value, cancellationToken);
-        return CreatedAtAction(nameof(GetRecordById), new { id = result.Id }, ApiResult<StudentStudyRecordDto>.Success(result, "创建成功"));
+            var result = await recordService.CreateAsync(input, userId.Value, cancellationToken);
+            logger.LogInformation("创建学习记录成功: {Id}", result.Id);
+            return CreatedAtAction(nameof(GetRecordById), new { id = result.Id }, ApiResult<StudentStudyRecordDto>.Success(result, "创建成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "创建学习记录失败");
+            return StatusCode(500, ApiResult.Fail("创建失败，请稍后重试"));
+        }
     }
 
     [RequireFeature("STUDENT_RECORDS")]
@@ -401,22 +519,40 @@ public class PostgraduateController(
         [FromBody] UpdateStudentStudyRecordDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetUserIdForQuery();
-        var result = await recordService.UpdateAsync(id, input, userId, cancellationToken);
-        if (result is null)
-            return NotFound(ApiResult<StudentStudyRecordDto>.Fail("学习记录不存在", StatusCodes.Status404NotFound));
-        return Ok(ApiResult<StudentStudyRecordDto>.Success(result, "更新成功"));
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var result = await recordService.UpdateAsync(id, input, userId, cancellationToken);
+            if (result is null)
+                return NotFound(ApiResult<StudentStudyRecordDto>.Fail("学习记录不存在", StatusCodes.Status404NotFound));
+            logger.LogInformation("更新学习记录成功: {Id}", id);
+            return Ok(ApiResult<StudentStudyRecordDto>.Success(result, "更新成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "更新学习记录失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
+        }
     }
 
     [RequireFeature("STUDENT_RECORDS")]
     [HttpDelete("records/{id:guid}")]
     public async Task<ActionResult<ApiResult>> DeleteRecord(Guid id, CancellationToken cancellationToken)
     {
-        var userId = GetUserIdForQuery();
-        var deleted = await recordService.DeleteAsync(id, userId, cancellationToken);
-        if (!deleted)
-            return NotFound(ApiResult.Fail("学习记录不存在"));
-        return Ok(ApiResult.Success("删除成功"));
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var deleted = await recordService.DeleteAsync(id, userId, cancellationToken);
+            if (!deleted)
+                return NotFound(ApiResult.Fail("学习记录不存在"));
+            logger.LogInformation("删除学习记录成功: {Id}", id);
+            return Ok(ApiResult.Success("删除成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "删除学习记录失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("删除失败，请稍后重试"));
+        }
     }
 
     private static bool SubjectEquals(string? subject, string target)

@@ -12,7 +12,7 @@ namespace WebApplication1.Features.Growth.Controllers;
 [RequireFeature("GROWTH_SKILL")]
 [Route("api/growth/projects")]
 [Tags("Growth - Projects")]
-public class GrowthProjectsController(IGrowthProjectService projectService) : BaseApiController
+public class GrowthProjectsController(IGrowthProjectService projectService, ILogger<GrowthProjectsController> logger) : BaseApiController
 {
     [HttpGet]
     public async Task<ActionResult<ApiResult<PageResult<GrowthProjectDto>>>> GetPage(
@@ -43,12 +43,21 @@ public class GrowthProjectsController(IGrowthProjectService projectService) : Ba
         [FromBody] CreateGrowthProjectDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue)
-            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Unauthorized(ApiResult.Fail("无法获取用户信息"));
 
-        var result = await projectService.CreateAsync(input, userId.Value, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResult<GrowthProjectDto>.Success(result, "创建成功"));
+            var result = await projectService.CreateAsync(input, userId.Value, cancellationToken);
+            logger.LogInformation("创建成长项目成功: {Id}", result.Id);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResult<GrowthProjectDto>.Success(result, "创建成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "创建成长项目失败");
+            return StatusCode(500, ApiResult.Fail("创建失败，请稍后重试"));
+        }
     }
 
     [HttpPut("{id:guid}")]
@@ -57,32 +66,50 @@ public class GrowthProjectsController(IGrowthProjectService projectService) : Ba
         [FromBody] UpdateGrowthProjectDto input,
         CancellationToken cancellationToken)
     {
-        var existing = await projectService.GetByIdAsync(id, cancellationToken);
-        if (existing is null)
-            return NotFound(ApiResult<GrowthProjectDto>.Fail("项目不存在", StatusCodes.Status404NotFound));
+        try
+        {
+            var existing = await projectService.GetByIdAsync(id, cancellationToken);
+            if (existing is null)
+                return NotFound(ApiResult<GrowthProjectDto>.Fail("项目不存在", StatusCodes.Status404NotFound));
 
-        var currentUserId = GetCurrentUserId();
-        if (!IsProOrAbove() && existing.UserId != currentUserId)
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改此项目"));
+            var currentUserId = GetCurrentUserId();
+            if (!IsProOrAbove() && existing.UserId != currentUserId)
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限修改此项目"));
 
-        var result = await projectService.UpdateAsync(id, input, cancellationToken);
-        if (result is null)
-            return NotFound(ApiResult.Fail("项目不存在"));
-        return Ok(ApiResult<GrowthProjectDto>.Success(result, "更新成功"));
+            var result = await projectService.UpdateAsync(id, input, cancellationToken);
+            if (result is null)
+                return NotFound(ApiResult.Fail("项目不存在"));
+            logger.LogInformation("更新成长项目成功: {Id}", id);
+            return Ok(ApiResult<GrowthProjectDto>.Success(result, "更新成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "更新成长项目失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
+        }
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<ApiResult>> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var existing = await projectService.GetByIdAsync(id, cancellationToken);
-        if (existing is null)
-            return NotFound(ApiResult.Fail("项目不存在"));
+        try
+        {
+            var existing = await projectService.GetByIdAsync(id, cancellationToken);
+            if (existing is null)
+                return NotFound(ApiResult.Fail("项目不存在"));
 
-        var currentUserId = GetCurrentUserId();
-        if (!IsProOrAbove() && existing.UserId != currentUserId)
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限删除此项目"));
+            var currentUserId = GetCurrentUserId();
+            if (!IsProOrAbove() && existing.UserId != currentUserId)
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResult.Fail("无权限删除此项目"));
 
-        var deleted = await projectService.DeleteAsync(id, cancellationToken);
-        return Ok(ApiResult.Success("删除成功"));
+            var deleted = await projectService.DeleteAsync(id, cancellationToken);
+            logger.LogInformation("删除成长项目成功: {Id}", id);
+            return Ok(ApiResult.Success("删除成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "删除成长项目失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("删除失败，请稍后重试"));
+        }
     }
 }

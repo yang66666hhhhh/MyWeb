@@ -10,7 +10,7 @@ namespace WebApplication1.Features.DailyPlans;
 [RequireFeature("GROWTH_DAILY_PLAN")]
 [Route("api/growth/daily-plans")]
 [Tags("Daily Plans")]
-public class DailyPlansController(IDailyPlanService dailyPlanService) : BaseApiController
+public class DailyPlansController(IDailyPlanService dailyPlanService, ILogger<DailyPlansController> logger) : BaseApiController
 {
     [HttpGet]
     public async Task<ActionResult<ApiResult<PageResult<DailyPlanDto>>>> GetPage(
@@ -40,14 +40,23 @@ public class DailyPlansController(IDailyPlanService dailyPlanService) : BaseApiC
         [FromBody] CreateDailyPlanDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue)
+        try
         {
-            return Unauthorized(ApiResult.Fail("无法获取用户信息"));
-        }
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+            {
+                return Unauthorized(ApiResult.Fail("无法获取用户信息"));
+            }
 
-        var result = await dailyPlanService.CreateAsync(input, userId.Value, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResult<DailyPlanDto>.Success(result, "创建成功"));
+            var result = await dailyPlanService.CreateAsync(input, userId.Value, cancellationToken);
+            logger.LogInformation("创建每日计划成功: {Id}", result.Id);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResult<DailyPlanDto>.Success(result, "创建成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "创建每日计划失败");
+            return StatusCode(500, ApiResult.Fail("创建失败，请稍后重试"));
+        }
     }
 
     [HttpPut("{id:guid}")]
@@ -56,14 +65,23 @@ public class DailyPlansController(IDailyPlanService dailyPlanService) : BaseApiC
         [FromBody] UpdateDailyPlanDto input,
         CancellationToken cancellationToken)
     {
-        var userId = GetUserIdForQuery();
-        var result = await dailyPlanService.UpdateAsync(id, input, userId, cancellationToken);
-        if (result is null)
+        try
         {
-            return NotFound(ApiResult.Fail("每日计划不存在", StatusCodes.Status404NotFound));
-        }
+            var userId = GetUserIdForQuery();
+            var result = await dailyPlanService.UpdateAsync(id, input, userId, cancellationToken);
+            if (result is null)
+            {
+                return NotFound(ApiResult.Fail("每日计划不存在", StatusCodes.Status404NotFound));
+            }
 
-        return Ok(ApiResult<DailyPlanDto>.Success(result, "更新成功"));
+            logger.LogInformation("更新每日计划成功: {Id}", id);
+            return Ok(ApiResult<DailyPlanDto>.Success(result, "更新成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "更新每日计划失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("更新失败，请稍后重试"));
+        }
     }
 
     [HttpPatch("{id:guid}/complete")]
@@ -82,13 +100,22 @@ public class DailyPlansController(IDailyPlanService dailyPlanService) : BaseApiC
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<ApiResult>> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var userId = GetUserIdForQuery();
-        var deleted = await dailyPlanService.DeleteAsync(id, userId, cancellationToken);
-        if (!deleted)
+        try
         {
-            return NotFound(ApiResult.Fail("每日计划不存在", StatusCodes.Status404NotFound));
-        }
+            var userId = GetUserIdForQuery();
+            var deleted = await dailyPlanService.DeleteAsync(id, userId, cancellationToken);
+            if (!deleted)
+            {
+                return NotFound(ApiResult.Fail("每日计划不存在", StatusCodes.Status404NotFound));
+            }
 
-        return Ok(ApiResult.Success("删除成功"));
+            logger.LogInformation("删除每日计划成功: {Id}", id);
+            return Ok(ApiResult.Success("删除成功"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "删除每日计划失败: {Id}", id);
+            return StatusCode(500, ApiResult.Fail("删除失败，请稍后重试"));
+        }
     }
 }
