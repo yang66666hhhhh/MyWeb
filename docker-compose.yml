@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # 后端 API
+  api:
+    build:
+      context: ./WebApplication1
+      dockerfile: Dockerfile
+    container_name: growth-api
+    ports:
+      - "5062:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - DB_CONNECTION=Server=mysql;Port=3306;Database=personal_growth;User=root;Password=growth_password;
+      - JWT_SECRET_KEY=your-super-secret-key-at-least-32-characters-long
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - growth-network
+    restart: unless-stopped
+
+  # 前端
+  web:
+    build:
+      context: ./vue-vben-admin
+      dockerfile: Dockerfile
+    container_name: growth-web
+    ports:
+      - "5666:80"
+    depends_on:
+      - api
+    networks:
+      - growth-network
+    restart: unless-stopped
+
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: growth-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=growth_password
+      - MYSQL_DATABASE=personal_growth
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - growth-network
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+
+networks:
+  growth-network:
+    driver: bridge
