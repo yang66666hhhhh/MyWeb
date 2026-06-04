@@ -83,7 +83,7 @@ const typeOptions = [
   { label: '其他', value: 4 },
 ];
 
-const columns: any[] = [
+const columns = [
   { dataIndex: 'projectName', key: 'projectName', title: '项目名称', minWidth: 180 },
   { dataIndex: 'customerName', key: 'customerName', title: '客户', width: 120 },
   { dataIndex: 'location', key: 'location', title: '项目地', width: 120 },
@@ -92,7 +92,7 @@ const columns: any[] = [
   { dataIndex: 'status', key: 'status', title: '状态', width: 90 },
   { dataIndex: 'startDate', key: 'startDate', title: '开始日期', width: 110 },
   { dataIndex: 'endDate', key: 'endDate', title: '结束日期', width: 110 },
-  { key: 'action', title: '操作', width: 180, fixed: 'right' },
+  { key: 'action', title: '操作', width: 180, fixed: 'right' as const },
 ];
 
 const { changePage, items, load, loading, query, resetQuery, search, total } = usePagedQuery<

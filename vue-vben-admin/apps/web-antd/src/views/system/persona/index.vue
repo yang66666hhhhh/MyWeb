@@ -100,7 +100,7 @@ const formState = reactive({
   isActive: true,
 });
 
-const columns: any[] = [
+const columns = [
   { title: '图标', key: 'icon', width: 80 },
   { title: '编码', dataIndex: 'code', width: 120 },
   { title: '名称', dataIndex: 'name' },

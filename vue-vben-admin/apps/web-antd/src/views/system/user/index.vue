@@ -70,7 +70,7 @@ const roleOptions = [
   { label: 'Member', value: 'member' },
 ];
 
-const columns: any[] = [
+const columns = [
   { dataIndex: 'username', key: 'username', title: '用户名', width: 120 },
   { dataIndex: 'realName', key: 'realName', title: '姓名', width: 120 },
   { dataIndex: 'roles', key: 'roles', title: '角色', width: 100 },
@@ -78,7 +78,7 @@ const columns: any[] = [
   { dataIndex: 'email', key: 'email', title: '邮箱', width: 180 },
   { dataIndex: 'phone', key: 'phone', title: '电话', width: 140 },
   { dataIndex: 'status', key: 'status', width: 90 },
-  { key: 'action', title: '操作', width: 180, fixed: 'right' },
+  { key: 'action', title: '操作', width: 180, fixed: 'right' as const },
 ];
 
 const { changePage, items, load, loading, query, search, total } = usePagedQuery<

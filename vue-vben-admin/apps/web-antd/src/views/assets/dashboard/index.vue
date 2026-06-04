@@ -5,7 +5,7 @@ import { Page } from '@vben/common-ui';
 
 import { Card, Col, message, Row, Statistic, Table, Tag } from 'ant-design-vue';
 
-import type { AssetSummary, Income } from '#/api/assets';
+import type { AssetSummary, Expense, Income } from '#/api/assets';
 
 import { assetApi } from '#/api/assets';
 
@@ -60,7 +60,7 @@ const fetchRecentTransactions = async () => {
       : [];
 
     const expenses = expenseRes.status === 'fulfilled'
-      ? expenseRes.value.items.map((item: any) => ({
+      ? expenseRes.value.items.map((item: Expense) => ({
           id: item.id,
           title: item.title,
           amount: item.amount,

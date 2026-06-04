@@ -1,7 +1,8 @@
 ﻿<script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -31,6 +32,11 @@ import {
   updateRiskApi,
 } from '#/api/work/extended';
 import { usePagedQuery } from '#/composables/usePagedQuery';
+
+const accessStore = useAccessStore();
+const canCreate = computed(() => accessStore.accessCodes.includes('WORK_TASK'));
+const canEdit = computed(() => accessStore.accessCodes.includes('WORK_TASK'));
+const canDelete = computed(() => accessStore.accessCodes.includes('WORK_TASK'));
 
 const formRef = ref();
 const formRules = {
@@ -235,7 +241,7 @@ onMounted(() => {
             </Space>
           </Form.Item>
         </Form>
-        <Button type="primary" @click="openCreate">识别风险</Button>
+        <Button v-if="canCreate" type="primary" @click="openCreate">识别风险</Button>
       </div>
     </Card>
 
@@ -278,8 +284,8 @@ onMounted(() => {
           <template v-else-if="column.key === 'action'">
             <Space>
               <Button size="small" type="link" @click="showDetail(record)">详情</Button>
-              <Button size="small" type="link" @click="openEdit(record)">编辑</Button>
-              <Popconfirm title="确认删除？" @confirm="handleRemove(record.id)">
+              <Button v-if="canEdit" size="small" type="link" @click="openEdit(record)">编辑</Button>
+              <Popconfirm v-if="canDelete" title="确认删除？" @confirm="handleRemove(record.id)">
                 <Button danger size="small" type="link">删除</Button>
               </Popconfirm>
             </Space>

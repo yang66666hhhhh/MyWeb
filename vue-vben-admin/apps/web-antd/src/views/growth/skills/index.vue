@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -30,6 +31,9 @@ import {
   updateSkillApi,
 } from '#/api/growth/extended';
 import { usePagedQuery } from '#/composables/usePagedQuery';
+
+const accessStore = useAccessStore();
+const hasPermission = (code: string) => accessStore.accessCodes.includes(code);
 
 const formOpen = ref(false);
 const submitting = ref(false);
@@ -187,7 +191,7 @@ onMounted(() => {
         <Form.Item>
           <Space>
             <Button type="primary" @click="search">查询</Button>
-            <Button @click="openCreate">新增技能</Button>
+            <Button v-if="hasPermission('GROWTH_SKILL')" @click="openCreate">新增技能</Button>
           </Space>
         </Form.Item>
       </Form>
@@ -228,9 +232,9 @@ onMounted(() => {
           </template>
           <template v-else-if="column.key === 'action'">
             <Space>
-              <Button size="small" type="link" @click="openEdit(record as Skill)">编辑</Button>
+              <Button v-if="hasPermission('GROWTH_SKILL')" size="small" type="link" @click="openEdit(record as Skill)">编辑</Button>
               <Popconfirm title="确认删除？" @confirm="handleDelete(record.id)">
-                <Button danger size="small" type="link">删除</Button>
+                <Button v-if="hasPermission('GROWTH_SKILL')" danger size="small" type="link">删除</Button>
               </Popconfirm>
             </Space>
           </template>

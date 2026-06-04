@@ -9,9 +9,10 @@ import type {
   WorkStatisticsTaskTypeDistribution,
 } from '#/api/work/statistics';
 
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import { Card, Col, DatePicker, Form, message, Row, Select, Space, Statistic, Table, Tag } from 'ant-design-vue';
 import dayjs from 'dayjs';
@@ -24,6 +25,9 @@ import {
   getWorkStatisticsProjectHoursApi,
   getWorkStatisticsTaskTypeDistributionApi,
 } from '#/api/work/statistics';
+
+const accessStore = useAccessStore();
+const canView = computed(() => accessStore.accessCodes.includes('WORK_LOG'));
 
 const loading = ref(false);
 const overview = ref<WorkStatisticsOverview>({
@@ -98,7 +102,7 @@ onMounted(() => {
 
 <template>
   <Page description="工作数据统计分析" title="工作统计">
-    <div class="space-y-4">
+    <div v-if="canView" class="space-y-4">
       <Card>
         <Form :model="queryParams" layout="inline">
           <Form.Item label="日期范围">

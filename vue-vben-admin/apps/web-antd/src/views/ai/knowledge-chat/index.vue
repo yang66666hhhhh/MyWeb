@@ -21,7 +21,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons-vue';
 
-import type { KnowledgeChatMessage } from '#/api/ai/extended';
+import type { KnowledgeChatMessage, KnowledgeChatSession } from '#/api/ai/extended';
 
 import {
   deleteKnowledgeChatSessionApi,
@@ -43,7 +43,7 @@ const messages = ref<KnowledgeChatMessage[]>([]);
 const messageListRef = ref<HTMLElement>();
 
 const { items, load, loading, query, total, changePage } = usePagedQuery<
-  any,
+  KnowledgeChatSession,
   { keyword?: string; page: number; pageSize: number; type?: string }
 >({
   defaultQuery: {
@@ -54,7 +54,7 @@ const { items, load, loading, query, total, changePage } = usePagedQuery<
 });
 
 const selectedSession = computed(() =>
-  items.value.find((i: any) => i.id === selectedSessionId.value),
+  items.value.find((i: KnowledgeChatSession) => i.id === selectedSessionId.value),
 );
 
 async function loadMessages(sessionId: string) {

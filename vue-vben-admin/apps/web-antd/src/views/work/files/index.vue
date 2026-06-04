@@ -1,7 +1,8 @@
 ﻿<script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -32,6 +33,11 @@ import {
 } from '#/api/work/extended';
 import { usePagedQuery } from '#/composables/usePagedQuery';
 
+const accessStore = useAccessStore();
+const canCreate = computed(() => accessStore.accessCodes.includes('WORK_TASK'));
+const canEdit = computed(() => accessStore.accessCodes.includes('WORK_TASK'));
+const canDelete = computed(() => accessStore.accessCodes.includes('WORK_TASK'));
+
 const formRef = ref();
 const formRules = {
   fileName: [{ required: true, message: '请输入文件名', type: 'string' as const, trigger: 'blur' as const }],
@@ -53,13 +59,13 @@ const formState = ref({
   tags: '',
 });
 
-const columns: any[] = [
+const columns = [
   { dataIndex: 'fileName', key: 'fileName', title: '文件名', minWidth: 200 },
   { dataIndex: 'fileType', key: 'fileType', title: '类型', width: 90 },
   { dataIndex: 'fileSize', key: 'fileSize', title: '大小', width: 100 },
   { dataIndex: 'category', key: 'category', title: '分类', width: 100 },
   { dataIndex: 'createdAt', key: 'createdAt', title: '上传时间', width: 160 },
-  { key: 'action', title: '操作', width: 180, fixed: 'right' },
+  { key: 'action', title: '操作', width: 180, fixed: 'right' as const },
 ];
 
 const categoryOptions = [
@@ -227,7 +233,7 @@ onMounted(() => {
             </Space>
           </Form.Item>
         </Form>
-        <Button type="primary" @click="openCreate">上传文件</Button>
+        <Button v-if="canCreate" type="primary" @click="openCreate">上传文件</Button>
       </div>
     </Card>
 
@@ -268,8 +274,8 @@ onMounted(() => {
           <template v-else-if="column.key === 'action'">
             <Space>
               <Button size="small" type="link" @click="showDetail(record)">详情</Button>
-              <Button size="small" type="link" @click="openEdit(record)">编辑</Button>
-              <Popconfirm title="确认删除？" @confirm="handleRemove(record.id)">
+              <Button v-if="canEdit" size="small" type="link" @click="openEdit(record)">编辑</Button>
+              <Popconfirm v-if="canDelete" title="确认删除？" @confirm="handleRemove(record.id)">
                 <Button danger size="small" type="link">删除</Button>
               </Popconfirm>
             </Space>

@@ -58,14 +58,14 @@ const priorityMap: Record<number, { color: string; label: string }> = {
   5: { color: 'magenta', label: '紧急+' },
 };
 
-const columns: any[] = [
+const columns = [
   { dataIndex: 'planDate', key: 'planDate', title: '日期', width: 120 },
   { dataIndex: 'title', key: 'title', title: '计划标题', minWidth: 220 },
   { key: 'timeRange', title: '时段', width: 150 },
   { dataIndex: 'priority', key: 'priority', title: '优先级', width: 100 },
   { dataIndex: 'status', key: 'status', title: '状态', width: 110 },
   { dataIndex: 'remark', key: 'remark', title: '备注', minWidth: 180 },
-  { key: 'action', title: '操作', width: 200, fixed: 'right' },
+  { key: 'action', title: '操作', width: 200, fixed: 'right' as const },
 ];
 
 const statusOptions = [
@@ -113,7 +113,7 @@ function handleTableChange(pagination: { current?: number; pageSize?: number }) 
   fetchPage();
 }
 
-function formatTimeRange(record: any) {
+function formatTimeRange(record: Record<string, any>) {
   if (!record.startTime && !record.endTime) return '未设置';
   return `${record.startTime || '--:--'} - ${record.endTime || '--:--'}`;
 }

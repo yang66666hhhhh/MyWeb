@@ -1,7 +1,8 @@
 ﻿<script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { useAccessStore } from '@vben/stores';
 
 import {
   Button,
@@ -29,6 +30,12 @@ import {
   updateWorkTaskTypeApi,
 } from '#/api/work/taskType';
 import { usePagedQuery } from '#/composables/usePagedQuery';
+
+const accessStore = useAccessStore();
+const canCreate = computed(() => accessStore.accessCodes.includes('WORK_TASK'));
+const canEdit = computed(() => accessStore.accessCodes.includes('WORK_TASK'));
+const canDelete = computed(() => accessStore.accessCodes.includes('WORK_TASK'));
+const canToggle = computed(() => accessStore.accessCodes.includes('WORK_TASK'));
 
 const formRef = ref();
 const formRules = {
@@ -182,7 +189,7 @@ onMounted(() => {
               </Space>
             </Form.Item>
           </Form>
-          <Button type="primary" @click="openCreate">新增类型</Button>
+          <Button v-if="canCreate" type="primary" @click="openCreate">新增类型</Button>
         </div>
       </Card>
 
@@ -207,13 +214,14 @@ onMounted(() => {
               <div class="font-medium">{{ record.typeName }}</div>
             </template>
             <template v-else-if="column.key === 'enabled'">
-              <Switch :checked="text" size="small" @click="handleToggleEnabled(record)" />
+              <Switch v-if="canToggle" :checked="text" size="small" @click="handleToggleEnabled(record)" />
+              <Tag v-else :color="text ? 'success' : 'default'">{{ text ? '已启用' : '已停用' }}</Tag>
             </template>
             <template v-else-if="column.key === 'action'">
               <Space>
                 <Button size="small" type="link" @click="showDetail(record)">详情</Button>
-                <Button size="small" type="link" @click="openEdit(record)">编辑</Button>
-                <Popconfirm title="确认删除？" @confirm="handleRemove(record.id)">
+                <Button v-if="canEdit" size="small" type="link" @click="openEdit(record)">编辑</Button>
+                <Popconfirm v-if="canDelete" title="确认删除？" @confirm="handleRemove(record.id)">
                   <Button danger size="small" type="link">删除</Button>
                 </Popconfirm>
               </Space>
