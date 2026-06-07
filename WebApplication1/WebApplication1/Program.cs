@@ -31,6 +31,7 @@ using WebApplication1.Features.Content.Services;
 using WebApplication1.Features.Content.Services.Interfaces;
 using WebApplication1.Features.Network.Services;
 using WebApplication1.Features.Network.Services.Interfaces;
+using WebApplication1.Features.Notification;
 using WebApplication1.Features.Persona;
 using WebApplication1.Shared.HealthChecks;
 using WebApplication1.Shared.Localization;
@@ -307,7 +308,10 @@ builder.Services.AddScoped<IAnalyticsExtendedService, AnalyticsExtendedService>(
 builder.Services.AddScoped<IAssetService, AssetService>();
 builder.Services.AddScoped<IContentService, ContentService>();
 builder.Services.AddScoped<INetworkService, NetworkService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IGrowthExtendedService, GrowthExtendedService>();
+builder.Services.AddScoped<WebApplication1.Features.Shared.Services.IExportService, WebApplication1.Features.Shared.Services.ExportService>();
+builder.Services.AddScoped<WebApplication1.Features.Shared.Services.IImportService, WebApplication1.Features.Shared.Services.ImportService>();
 
 builder.Services.AddHealthChecks()
     .AddMySql(

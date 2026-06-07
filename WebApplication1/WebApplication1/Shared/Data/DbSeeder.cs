@@ -1148,6 +1148,8 @@ public static class DbSeeder
                 new() { Code = "AI_PLANNER", Name = "AI规划器", Category = "AI", Description = "AI智能规划" },
                 new() { Code = "AI_REPORT", Name = "AI报告", Category = "AI", Description = "AI生成报告" },
                 new() { Code = "AI_INSIGHTS", Name = "数据洞察", Category = "AI", Description = "AI数据分析洞察" },
+                new() { Code = "AI_AUTOMATION", Name = "自动化工作流", Category = "AI", Description = "AI自动化工作流管理" },
+                new() { Code = "AI_KNOWLEDGE_CHAT", Name = "知识库问答", Category = "AI", Description = "基于知识库的AI问答" },
 
                 // 财务模块
                 new() { Code = "ASSET_DASHBOARD", Name = "资产看板", Category = "Assets", Description = "财务资产总览" },

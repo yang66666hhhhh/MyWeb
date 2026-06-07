@@ -16,6 +16,7 @@ import {
   Row,
   Select,
   SelectOption,
+  Space,
   Statistic,
   Table,
   Tag,
@@ -38,6 +39,7 @@ const pageSize = ref(10);
 const modalVisible = ref(false);
 const editingId = ref<string | null>(null);
 const submitting = ref(false);
+const filterStatus = ref<number | undefined>(undefined);
 
 const formState = reactive<CreateIssueInput>({
   title: '',
@@ -99,10 +101,28 @@ const openCount = computed(() => dataList.value.filter((i) => i.status === 0).le
 const inProgressCount = computed(() => dataList.value.filter((i) => i.status === 1).length);
 const resolvedCount = computed(() => dataList.value.filter((i) => i.status === 2).length);
 
+const statusOptions = [
+  { label: '全部', value: undefined },
+  { label: '待处理', value: 0 },
+  { label: '进行中', value: 1 },
+  { label: '已解决', value: 2 },
+  { label: '已关闭', value: 3 },
+];
+
+const handleStatusFilter = (value: any) => {
+  filterStatus.value = value as number | undefined;
+  currentPage.value = 1;
+  fetchData();
+};
+
 const fetchData = async () => {
   loading.value = true;
   try {
-    const res = await getIssuesApi({ page: currentPage.value, pageSize: pageSize.value });
+    const res = await getIssuesApi({
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      status: filterStatus.value,
+    });
     dataList.value = res.items;
     total.value = res.total;
   } catch (e: unknown) {
@@ -210,7 +230,20 @@ onMounted(() => {
 
     <Card title="问题列表">
       <template #extra>
-        <Button type="primary" @click="handleAdd">新建问题</Button>
+        <Space>
+          <Select
+            v-model:value="filterStatus"
+            placeholder="筛选状态"
+            allow-clear
+            style="width: 120px"
+            @change="handleStatusFilter"
+          >
+            <SelectOption v-for="opt in statusOptions" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </SelectOption>
+          </Select>
+          <Button type="primary" @click="handleAdd">新建问题</Button>
+        </Space>
       </template>
       <Table
         :columns="columns"

@@ -26,4 +26,10 @@ public interface IAssetService
     Task<InvestmentDto> CreateInvestmentAsync(CreateInvestmentDto input, Guid userId, CancellationToken cancellationToken = default);
     Task<InvestmentDto?> UpdateInvestmentAsync(Guid id, UpdateInvestmentDto input, CancellationToken cancellationToken = default);
     Task<bool> DeleteInvestmentAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<List<MonthlyTrendDto>> GetIncomeTrendAsync(Guid? userId = null, int months = 6, CancellationToken cancellationToken = default);
+    Task<List<MonthlyTrendDto>> GetExpenseTrendAsync(Guid? userId = null, int months = 6, CancellationToken cancellationToken = default);
+    Task<List<CategoryStatDto>> GetExpenseCategoryStatsAsync(Guid? userId = null, CancellationToken cancellationToken = default);
+    Task<List<BudgetExecutionDto>> GetBudgetExecutionAsync(Guid? userId = null, CancellationToken cancellationToken = default);
+    Task<AssetOverviewDto> GetAssetOverviewAsync(Guid? userId = null, CancellationToken cancellationToken = default);
 }

@@ -1,7 +1,10 @@
 ﻿<script lang="ts" setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import type { EchartsUIType } from '@vben/plugins/echarts';
+
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 
 import {
   Button,
@@ -10,16 +13,21 @@ import {
   Form,
   FormItem,
   Input,
+  List,
+  ListItem,
+  ListItemMeta,
   message,
   Modal,
   Popconfirm,
   Row,
   Select,
   SelectOption,
+  Space,
   Statistic,
   Switch,
   Table,
   Tag,
+  Tooltip,
 } from 'ant-design-vue';
 
 import type { CodeRepository, CreateCodeRepositoryInput } from '#/api/persona';
@@ -39,6 +47,9 @@ const pageSize = ref(10);
 const modalVisible = ref(false);
 const editingId = ref<string | null>(null);
 const submitting = ref(false);
+
+const chartRef = ref<EchartsUIType>();
+const { renderEcharts } = useEcharts(chartRef);
 
 const formState = reactive<CreateCodeRepositoryInput>({
   name: '',
@@ -78,6 +89,44 @@ const languageColors: Record<string, string> = {
 };
 
 const totalStars = computed(() => dataList.value.reduce((sum, r) => sum + (r.stars || 0), 0));
+
+const languageStats = computed(() => {
+  const stats: Record<string, number> = {};
+  dataList.value.forEach((r) => {
+    if (r.language) {
+      stats[r.language] = (stats[r.language] || 0) + 1;
+    }
+  });
+  return Object.entries(stats).map(([name, value]) => ({ name, value }));
+});
+
+const recentRepos = computed(() =>
+  [...dataList.value]
+    .toSorted((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5),
+);
+
+watch(languageStats, (stats) => {
+  if (stats.length > 0) {
+    renderEcharts({
+      tooltip: { trigger: 'item' as const },
+      legend: { bottom: '0%', left: 'center' },
+      series: [
+        {
+          data: stats,
+          emphasis: {
+            itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.5)' },
+          },
+          itemStyle: { borderRadius: 6, borderWidth: 2 },
+          label: { formatter: '{b}: {c} ({d}%)', show: true },
+          name: '语言分布',
+          radius: ['40%', '70%'],
+          type: 'pie' as const,
+        },
+      ],
+    });
+  }
+});
 
 const fetchData = async () => {
   loading.value = true;
@@ -174,6 +223,42 @@ onMounted(() => {
       <Col :lg="6" :md="12" :xs="24">
         <Card :loading="loading">
           <Statistic title="总 Stars" :value="totalStars" />
+        </Card>
+      </Col>
+    </Row>
+
+    <Row :gutter="[16, 16]" class="mb-4">
+      <Col :lg="12" :md="24" :xs="24">
+        <Card title="语言分布" :loading="loading">
+          <div class="h-72">
+            <EchartsUI v-if="!loading && languageStats.length > 0" ref="chartRef" />
+            <div v-else class="flex items-center justify-center h-full text-gray-400">
+              暂无数据
+            </div>
+          </div>
+        </Card>
+      </Col>
+      <Col :lg="12" :md="24" :xs="24">
+        <Card title="最近更新" :loading="loading">
+          <List :data-source="recentRepos" size="small">
+            <template #renderItem="{ item }">
+              <ListItem>
+                <ListItemMeta>
+                  <template #title>
+                    <a :href="item.url" target="_blank" rel="noopener noreferrer">{{ item.name }}</a>
+                  </template>
+                  <template #description>
+                    <Space>
+                      <Tag :color="languageColors[item.language] || 'default'">{{ item.language }}</Tag>
+                      <Tooltip title="Stars">
+                        <span>⭐ {{ item.stars || 0 }}</span>
+                      </Tooltip>
+                    </Space>
+                  </template>
+                </ListItemMeta>
+              </ListItem>
+            </template>
+          </List>
         </Card>
       </Col>
     </Row>

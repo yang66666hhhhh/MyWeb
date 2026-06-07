@@ -8,6 +8,7 @@ using WebApplication1.Features.Content.Entities;
 using WebApplication1.Features.DailyPlans;
 using WebApplication1.Features.Growth.Entities;
 using WebApplication1.Features.Network.Entities;
+using WebApplication1.Features.Notification;
 using WebApplication1.Features.Tasks;
 using WebApplication1.Features.Persona.Entities;
 using WebApplication1.Features.Analytics.Entities;
@@ -21,6 +22,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<DailyPlan> DailyPlans => Set<DailyPlan>();
 
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
+
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<AppUser> Users => Set<AppUser>();

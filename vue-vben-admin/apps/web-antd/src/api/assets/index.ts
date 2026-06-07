@@ -146,6 +146,34 @@ export interface UpdateInvestmentInput {
   remark?: string;
 }
 
+export interface MonthlyTrend {
+  month: string;
+  amount: number;
+}
+
+export interface CategoryStat {
+  category: string;
+  amount: number;
+  count: number;
+}
+
+export interface BudgetExecution {
+  category: string;
+  plannedAmount: number;
+  actualAmount: number;
+  executionRate: number;
+}
+
+export interface AssetOverview {
+  totalIncome: number;
+  totalExpense: number;
+  totalInvestment: number;
+  netAsset: number;
+  monthlyIncome: number;
+  monthlyExpense: number;
+  savingsRate: number;
+}
+
 export const assetApi = {
   getSummary: () =>
     requestClient.get<AssetSummary>('/assets/summary'),
@@ -209,6 +237,21 @@ export const assetApi = {
 
   deleteInvestment: (id: string) =>
     requestClient.delete(`/assets/investments/${id}`),
+
+  getIncomeTrend: (months?: number) =>
+    requestClient.get<MonthlyTrend[]>('/assets/charts/income-trend', { params: { months } }),
+
+  getExpenseTrend: (months?: number) =>
+    requestClient.get<MonthlyTrend[]>('/assets/charts/expense-trend', { params: { months } }),
+
+  getExpenseCategoryStats: () =>
+    requestClient.get<CategoryStat[]>('/assets/charts/expense-category'),
+
+  getBudgetExecution: () =>
+    requestClient.get<BudgetExecution[]>('/assets/charts/budget-execution'),
+
+  getAssetOverview: () =>
+    requestClient.get<AssetOverview>('/assets/charts/asset-overview'),
 };
 
 export const getAssetSummaryApi = assetApi.getSummary;

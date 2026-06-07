@@ -1,24 +1,32 @@
 ﻿<script lang="ts" setup>
+import type { EchartsUIType } from '@vben/plugins/echarts';
+
 import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 
-import { Card, Col, message, Row, Statistic, Table, Tag } from 'ant-design-vue';
+import { Card, Col, message, Progress, Row, Statistic, Table, Tag } from 'ant-design-vue';
 
-import type { AssetSummary, Expense, Income } from '#/api/assets';
+import type { AssetOverview, BudgetExecution, CategoryStat, Expense, Income, MonthlyTrend } from '#/api/assets';
 
 import { assetApi } from '#/api/assets';
 
 const loading = ref(false);
-const summary = ref<AssetSummary>({
+const overview = ref<AssetOverview>({
   totalIncome: 0,
   totalExpense: 0,
   totalInvestment: 0,
   netAsset: 0,
-  incomeCount: 0,
-  expenseCount: 0,
-  investmentCount: 0,
+  monthlyIncome: 0,
+  monthlyExpense: 0,
+  savingsRate: 0,
 });
+
+const incomeTrend = ref<MonthlyTrend[]>([]);
+const expenseTrend = ref<MonthlyTrend[]>([]);
+const expenseCategories = ref<CategoryStat[]>([]);
+const budgetExecution = ref<BudgetExecution[]>([]);
 
 const recentTransactions = ref<Array<{
   amount: number;
@@ -29,15 +37,101 @@ const recentTransactions = ref<Array<{
   type: 'expense' | 'income';
 }>>([]);
 
-const fetchSummary = async () => {
+const trendChartRef = ref<EchartsUIType>();
+const { renderEcharts: renderTrendChart } = useEcharts(trendChartRef);
+
+const pieChartRef = ref<EchartsUIType>();
+const { renderEcharts: renderPieChart } = useEcharts(pieChartRef);
+
+const fetchOverview = async () => {
   loading.value = true;
   try {
-    const data = await assetApi.getSummary();
-    summary.value = data;
+    const data = await assetApi.getAssetOverview();
+    overview.value = data;
   } catch (e: unknown) {
     message.error((e instanceof Error ? e.message : null) || '加载资产数据失败');
   } finally {
     loading.value = false;
+  }
+};
+
+const fetchChartData = async () => {
+  try {
+    const [trendRes, categoryRes, budgetRes] = await Promise.allSettled([
+      assetApi.getIncomeTrend(6),
+      assetApi.getExpenseTrend(6),
+      assetApi.getExpenseCategoryStats(),
+      assetApi.getBudgetExecution(),
+    ]);
+
+    if (trendRes.status === 'fulfilled') {
+      incomeTrend.value = trendRes.value;
+    }
+
+    if (categoryRes.status === 'fulfilled') {
+      expenseTrend.value = categoryRes.value;
+    }
+
+    if (budgetRes.status === 'fulfilled') {
+      expenseCategories.value = budgetRes.value;
+    }
+
+    renderTrendChart({
+      tooltip: { trigger: 'axis' as const },
+      legend: { data: ['收入', '支出'] },
+      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      xAxis: {
+        type: 'category' as const,
+        data: incomeTrend.value.map((item) => item.month),
+        axisTick: { show: false },
+      },
+      yAxis: { type: 'value' as const, axisTick: { show: false } },
+      series: [
+        {
+          name: '收入',
+          type: 'line' as const,
+          smooth: true,
+          areaStyle: {},
+          itemStyle: { color: '#52c41a' },
+          data: incomeTrend.value.map((item) => item.amount),
+        },
+        {
+          name: '支出',
+          type: 'line' as const,
+          smooth: true,
+          areaStyle: {},
+          itemStyle: { color: '#ff4d4f' },
+          data: expenseTrend.value.map((item) => item.amount),
+        },
+      ],
+    });
+
+    renderPieChart({
+      tooltip: { trigger: 'item' as const },
+      legend: { bottom: '0%', left: 'center' },
+      series: [
+        {
+          type: 'pie' as const,
+          radius: ['40%', '70%'],
+          label: { show: true, formatter: '{b}: {c} ({d}%)' },
+          data: expenseCategories.value.map((item) => ({
+            name: item.category,
+            value: item.amount,
+          })),
+        },
+      ],
+    });
+  } catch (e: unknown) {
+    message.error((e instanceof Error ? e.message : null) || '加载图表数据失败');
+  }
+};
+
+const fetchBudgetExecution = async () => {
+  try {
+    const res = await assetApi.getBudgetExecution();
+    budgetExecution.value = res;
+  } catch {
+    // ignore
   }
 };
 
@@ -86,7 +180,9 @@ const transactionColumns = [
 ];
 
 onMounted(() => {
-  fetchSummary();
+  fetchOverview();
+  fetchChartData();
+  fetchBudgetExecution();
   fetchRecentTransactions();
 });
 </script>
@@ -96,22 +192,64 @@ onMounted(() => {
     <Row :gutter="[16, 16]" class="mb-4">
       <Col :lg="6" :md="12" :xs="24">
         <Card :loading="loading">
-          <Statistic title="净资产" :value="summary.netAsset" prefix="¥" />
+          <Statistic title="净资产" :value="overview.netAsset" prefix="¥" />
         </Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card :loading="loading">
-          <Statistic title="总收入" :value="summary.totalIncome" prefix="¥" />
+          <Statistic title="本月收入" :value="overview.monthlyIncome" prefix="¥" />
         </Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card :loading="loading">
-          <Statistic title="总支出" :value="summary.totalExpense" prefix="¥" />
+          <Statistic title="本月支出" :value="overview.monthlyExpense" prefix="¥" />
         </Card>
       </Col>
       <Col :lg="6" :md="12" :xs="24">
         <Card :loading="loading">
-          <Statistic title="总投资" :value="summary.totalInvestment" prefix="¥" />
+          <Statistic title="储蓄率" :value="overview.savingsRate" suffix="%" />
+        </Card>
+      </Col>
+    </Row>
+
+    <Row :gutter="[16, 16]" class="mb-4">
+      <Col :lg="12" :xs="24">
+        <Card title="收支趋势（近6个月）">
+          <div class="h-72">
+            <EchartsUI ref="trendChartRef" />
+          </div>
+        </Card>
+      </Col>
+      <Col :lg="12" :xs="24">
+        <Card title="支出分类占比">
+          <div class="h-72">
+            <EchartsUI ref="pieChartRef" />
+          </div>
+        </Card>
+      </Col>
+    </Row>
+
+    <Row :gutter="[16, 16]" class="mb-4">
+      <Col :span="24">
+        <Card title="本月预算执行">
+          <div v-if="budgetExecution.length > 0" class="space-y-4">
+            <div v-for="item in budgetExecution" :key="item.category" class="flex items-center gap-4">
+              <span class="w-16 text-right">{{ item.category }}</span>
+              <div class="flex-1">
+                <Progress
+                  :percent="Math.min(item.executionRate, 100)"
+                  :status="item.executionRate > 100 ? 'exception' : item.executionRate > 80 ? 'active' : 'success'"
+                  :format="() => `${item.executionRate}%`"
+                />
+              </div>
+              <span class="w-32 text-right text-sm text-gray-500">
+                ¥{{ item.actualAmount.toLocaleString() }} / ¥{{ item.plannedAmount.toLocaleString() }}
+              </span>
+            </div>
+          </div>
+          <div v-else class="flex items-center justify-center h-20 text-gray-400">
+            暂无预算数据
+          </div>
         </Card>
       </Col>
     </Row>
@@ -121,16 +259,16 @@ onMounted(() => {
         <Card title="资产概况">
           <div class="space-y-4">
             <div class="flex justify-between items-center">
-              <span>收入记录数</span>
-              <span class="font-bold">{{ summary.incomeCount }} 条</span>
+              <span>总收入</span>
+              <span class="font-bold text-green-500">¥{{ overview.totalIncome.toLocaleString() }}</span>
             </div>
             <div class="flex justify-between items-center">
-              <span>支出记录数</span>
-              <span class="font-bold">{{ summary.expenseCount }} 条</span>
+              <span>总支出</span>
+              <span class="font-bold text-red-500">¥{{ overview.totalExpense.toLocaleString() }}</span>
             </div>
             <div class="flex justify-between items-center">
-              <span>投资记录数</span>
-              <span class="font-bold">{{ summary.investmentCount }} 条</span>
+              <span>总投资</span>
+              <span class="font-bold text-blue-500">¥{{ overview.totalInvestment.toLocaleString() }}</span>
             </div>
           </div>
         </Card>

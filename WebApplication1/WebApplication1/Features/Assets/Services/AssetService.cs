@@ -434,4 +434,125 @@ public class AssetService(AppDbContext dbContext) : IAssetService
         Remark = investment.Remark,
         CreatedAt = investment.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")
     };
+
+    public async Task<List<MonthlyTrendDto>> GetIncomeTrendAsync(Guid? userId = null, int months = 6, CancellationToken cancellationToken = default)
+    {
+        var startDate = DateTime.UtcNow.AddMonths(-months).ToString("yyyy-MM");
+        var incomes = dbContext.Incomes.AsNoTracking();
+
+        if (userId.HasValue)
+            incomes = incomes.Where(x => x.UserId == userId.Value);
+
+        return await incomes
+            .Where(x => string.Compare(x.IncomeDate.Substring(0, 7), startDate) >= 0)
+            .GroupBy(x => x.IncomeDate.Substring(0, 7))
+            .Select(g => new MonthlyTrendDto
+            {
+                Month = g.Key,
+                Amount = g.Sum(x => x.Amount)
+            })
+            .OrderBy(x => x.Month)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<MonthlyTrendDto>> GetExpenseTrendAsync(Guid? userId = null, int months = 6, CancellationToken cancellationToken = default)
+    {
+        var startDate = DateTime.UtcNow.AddMonths(-months).ToString("yyyy-MM");
+        var expenses = dbContext.Expenses.AsNoTracking();
+
+        if (userId.HasValue)
+            expenses = expenses.Where(x => x.UserId == userId.Value);
+
+        return await expenses
+            .Where(x => string.Compare(x.ExpenseDate.Substring(0, 7), startDate) >= 0)
+            .GroupBy(x => x.ExpenseDate.Substring(0, 7))
+            .Select(g => new MonthlyTrendDto
+            {
+                Month = g.Key,
+                Amount = g.Sum(x => x.Amount)
+            })
+            .OrderBy(x => x.Month)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<CategoryStatDto>> GetExpenseCategoryStatsAsync(Guid? userId = null, CancellationToken cancellationToken = default)
+    {
+        var expenses = dbContext.Expenses.AsNoTracking();
+
+        if (userId.HasValue)
+            expenses = expenses.Where(x => x.UserId == userId.Value);
+
+        return await expenses
+            .GroupBy(x => x.Category)
+            .Select(g => new CategoryStatDto
+            {
+                Category = g.Key,
+                Amount = g.Sum(x => x.Amount),
+                Count = g.Count()
+            })
+            .OrderByDescending(x => x.Amount)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<BudgetExecutionDto>> GetBudgetExecutionAsync(Guid? userId = null, CancellationToken cancellationToken = default)
+    {
+        var now = DateTime.UtcNow;
+        var budgets = dbContext.Budgets.AsNoTracking()
+            .Where(x => x.Year == now.Year && x.Month == now.Month);
+
+        if (userId.HasValue)
+            budgets = budgets.Where(x => x.UserId == userId.Value);
+
+        return await budgets
+            .Select(x => new BudgetExecutionDto
+            {
+                Category = x.Category,
+                PlannedAmount = x.PlannedAmount,
+                ActualAmount = x.ActualAmount,
+                ExecutionRate = x.PlannedAmount > 0 ? Math.Round(x.ActualAmount / x.PlannedAmount * 100, 2) : 0
+            })
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<AssetOverviewDto> GetAssetOverviewAsync(Guid? userId = null, CancellationToken cancellationToken = default)
+    {
+        var incomes = dbContext.Incomes.AsNoTracking();
+        var expenses = dbContext.Expenses.AsNoTracking();
+        var investments = dbContext.Investments.AsNoTracking();
+
+        if (userId.HasValue)
+        {
+            incomes = incomes.Where(x => x.UserId == userId.Value);
+            expenses = expenses.Where(x => x.UserId == userId.Value);
+            investments = investments.Where(x => x.UserId == userId.Value);
+        }
+
+        var now = DateTime.UtcNow;
+        var currentMonth = now.ToString("yyyy-MM");
+
+        var totalIncome = await incomes.SumAsync(x => x.Amount, cancellationToken);
+        var totalExpense = await expenses.SumAsync(x => x.Amount, cancellationToken);
+        var totalInvestment = await investments.SumAsync(x => x.Amount, cancellationToken);
+        var monthlyIncome = await incomes
+            .Where(x => x.IncomeDate.Substring(0, 7) == currentMonth)
+            .SumAsync(x => x.Amount, cancellationToken);
+        var monthlyExpense = await expenses
+            .Where(x => x.ExpenseDate.Substring(0, 7) == currentMonth)
+            .SumAsync(x => x.Amount, cancellationToken);
+
+        var savingsRate = monthlyIncome > 0
+            ? Math.Round((monthlyIncome - monthlyExpense) / monthlyIncome * 100, 2)
+            : 0;
+
+        return new AssetOverviewDto
+        {
+            TotalIncome = totalIncome,
+            TotalExpense = totalExpense,
+            TotalInvestment = totalInvestment,
+            NetAsset = totalIncome - totalExpense + totalInvestment,
+            MonthlyIncome = monthlyIncome,
+            MonthlyExpense = monthlyExpense,
+            SavingsRate = savingsRate
+        };
+    }
 }

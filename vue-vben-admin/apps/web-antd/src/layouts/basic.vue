@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { NotificationItem } from '@vben/layouts';
 
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
@@ -18,62 +18,63 @@ import { preferences } from '@vben/preferences';
 import { useAccessStore, useUserStore } from '@vben/stores';
 import { openWindow } from '@vben/utils';
 
+import { notificationApi } from '#/api/notification';
 import { $t } from '#/locales';
 import { useAuthStore, usePersonaStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
 
-const notifications = ref<NotificationItem[]>([
-  {
-    id: 1,
-    avatar: 'https://avatar.vercel.sh/vercel.svg?text=VB',
-    date: '3小时前',
-    isRead: true,
-    message: '描述信息描述信息描述信息',
-    title: '收到了 14 份新周报',
-  },
-  {
-    id: 2,
-    avatar: 'https://avatar.vercel.sh/1',
-    date: '刚刚',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '朱偏右 回复了你',
-  },
-  {
-    id: 3,
-    avatar: 'https://avatar.vercel.sh/1',
-    date: '2024-01-01',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '曲丽丽 评论了你',
-  },
-  {
-    id: 4,
-    avatar: 'https://avatar.vercel.sh/satori',
-    date: '1天前',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '代办提醒',
-  },
-  {
-    id: 5,
-    avatar: 'https://avatar.vercel.sh/satori',
-    date: '1天前',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '跳转Workspace示例',
-    link: '/workspace',
-  },
-  {
-    id: 6,
-    avatar: 'https://avatar.vercel.sh/satori',
-    date: '1天前',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '跳转外部链接示例',
-    link: 'https://doc.vben.pro',
-  },
-]);
+const notifications = ref<NotificationItem[]>([]);
+const unreadCount = ref(0);
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+const typeAvatars: Record<string, string> = {
+  System: 'https://avatar.vercel.sh/system?text=SY',
+  Task: 'https://avatar.vercel.sh/task?text=TK',
+  Habit: 'https://avatar.vercel.sh/habit?text=HB',
+  Ai: 'https://avatar.vercel.sh/ai?text=AI',
+  Finance: 'https://avatar.vercel.sh/finance?text=FN',
+};
+
+function formatTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 1) return '刚刚';
+  if (minutes < 60) return `${minutes}分钟前`;
+  if (hours < 24) return `${hours}小时前`;
+  if (days < 7) return `${days}天前`;
+  return date.toLocaleDateString('zh-CN');
+}
+
+async function fetchNotifications() {
+  try {
+    const result = await notificationApi.getPage({ page: 1, pageSize: 10 });
+    notifications.value = result.items.map((n) => ({
+      id: n.id,
+      avatar: typeAvatars[n.type] || 'https://avatar.vercel.sh/default?text=N',
+      date: formatTime(n.createdAt),
+      isRead: n.isRead,
+      message: n.content || '',
+      title: n.title,
+      link: n.link,
+    }));
+  } catch {
+    // silent fail
+  }
+}
+
+async function fetchUnreadCount() {
+  try {
+    const result = await notificationApi.getUnreadCount();
+    unreadCount.value = result.count;
+  } catch {
+    // silent fail
+  }
+}
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -81,9 +82,7 @@ const authStore = useAuthStore();
 const personaStore = usePersonaStore();
 const accessStore = useAccessStore();
 const { destroyWatermark, updateWatermark } = useWatermark();
-const showDot = computed(() =>
-  notifications.value.some((item) => !item.isRead),
-);
+const showDot = computed(() => unreadCount.value > 0);
 
 const menus = computed(() => [
   {
@@ -147,22 +146,45 @@ function handleNoticeClear() {
   notifications.value = [];
 }
 
-function markRead(id: number | string) {
-  const item = notifications.value.find((item) => item.id === id);
-  if (item) {
-    item.isRead = true;
+async function markRead(id: number | string) {
+  try {
+    await notificationApi.markAsRead(id as string);
+    const item = notifications.value.find((item) => item.id === id);
+    if (item) {
+      item.isRead = true;
+    }
+    unreadCount.value = Math.max(0, unreadCount.value - 1);
+  } catch {
+    // silent
   }
 }
 
-function remove(id: number | string) {
-  notifications.value = notifications.value.filter((item) => item.id !== id);
+async function remove(id: number | string) {
+  try {
+    await notificationApi.delete(id as string);
+    const item = notifications.value.find((n) => n.id === id);
+    notifications.value = notifications.value.filter((item) => item.id !== id);
+    if (item && !item.isRead) {
+      unreadCount.value = Math.max(0, unreadCount.value - 1);
+    }
+  } catch {
+    // silent
+  }
 }
 
-function handleMakeAll() {
-  notifications.value.forEach((item) => (item.isRead = true));
+async function handleMakeAll() {
+  try {
+    await notificationApi.markAllAsRead();
+    notifications.value.forEach((item) => (item.isRead = true));
+    unreadCount.value = 0;
+  } catch {
+    // silent
+  }
 }
 
-const viewAll = () => {};
+const viewAll = () => {
+  router.push({ name: 'Profile', query: { tab: 'notifications' } });
+};
 
 const handleClick = (item: NotificationItem) => {
   if (item.link) {
@@ -189,6 +211,18 @@ function navigateTo(
 onMounted(() => {
   if (!personaStore.initialized) {
     personaStore.loadPersonaData();
+  }
+  fetchNotifications();
+  fetchUnreadCount();
+  pollTimer = setInterval(() => {
+    fetchUnreadCount();
+    fetchNotifications();
+  }, 30000);
+});
+
+onUnmounted(() => {
+  if (pollTimer) {
+    clearInterval(pollTimer);
   }
 });
 

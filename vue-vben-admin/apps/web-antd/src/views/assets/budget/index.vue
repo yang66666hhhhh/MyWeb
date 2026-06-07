@@ -24,9 +24,9 @@ import {
   Tag,
 } from 'ant-design-vue';
 
-import type { Budget, CreateBudgetInput } from '#/api/assets';
+import type { Budget, BudgetExecution, CreateBudgetInput } from '#/api/assets';
 
-import { createBudgetApi, deleteBudgetApi, getBudgetPageApi, updateBudgetApi } from '#/api/assets';
+import { assetApi, createBudgetApi, deleteBudgetApi, getBudgetPageApi, updateBudgetApi } from '#/api/assets';
 
 const formRef = ref();
 const formRules = {
@@ -61,6 +61,17 @@ const categoryOptions = ['住房', '餐饮', '交通', '购物', '娱乐', '医�
 
 const totalPlanned = computed(() => dataList.value.reduce((sum, item) => sum + item.plannedAmount, 0));
 const totalActual = computed(() => dataList.value.reduce((sum, item) => sum + item.actualAmount, 0));
+
+const budgetExecution = ref<BudgetExecution[]>([]);
+
+const fetchBudgetExecution = async () => {
+  try {
+    const res = await assetApi.getBudgetExecution();
+    budgetExecution.value = res;
+  } catch {
+    // ignore
+  }
+};
 
 const columns = [
   { title: '年月', key: 'period', width: 100 },
@@ -156,6 +167,7 @@ const handlePageChange = (page: number, size: number) => {
 
 onMounted(() => {
   fetchData();
+  fetchBudgetExecution();
 });
 </script>
 
@@ -183,6 +195,27 @@ onMounted(() => {
         </Card>
       </Col>
     </Row>
+
+    <Card title="本月预算执行" class="mb-4">
+      <div v-if="budgetExecution.length > 0" class="space-y-4">
+        <div v-for="item in budgetExecution" :key="item.category" class="flex items-center gap-4">
+          <span class="w-16 text-right">{{ item.category }}</span>
+          <div class="flex-1">
+            <Progress
+              :percent="Math.min(item.executionRate, 100)"
+              :status="item.executionRate > 100 ? 'exception' : item.executionRate > 80 ? 'active' : 'success'"
+              :format="() => `${item.executionRate}%`"
+            />
+          </div>
+          <span class="w-32 text-right text-sm text-gray-500">
+            ¥{{ item.actualAmount.toLocaleString() }} / ¥{{ item.plannedAmount.toLocaleString() }}
+          </span>
+        </div>
+      </div>
+      <div v-else class="flex items-center justify-center h-20 text-gray-400">
+        暂无预算数据
+      </div>
+    </Card>
 
     <Card title="预算列表">
       <template #extra>

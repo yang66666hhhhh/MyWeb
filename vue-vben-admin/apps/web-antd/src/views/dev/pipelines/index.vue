@@ -20,6 +20,9 @@ import {
   Statistic,
   Table,
   Tag,
+  Timeline,
+  TimelineItem,
+  Tooltip,
 } from 'ant-design-vue';
 
 import type { CreatePipelineInput, Pipeline } from '#/api/persona';
@@ -91,6 +94,22 @@ const statusIcons: Record<number, string> = {
 const successCount = computed(() => dataList.value.filter((p) => p.status === 2).length);
 const runningCount = computed(() => dataList.value.filter((p) => p.status === 1).length);
 const failedCount = computed(() => dataList.value.filter((p) => p.status === 3).length);
+
+const recentPipelines = computed(() =>
+  [...dataList.value]
+    .toSorted((a, b) => new Date(b.lastRunAt || b.createdAt).getTime() - new Date(a.lastRunAt || a.createdAt).getTime())
+    .slice(0, 5),
+);
+
+const timelineColor = (status: number) => {
+  const colors: Record<number, string> = {
+    0: 'gray',
+    1: 'blue',
+    2: 'green',
+    3: 'red',
+  };
+  return colors[status] || 'gray';
+};
 
 const fetchData = async () => {
   loading.value = true;
@@ -197,6 +216,33 @@ onMounted(() => {
       <Col :lg="6" :md="12" :xs="24">
         <Card :loading="loading">
           <Statistic title="总流水线" :value="total" />
+        </Card>
+      </Col>
+    </Row>
+
+    <Row :gutter="[16, 16]" class="mb-4">
+      <Col :lg="12" :md="24" :xs="24">
+        <Card title="最近构建历史" :loading="loading">
+          <Timeline v-if="recentPipelines.length > 0">
+            <TimelineItem v-for="pipeline in recentPipelines" :key="pipeline.id" :color="timelineColor(pipeline.status)">
+              <template #dot>
+                <span>{{ statusIcons[pipeline.status] || '○' }}</span>
+              </template>
+              <div>
+                <div class="font-medium">{{ pipeline.name }}</div>
+                <div class="text-sm text-gray-500">
+                  <Space>
+                    <Tag :color="statusColors[pipeline.status]">{{ statusMap[pipeline.status] }}</Tag>
+                    <span>{{ pipeline.repository }} / {{ pipeline.branch }}</span>
+                    <Tooltip v-if="pipeline.lastRunAt" :title="pipeline.lastRunAt">
+                      <span>{{ new Date(pipeline.lastRunAt).toLocaleString() }}</span>
+                    </Tooltip>
+                  </Space>
+                </div>
+              </div>
+            </TimelineItem>
+          </Timeline>
+          <div v-else class="text-center text-gray-400 py-4">暂无构建记录</div>
         </Card>
       </Col>
     </Row>

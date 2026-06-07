@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Card, Col, message, Row, Spin, Statistic } from 'ant-design-vue';
+import { Card, Col, message, Row, Statistic } from 'ant-design-vue';
 
 import type {
   HourlyDistribution,
@@ -16,6 +16,9 @@ import {
   getTimeOverviewApi,
   getWeeklyTrendApi,
 } from '#/api/analytics/extended';
+
+import TimeAllocationChart from '../components/TimeAllocationChart.vue';
+import TimeUtilizationChart from '../components/TimeUtilizationChart.vue';
 
 const loading = ref(false);
 const overview = ref<TimeAnalyticsOverview>({
@@ -52,68 +55,40 @@ onMounted(() => {
 
 <template>
   <Page description="分析时间分配和使用效率" title="时间分析">
-    <Spin :spinning="loading">
-      <Row :gutter="[16, 16]" class="mb-4">
-        <Col :lg="6" :md="12" :xs="24">
-          <Card>
-            <Statistic title="日均工时" :value="overview.dailyWorkHours" suffix="小时" />
-          </Card>
-        </Col>
-        <Col :lg="6" :md="12" :xs="24">
-          <Card>
-            <Statistic title="日均学习" :value="overview.dailyLearningHours" suffix="小时" />
-          </Card>
-        </Col>
-        <Col :lg="6" :md="12" :xs="24">
-          <Card>
-            <Statistic title="日均休息" :value="overview.dailyRestHours" suffix="小时" />
-          </Card>
-        </Col>
-        <Col :lg="6" :md="12" :xs="24">
-          <Card>
-            <Statistic title="时间利用率" :value="overview.timeUtilizationRate" suffix="%" />
-          </Card>
-        </Col>
-      </Row>
+    <Row :gutter="[16, 16]" class="mb-4">
+      <Col :lg="6" :md="12" :xs="24">
+        <Card :loading="loading">
+          <Statistic title="日均工时" :value="overview.dailyWorkHours" suffix="小时" />
+        </Card>
+      </Col>
+      <Col :lg="6" :md="12" :xs="24">
+        <Card :loading="loading">
+          <Statistic title="日均学习" :value="overview.dailyLearningHours" suffix="小时" />
+        </Card>
+      </Col>
+      <Col :lg="6" :md="12" :xs="24">
+        <Card :loading="loading">
+          <Statistic title="日均休息" :value="overview.dailyRestHours" suffix="小时" />
+        </Card>
+      </Col>
+      <Col :lg="6" :md="12" :xs="24">
+        <Card :loading="loading">
+          <Statistic title="时间利用率" :value="overview.timeUtilizationRate" suffix="%" />
+        </Card>
+      </Col>
+    </Row>
 
-      <Row :gutter="[16, 16]">
-        <Col :lg="12" :xs="24">
-          <Card title="时间分配">
-            <div v-if="hourlyDistribution.length" class="h-64">
-              <div
-                v-for="item in hourlyDistribution"
-                :key="item.hour"
-                class="flex items-center justify-between border-b py-1"
-              >
-                <span>{{ item.hour }}:00</span>
-                <span class="text-gray-500">{{ item.category }}</span>
-                <span class="font-bold">{{ item.value }}分钟</span>
-              </div>
-            </div>
-            <div v-else class="h-64 flex items-center justify-center text-gray-400">
-              暂无数据
-            </div>
-          </Card>
-        </Col>
-        <Col :lg="12" :xs="24">
-          <Card title="时间趋势">
-            <div v-if="weeklyTrend.length" class="h-64">
-              <div
-                v-for="item in weeklyTrend"
-                :key="item.date"
-                class="flex items-center justify-between border-b py-1"
-              >
-                <span>{{ item.date }}</span>
-                <span>工作: {{ item.workHours }}h</span>
-                <span>学习: {{ item.learningHours }}h</span>
-              </div>
-            </div>
-            <div v-else class="h-64 flex items-center justify-center text-gray-400">
-              暂无数据
-            </div>
-          </Card>
-        </Col>
-      </Row>
-    </Spin>
+    <Row :gutter="[16, 16]">
+      <Col :lg="12" :xs="24">
+        <Card title="时间分配">
+          <TimeAllocationChart :data="hourlyDistribution" :loading="loading" />
+        </Card>
+      </Col>
+      <Col :lg="12" :xs="24">
+        <Card title="每日时间利用效率">
+          <TimeUtilizationChart :data="weeklyTrend" :loading="loading" />
+        </Card>
+      </Col>
+    </Row>
   </Page>
 </template>

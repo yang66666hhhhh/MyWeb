@@ -570,9 +570,9 @@
 | _core | /auth, /profile, /fallback | 14 |
 | other | /external-links, /about, /demos | 3 |
 
-**总计: 90 个页面**
+**总计: 86 个页面**
 
-### 7.2 API 文件 (33个)
+### 7.2 API 文件 (43个)
 
 ```
 api/
@@ -1098,6 +1098,77 @@ rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.cspr
   - 新建后端 Controller：`PersonaController`
   - 新建前端 API 文件：`api/persona/index.ts`
   - 所有页面对接后端 API
+
+**验证结果：**
+- 后端测试：140 个全部通过
+- 前端类型检查：通过
+- 前端构建：成功
+
+### v4.0 (2025-06-07)
+
+**API Feature 覆盖对齐：**
+
+- **ApiFeatureCoverageTests**：新增测试验证所有 Controller 的 Feature 覆盖
+- **DbSeederTests**：新增测试验证种子数据完整性
+- **Controller 修复**：
+  - AiExtendedController：补充 AI_PLANNER/AI_REPORT Feature
+  - AnalyticsExtendedController：补充 ANALYTICS_GROWTH/ANALYTICS_WORK 等 Feature
+  - PersonaController：优化 CRUD 权限控制
+  - WorkExtendedController：补充 WORK_TASK Feature
+
+**权限控制和类型安全优化：**
+
+- 统一权限上下文服务 `UserAccessContextService`
+- 修复 RoleMenuController 权限过严问题
+- 修复 PersonaTypeController 权限问题
+- 优化 GetAccessCodesAsync 实现
+
+**Docker 部署配置：**
+
+- 新增 Docker Compose 配置
+- 前端 Dockerfile 和 Nginx 配置
+- 后端 Dockerfile
+- 环境变量配置优化
+
+**前端工具库增强：**
+
+- 请求去重和缓存机制
+- 请求验证和状态管理
+- API 版本控制支持
+- 安全加固和组件优化
+- 无障碍访问和动画工具
+- 主题切换和验证工具
+- PWA 配置和构建优化
+
+**验证结果：**
+- 后端测试：140 个全部通过
+- 前端类型检查：通过
+- 前端构建：成功
+
+### v3.5 (2025-06)
+
+**模块完善：**
+
+- 完善 Labs 模块和辅助页面
+- 补充 Analytics AI Insights 端点
+- 修复 AnalyticsExtendedService 变量重复定义
+- 前端页面全面优化
+- 补全 API 文件导出
+- 注册全部缺失路由（58个）
+
+**数据库迁移：**
+
+- 新增 V4_ProductGradeOptimizations 迁移
+- 实现 Growth/Work/Analytics 模块真实业务逻辑
+- 实现 AI 模块真实业务逻辑
+- 实现 Persona 模块完整 CRUD
+
+**后端优化：**
+
+- 补全剩余 Controller 日志和异常处理
+- 为关键 Controller 添加日志和异常处理
+- 为 DTO 添加验证属性
+- 添加全局异常处理中间件
 
 **验证结果：**
 - 后端测试：140 个全部通过

@@ -1,5 +1,5 @@
 ﻿<script lang="ts" setup>
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
@@ -86,6 +86,24 @@ const formatFileSize = (size: number) => {
   if (size < 1024 * 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(1)} MB`;
   return `${(size / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 };
+
+const categoryStats = computed(() => {
+  const stats: Record<string, number> = {};
+  dataList.value.forEach((a) => {
+    if (a.category) {
+      stats[a.category] = (stats[a.category] || 0) + 1;
+    }
+  });
+  return Object.entries(stats).map(([name, count]) => ({ name, count }));
+});
+
+const colorAssets = computed(() =>
+  dataList.value.filter((a) => a.category === '设计系统' || a.name.toLowerCase().includes('color')),
+);
+
+const fontAssets = computed(() =>
+  dataList.value.filter((a) => a.category === '字体' || a.name.toLowerCase().includes('font')),
+);
 
 const fetchData = async () => {
   loading.value = true;
@@ -179,6 +197,46 @@ onMounted(() => {
       <Col :lg="6" :md="12" :xs="24">
         <Card :loading="loading">
           <Statistic title="资源总数" :value="total" />
+        </Card>
+      </Col>
+      <Col v-for="stat in categoryStats" :key="stat.name" :lg="6" :md="12" :xs="24">
+        <Card :loading="loading">
+          <Statistic :title="stat.name" :value="stat.count" />
+        </Card>
+      </Col>
+    </Row>
+
+    <Row :gutter="[16, 16]" class="mb-4">
+      <Col :lg="12" :md="24" :xs="24">
+        <Card title="颜色库" :loading="loading">
+          <div v-if="colorAssets.length > 0" class="flex flex-wrap gap-2">
+            <div
+              v-for="asset in colorAssets"
+              :key="asset.id"
+              class="w-20 h-20 rounded-lg border flex flex-col items-center justify-center cursor-pointer hover:shadow-md"
+              @click="handleEdit(asset)"
+            >
+              <div class="w-12 h-12 rounded mb-1" :style="{ backgroundColor: '#5ab1ef' }" />
+              <span class="text-xs truncate w-full text-center">{{ asset.name }}</span>
+            </div>
+          </div>
+          <div v-else class="text-center text-gray-400 py-4">暂无颜色资源</div>
+        </Card>
+      </Col>
+      <Col :lg="12" :md="24" :xs="24">
+        <Card title="字体库" :loading="loading">
+          <div v-if="fontAssets.length > 0" class="flex flex-wrap gap-2">
+            <div
+              v-for="asset in fontAssets"
+              :key="asset.id"
+              class="w-20 h-20 rounded-lg border flex flex-col items-center justify-center cursor-pointer hover:shadow-md"
+              @click="handleEdit(asset)"
+            >
+              <span class="text-lg font-bold">Aa</span>
+              <span class="text-xs truncate w-full text-center">{{ asset.name }}</span>
+            </div>
+          </div>
+          <div v-else class="text-center text-gray-400 py-4">暂无字体资源</div>
         </Card>
       </Col>
     </Row>

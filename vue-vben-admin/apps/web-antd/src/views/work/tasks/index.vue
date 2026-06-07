@@ -26,6 +26,8 @@ import dayjs from 'dayjs';
 import { taskApi, type CreateTaskItemInput, type TaskItem, type TaskItemQuery, type UpdateTaskItemInput } from '#/api/growth/task';
 import { projectApi } from '#/api/work/project';
 import type { WorkProject } from '#/api/work/project';
+import ExportButton from '#/components/ExportButton.vue';
+import ImportButton from '#/components/ImportButton.vue';
 
 const props = withDefaults(
   defineProps<{
@@ -319,6 +321,8 @@ onMounted(() => {
           </Form>
           <div class="flex items-center gap-3">
             <span class="text-gray-500 text-sm">{{ summaryText }}</span>
+            <ExportButton module="tasks" filename="工作任务" />
+            <ImportButton module="tasks" @imported="fetchPage" />
             <Button v-if="props.context === 'implementation'" @click="goToWeeklyReport">
               查看实施周报
             </Button>

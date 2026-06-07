@@ -1,30 +1,30 @@
 ﻿<script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 
+import type { GanttBarObject } from '@infectoone/vue-ganttastic';
+import { GGanttChart, GGanttRow } from '@infectoone/vue-ganttastic';
 import { Page } from '@vben/common-ui';
-
 import {
   Button,
   Card,
   DatePicker,
   Empty,
   Form,
-  Popover,
+  Modal,
   Radio,
   Select,
   Space,
-  Tag,
-  Tooltip,
   message,
 } from 'ant-design-vue';
-
-import type { TaskItem } from '#/api/growth/task';
-
-import { taskApi } from '#/api/growth/task';
-import { projectApi } from '#/api/work/project';
 import dayjs from 'dayjs';
 
-type ZoomLevel = 'day' | 'week' | 'month';
+import type { TaskItem } from '#/api/growth/task';
+import { taskApi } from '#/api/growth/task';
+import { projectApi } from '#/api/work/project';
+
+type ZoomLevel = 'day' | 'month' | 'week';
+
+type GanttBar = GanttBarObject;
 
 const loading = ref(false);
 const tasks = ref<TaskItem[]>([]);
@@ -38,18 +38,18 @@ const queryParams = ref({
   status: undefined as number | undefined,
 });
 
-const statusConfig: Record<string, { color: string; label: string; bgColor: string }> = {
-  Pending: { color: 'default', label: '待处理', bgColor: '#d9d9d9' },
-  InProgress: { color: 'processing', label: '进行中', bgColor: '#1890ff' },
-  Completed: { color: 'success', label: '已完成', bgColor: '#52c41a' },
-  Cancelled: { color: 'error', label: '已取消', bgColor: '#ff4d4f' },
+const statusConfig: Record<number, { bgColor: string; color: string; label: string }> = {
+  0: { bgColor: '#d9d9d9', color: 'default', label: '待处理' },
+  1: { bgColor: '#1890ff', color: 'processing', label: '进行中' },
+  2: { bgColor: '#52c41a', color: 'success', label: '已完成' },
+  3: { bgColor: '#ff4d4f', color: 'error', label: '已取消' },
 };
 
-const priorityConfig: Record<string, { color: string; label: string }> = {
-  Low: { color: 'green', label: '低' },
-  Medium: { color: 'orange', label: '中' },
-  High: { color: 'red', label: '高' },
-  Urgent: { color: 'magenta', label: '紧急' },
+const priorityConfig: Record<number, { color: string; label: string }> = {
+  1: { color: 'green', label: '低' },
+  2: { color: 'orange', label: '中' },
+  3: { color: 'red', label: '高' },
+  4: { color: 'magenta', label: '紧急' },
 };
 
 const statusOptions = [
@@ -66,133 +66,88 @@ const zoomOptions = [
   { label: '月', value: 'month' },
 ];
 
-const timelineRange = computed(() => {
+const precisionMap: Record<ZoomLevel, 'date' | 'day' | 'hour' | 'month' | 'week'> = {
+  day: 'hour',
+  month: 'day',
+  week: 'date',
+};
+
+const chartRange = computed(() => {
   const current = currentDate.value;
   let start: dayjs.Dayjs;
   let end: dayjs.Dayjs;
 
   switch (zoomLevel.value) {
     case 'day': {
-      start = current.subtract(3, 'day');
-      end = current.add(10, 'day');
-      break;
-    }
-    case 'week': {
-      start = current.startOf('week').subtract(1, 'week');
-      end = current.startOf('week').add(6, 'week');
+      start = current.subtract(2, 'day').startOf('day');
+      end = current.add(5, 'day').endOf('day');
       break;
     }
     case 'month': {
       start = current.startOf('month').subtract(1, 'month');
-      end = current.startOf('month').add(4, 'month');
-      break;
-    }
-  }
-
-  return { start, end };
-});
-
-const timelineDays = computed(() => {
-  const { start, end } = timelineRange.value;
-  const days: dayjs.Dayjs[] = [];
-  let current = start;
-  while (current.isBefore(end) || current.isSame(end, 'day')) {
-    days.push(current);
-    current = current.add(1, 'day');
-  }
-  return days;
-});
-
-const totalDays = computed(() => timelineDays.value.length);
-
-const headerGroups = computed(() => {
-  const { start, end } = timelineRange.value;
-  const groups: Array<{ label: string; span: number }> = [];
-
-  switch (zoomLevel.value) {
-    case 'day': {
-      let current = start;
-      while (current.isBefore(end)) {
-        groups.push({
-          label: current.format('MM/DD'),
-          span: 1,
-        });
-        current = current.add(1, 'day');
-      }
+      end = current.startOf('month').add(4, 'month').endOf('month');
       break;
     }
     case 'week': {
-      let current = start.startOf('week');
-      while (current.isBefore(end)) {
-        const weekEnd = current.add(6, 'day');
-        groups.push({
-          label: `${current.format('MM/DD')} - ${weekEnd.format('MM/DD')}`,
-          span: 7,
-        });
-        current = current.add(7, 'day');
-      }
-      break;
-    }
-    case 'month': {
-      let current = start.startOf('month');
-      while (current.isBefore(end)) {
-        const daysInMonth = current.daysInMonth();
-        groups.push({
-          label: current.format('YYYY年MM月'),
-          span: daysInMonth,
-        });
-        current = current.add(1, 'month');
-      }
+      start = current.startOf('week').subtract(1, 'week');
+      end = current.startOf('week').add(5, 'week').endOf('week');
       break;
     }
   }
 
-  return groups;
+  return {
+    start: start.format('YYYY-MM-DD HH:mm'),
+    end: end.format('YYYY-MM-DD HH:mm'),
+  };
 });
 
-const dayHeaders = computed(() => {
-  return timelineDays.value.map((day) => ({
-    label: day.format('DD'),
-    isWeekend: day.day() === 0 || day.day() === 6,
-    isToday: day.isSame(dayjs(), 'day'),
-  }));
+const ganttRows = computed(() => {
+  const barStart = 'startDate';
+  const barEnd = 'endDate';
+
+  const grouped = new Map<string, { bars: GanttBar[]; label: string }>();
+
+  for (const task of tasks.value) {
+    if (!task.startTime && !task.planDate) continue;
+
+    const taskStart = task.startTime
+      ? dayjs(task.startTime)
+      : dayjs(task.planDate).startOf('day');
+    const taskEnd = task.endTime
+      ? dayjs(task.endTime)
+      : taskStart.add(Math.max(task.estimatedHours ? Math.ceil(task.estimatedHours / 8) : 1, 1), 'day');
+
+    const status = typeof task.status === 'number' ? task.status : 0;
+    const config = statusConfig[status] ?? statusConfig[0]!;
+
+    const bar: GanttBar = {
+      [barStart]: taskStart.format('YYYY-MM-DD HH:mm'),
+      [barEnd]: taskEnd.format('YYYY-MM-DD HH:mm'),
+      ganttBarConfig: {
+        id: task.id,
+        immobile: status === 2 || status === 3,
+        label: task.title,
+        hasHandles: true,
+        style: {
+          background: config.bgColor,
+          borderRadius: '4px',
+          color: '#fff',
+        },
+      },
+    };
+
+    const groupKey = task.projectName || '未分组';
+    if (!grouped.has(groupKey)) {
+      grouped.set(groupKey, { bars: [], label: groupKey });
+    }
+    grouped.get(groupKey)!.bars.push(bar);
+  }
+
+  return [...grouped.values()];
 });
 
-const taskBars = computed(() => {
-  const { start } = timelineRange.value;
-  const dayWidth = 36;
-
-  return tasks.value
-    .filter((task) => task.planDate || task.startTime)
-    .map((task) => {
-      const taskStart = task.startTime
-        ? dayjs(task.startTime)
-        : dayjs(task.planDate);
-      const taskEnd = task.endTime
-        ? dayjs(task.endTime)
-        : taskStart.add(Math.max(task.estimatedHours ? Math.ceil(task.estimatedHours / 8) : 1, 1), 'day');
-
-      const offsetDays = taskStart.diff(start, 'day');
-      const duration = Math.max(taskEnd.diff(taskStart, 'day'), 1);
-
-      const left = offsetDays * dayWidth;
-      const width = duration * dayWidth;
-
-      const status = task.status || 'Pending';
-      const config = statusConfig[status] ?? statusConfig.Pending;
-
-      return {
-        ...task,
-        left,
-        width: Math.max(width, dayWidth),
-        bgColor: config?.bgColor ?? '#d9d9d9',
-        statusLabel: config?.label ?? status,
-        startDate: taskStart.format('MM/DD'),
-        endDate: taskEnd.format('MM/DD'),
-        duration,
-      };
-    });
-});
+const barStart = 'startDate';
+const barEnd = 'endDate';
 
 async function loadProjects() {
   try {
@@ -219,8 +174,8 @@ async function fetchData() {
     });
     tasks.value = res.items;
     total.value = res.total;
-  } catch (e: unknown) {
-    message.error((e instanceof Error ? e.message : null) || '加载任务失败');
+  } catch (error: unknown) {
+    message.error((error instanceof Error ? error.message : null) || '加载任务失败');
   } finally {
     loading.value = false;
   }
@@ -237,15 +192,15 @@ function goToToday() {
 function navigatePrev() {
   switch (zoomLevel.value) {
     case 'day': {
-      currentDate.value = currentDate.value.subtract(7, 'day');
-      break;
-    }
-    case 'week': {
-      currentDate.value = currentDate.value.subtract(2, 'week');
+      currentDate.value = currentDate.value.subtract(3, 'day');
       break;
     }
     case 'month': {
       currentDate.value = currentDate.value.subtract(1, 'month');
+      break;
+    }
+    case 'week': {
+      currentDate.value = currentDate.value.subtract(1, 'week');
       break;
     }
   }
@@ -254,15 +209,15 @@ function navigatePrev() {
 function navigateNext() {
   switch (zoomLevel.value) {
     case 'day': {
-      currentDate.value = currentDate.value.add(7, 'day');
-      break;
-    }
-    case 'week': {
-      currentDate.value = currentDate.value.add(2, 'week');
+      currentDate.value = currentDate.value.add(3, 'day');
       break;
     }
     case 'month': {
       currentDate.value = currentDate.value.add(1, 'month');
+      break;
+    }
+    case 'week': {
+      currentDate.value = currentDate.value.add(1, 'week');
       break;
     }
   }
@@ -271,6 +226,50 @@ function navigateNext() {
 function handleDateChange(date: unknown) {
   if (date && dayjs.isDayjs(date)) {
     currentDate.value = date;
+  }
+}
+
+function handleClickBar(event: { bar: GanttBar; e: MouseEvent }) {
+  const task = tasks.value.find((t) => t.id === event.bar.ganttBarConfig.id);
+  if (task) {
+    Modal.info({
+      title: task.title,
+      content: `
+        项目: ${task.projectName || '-'}
+        状态: ${statusConfig[task.status]?.label || '-'}
+        优先级: ${priorityConfig[task.priority]?.label || '-'}
+        工时: ${task.estimatedHours || '-'}h
+        描述: ${task.description || '-'}
+      `,
+      width: 400,
+    });
+  }
+}
+
+function handleDblClickBar(event: { bar: GanttBar; e: MouseEvent }) {
+  const task = tasks.value.find((t) => t.id === event.bar.ganttBarConfig.id);
+  if (task) {
+    message.info(`编辑任务: ${task.title}`);
+  }
+}
+
+async function handleDragEndBar(event: {
+  bar: GanttBar;
+  e: MouseEvent;
+  movedBars?: Map<GanttBar, { oldEnd: string; oldStart: string }>;
+}) {
+  const bar = event.bar;
+  const taskId = bar.ganttBarConfig.id;
+
+  try {
+    await taskApi.update(taskId, {
+      startTime: bar[barStart],
+      endTime: bar[barEnd],
+    });
+    message.success('任务时间已更新');
+  } catch {
+    message.error('更新失败');
+    fetchData();
   }
 }
 
@@ -360,109 +359,39 @@ onMounted(() => {
         <Empty v-else-if="tasks.length === 0" description="暂无任务数据" />
 
         <div v-else class="gantt-container">
-          <div class="gantt-wrapper">
-            <div class="gantt-sidebar">
-              <div class="sidebar-header">
-                <span>任务名称</span>
-              </div>
-              <div
-                v-for="task in tasks"
-                :key="task.id"
-                class="sidebar-row"
-              >
-                <Tooltip :title="task.title">
-                  <span class="task-name">{{ task.title }}</span>
-                </Tooltip>
-                <Tag
-                  :color="statusConfig[task.status]?.color || 'default'"
-                  size="small"
-                >
-                  {{ statusConfig[task.status]?.label || task.status }}
-                </Tag>
-              </div>
-            </div>
+          <GGanttChart
+            :chart-start="chartRange.start"
+            :chart-end="chartRange.end"
+            :precision="precisionMap[zoomLevel]"
+            :bar-start="barStart"
+            :bar-end="barEnd"
+            :row-height="40"
+            grid
+            push-on-overlap
+            color-scheme="creamy"
+            width="100%"
+            label-column-title="项目分组"
+            label-column-width="160px"
+            @click-bar="handleClickBar"
+            @dblclick-bar="handleDblClickBar"
+            @dragend-bar="handleDragEndBar"
+          >
+            <GGanttRow
+              v-for="row in ganttRows"
+              :key="row.label"
+              :label="row.label"
+              :bars="row.bars"
+            />
+          </GGanttChart>
+        </div>
 
-            <div class="gantt-timeline">
-              <div class="timeline-header">
-                <div
-                  v-for="(group, idx) in headerGroups"
-                  :key="idx"
-                  class="header-group"
-                  :style="{ width: `${group.span * 36}px` }"
-                >
-                  {{ group.label }}
-                </div>
-              </div>
-              <div class="timeline-days">
-                <div
-                  v-for="(day, idx) in dayHeaders"
-                  :key="idx"
-                  class="day-cell"
-                  :class="{
-                    'weekend': day.isWeekend,
-                    'today': day.isToday,
-                  }"
-                >
-                  {{ day.label }}
-                </div>
-              </div>
-              <div class="timeline-body">
-                <div
-                  v-for="task in taskBars"
-                  :key="task.id"
-                  class="task-row"
-                >
-                  <div class="row-grid" :style="{ width: `${totalDays * 36}px` }">
-                    <div
-                      v-for="(_, idx) in timelineDays"
-                      :key="idx"
-                      class="grid-cell"
-                      :class="{ 'weekend': dayHeaders[idx]?.isWeekend }"
-                    />
-                  </div>
-                  <Popover trigger="hover" placement="right">
-                    <template #content>
-                      <div class="p-2" style="min-width: 200px">
-                        <div class="font-medium">{{ task.title }}</div>
-                        <div class="mt-1 text-sm text-gray-500">
-                          项目: {{ task.projectName || '-' }}
-                        </div>
-                        <div class="text-sm text-gray-500">
-                          时间: {{ task.startDate }} ~ {{ task.endDate }}
-                        </div>
-                        <div class="text-sm text-gray-500">
-                          工时: {{ task.estimatedHours || '-' }}h
-                        </div>
-                        <div class="mt-1">
-                          <Tag
-                            :color="priorityConfig[task.priority]?.color"
-                            size="small"
-                          >
-                            {{ priorityConfig[task.priority]?.label || task.priority }}
-                          </Tag>
-                          <Tag
-                            :color="statusConfig[task.status]?.color"
-                            size="small"
-                          >
-                            {{ statusConfig[task.status]?.label || task.status }}
-                          </Tag>
-                        </div>
-                      </div>
-                    </template>
-                    <div
-                      class="task-bar"
-                      :style="{
-                        left: `${task.left}px`,
-                        width: `${task.width}px`,
-                        backgroundColor: task.bgColor,
-                      }"
-                    >
-                      <span class="task-bar-label">{{ task.title }}</span>
-                    </div>
-                  </Popover>
-                </div>
-              </div>
-            </div>
+        <div class="mt-4 flex gap-4">
+          <div v-for="(config, status) in statusConfig" :key="status" class="flex items-center gap-1">
+            <div
+              class="h-3 w-3 rounded"
+              :style="{ backgroundColor: config.bgColor }"
+            ></div>
+            <span class="text-xs text-gray-500">{{ config.label }}</span>
           </div>
         </div>
       </Card>
@@ -475,152 +404,30 @@ onMounted(() => {
   overflow-x: auto;
   border: 1px solid #f0f0f0;
   border-radius: 6px;
+  min-height: 400px;
 }
 
-.gantt-wrapper {
-  display: flex;
-  min-width: fit-content;
+:deep(.g-gantt-chart) {
+  font-family: inherit;
 }
 
-.gantt-sidebar {
-  flex-shrink: 0;
-  width: 240px;
-  border-right: 2px solid #f0f0f0;
-  background: #fafafa;
-}
-
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  height: 58px;
-  padding: 0 12px;
-  font-weight: 600;
-  border-bottom: 1px solid #f0f0f0;
-  background: #fafafa;
-}
-
-.sidebar-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 40px;
-  padding: 0 12px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.task-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 140px;
+:deep(.g-gantt-row-label) {
   font-size: 13px;
+  padding: 0 12px;
 }
 
-.gantt-timeline {
-  flex: 1;
-  overflow-x: auto;
-}
-
-.timeline-header {
-  display: flex;
-  height: 28px;
-  border-bottom: 1px solid #f0f0f0;
-  background: #fafafa;
-}
-
-.header-group {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 500;
-  color: #666;
-  border-right: 1px solid #f0f0f0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.timeline-days {
-  display: flex;
-  height: 30px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.day-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  font-size: 11px;
-  color: #666;
-  border-right: 1px solid #f0f0f0;
-}
-
-.day-cell.weekend {
-  background: #fff8f0;
-  color: #fa8c16;
-}
-
-.day-cell.today {
-  background: #e6f7ff;
-  color: #1890ff;
-  font-weight: 600;
-}
-
-.timeline-body {
-  position: relative;
-}
-
-.task-row {
-  position: relative;
-  height: 40px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.row-grid {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: flex;
-  height: 100%;
-}
-
-.grid-cell {
-  width: 36px;
-  height: 100%;
-  border-right: 1px solid #f0f0f0;
-}
-
-.grid-cell.weekend {
-  background: #fff8f0;
-}
-
-.task-bar {
-  position: absolute;
-  top: 6px;
-  height: 28px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  padding: 0 8px;
+:deep(.g-gantt-bar) {
   cursor: pointer;
   transition: opacity 0.2s;
-  z-index: 1;
-  overflow: hidden;
 }
 
-.task-bar:hover {
+:deep(.g-gantt-bar:hover) {
   opacity: 0.85;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.task-bar-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+:deep(.g-gantt-bar-label) {
   font-size: 12px;
-  color: #fff;
   font-weight: 500;
 }
 </style>

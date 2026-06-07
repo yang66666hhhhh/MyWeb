@@ -71,6 +71,28 @@ export interface CreateCustomReportInput {
   type?: string;
 }
 
+// Growth Analytics types
+export interface SkillMastery {
+  skill: string;
+  value: number;
+}
+
+export interface LearningTimeTrend {
+  date: string;
+  hours: number;
+}
+
+export interface GoalCompletion {
+  goal: string;
+  completed: number;
+  total: number;
+}
+
+export interface HabitHeatmapData {
+  date: string;
+  count: number;
+}
+
 // AI Insight types
 export interface AiInsight {
   id: string;
@@ -97,6 +119,16 @@ export const analyticsExtendedApi = {
     requestClient.get<HourlyDistribution[]>('/analytics/time/hourly-distribution'),
   getWeeklyTrend: () =>
     requestClient.get<WeeklyTrend[]>('/analytics/time/weekly-trend'),
+
+  // Growth Analytics
+  getSkillMastery: () =>
+    requestClient.get<SkillMastery[]>('/growth/analytics/skill-mastery'),
+  getLearningTimeTrend: () =>
+    requestClient.get<LearningTimeTrend[]>('/growth/analytics/learning-time-trend'),
+  getGoalCompletion: () =>
+    requestClient.get<GoalCompletion[]>('/growth/analytics/goal-completion'),
+  getHabitHeatmap: () =>
+    requestClient.get<HabitHeatmapData[]>('/analytics/habits/heatmap'),
 
   // Habits Analytics
   getHabitsOverview: () =>
@@ -134,6 +166,10 @@ export const getWeeklyTrendApi = analyticsExtendedApi.getWeeklyTrend;
 
 export const getHabitsOverviewApi = analyticsExtendedApi.getHabitsOverview;
 export const getHabitTrendsApi = analyticsExtendedApi.getHabitTrends;
+export const getSkillMasteryApi = analyticsExtendedApi.getSkillMastery;
+export const getLearningTimeTrendApi = analyticsExtendedApi.getLearningTimeTrend;
+export const getGoalCompletionApi = analyticsExtendedApi.getGoalCompletion;
+export const getHabitHeatmapApi = analyticsExtendedApi.getHabitHeatmap;
 
 export const getFinanceOverviewApi = analyticsExtendedApi.getFinanceOverview;
 export const getMonthlyFinanceTrendApi = analyticsExtendedApi.getMonthlyFinanceTrend;

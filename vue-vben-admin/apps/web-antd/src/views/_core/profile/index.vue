@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useRoute } from 'vue-router';
 
 import { Profile } from '@vben/common-ui';
 import { useUserStore } from '@vben/stores';
 
 import ProfileBase from './base-setting.vue';
 import ProfileNotificationSetting from './notification-setting.vue';
+import NotificationsPage from './notifications/index.vue';
 import ProfilePasswordSetting from './password-setting.vue';
 import ProfileSecuritySetting from './security-setting.vue';
 
+const route = useRoute();
 const userStore = useUserStore();
 
-const tabsValue = ref<string>('basic');
+const tabsValue = ref<string>((route.query.tab as string) || 'basic');
 
 const tabs = ref([
   {
@@ -30,6 +33,10 @@ const tabs = ref([
     label: '新消息提醒',
     value: 'notice',
   },
+  {
+    label: '通知中心',
+    value: 'notifications',
+  },
 ]);
 </script>
 <template>
@@ -44,6 +51,7 @@ const tabs = ref([
       <ProfileSecuritySetting v-if="tabsValue === 'security'" />
       <ProfilePasswordSetting v-if="tabsValue === 'password'" />
       <ProfileNotificationSetting v-if="tabsValue === 'notice'" />
+      <NotificationsPage v-if="tabsValue === 'notifications'" />
     </template>
   </Profile>
 </template>

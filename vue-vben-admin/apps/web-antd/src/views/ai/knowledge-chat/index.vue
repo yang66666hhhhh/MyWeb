@@ -32,8 +32,8 @@ import {
 import { usePagedQuery } from '#/composables/usePagedQuery';
 
 const accessStore = useAccessStore();
-const canUseChat = computed(() => accessStore.accessCodes.includes('AI_KNOWLEDGE'));
-const canDeleteChat = computed(() => accessStore.accessCodes.includes('AI_KNOWLEDGE'));
+const canUseChat = computed(() => accessStore.accessCodes.includes('AI_KNOWLEDGE_CHAT'));
+const canDeleteChat = computed(() => accessStore.accessCodes.includes('AI_KNOWLEDGE_CHAT'));
 
 const chatInput = ref('');
 const sending = ref(false);

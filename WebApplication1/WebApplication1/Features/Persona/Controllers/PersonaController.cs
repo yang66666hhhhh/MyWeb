@@ -15,7 +15,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     // Dev - Code Repositories
 
     [HttpGet("dev/repositories")]
-    [RequireFeature("WORK_PROJECT")]
+    [RequireFeature("DEV_REPOSITORIES")]
     public async Task<ActionResult<ApiResult<PageResult<CodeRepositoryDto>>>> GetRepositories(
         [FromQuery] PersonaQueryDto query, CancellationToken ct)
     {
@@ -25,7 +25,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpGet("dev/repositories/{id:guid}")]
-    [RequireFeature("WORK_PROJECT")]
+    [RequireFeature("DEV_REPOSITORIES")]
     public async Task<ActionResult<ApiResult<CodeRepositoryDto>>> GetRepositoryById(Guid id, CancellationToken ct)
     {
         var result = await personaService.GetRepositoryByIdAsync(id, ct);
@@ -40,7 +40,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpPost("dev/repositories")]
-    [RequireFeature("WORK_PROJECT")]
+    [RequireFeature("DEV_REPOSITORIES")]
     public async Task<ActionResult<ApiResult<CodeRepositoryDto>>> CreateRepository(
         [FromBody] CreateCodeRepositoryInput input, CancellationToken ct)
     {
@@ -53,7 +53,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpPut("dev/repositories/{id:guid}")]
-    [RequireFeature("WORK_PROJECT")]
+    [RequireFeature("DEV_REPOSITORIES")]
     public async Task<ActionResult<ApiResult<CodeRepositoryDto>>> UpdateRepository(
         Guid id, [FromBody] CreateCodeRepositoryInput input, CancellationToken ct)
     {
@@ -70,7 +70,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpDelete("dev/repositories/{id:guid}")]
-    [RequireFeature("WORK_PROJECT")]
+    [RequireFeature("DEV_REPOSITORIES")]
     public async Task<ActionResult<ApiResult>> DeleteRepository(Guid id, CancellationToken ct)
     {
         var existing = await personaService.GetRepositoryByIdAsync(id, ct);
@@ -88,7 +88,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     // Dev - Issues
 
     [HttpGet("dev/issues")]
-    [RequireFeature("WORK_TASK")]
+    [RequireFeature("DEV_ISSUES")]
     public async Task<ActionResult<ApiResult<PageResult<IssueDto>>>> GetIssues(
         [FromQuery] PersonaQueryDto query, CancellationToken ct)
     {
@@ -98,7 +98,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpGet("dev/issues/{id:guid}")]
-    [RequireFeature("WORK_TASK")]
+    [RequireFeature("DEV_ISSUES")]
     public async Task<ActionResult<ApiResult<IssueDto>>> GetIssueById(Guid id, CancellationToken ct)
     {
         var result = await personaService.GetIssueByIdAsync(id, ct);
@@ -113,7 +113,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpPost("dev/issues")]
-    [RequireFeature("WORK_TASK")]
+    [RequireFeature("DEV_ISSUES")]
     public async Task<ActionResult<ApiResult<IssueDto>>> CreateIssue(
         [FromBody] CreateIssueInput input, CancellationToken ct)
     {
@@ -126,7 +126,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpPut("dev/issues/{id:guid}")]
-    [RequireFeature("WORK_TASK")]
+    [RequireFeature("DEV_ISSUES")]
     public async Task<ActionResult<ApiResult<IssueDto>>> UpdateIssue(
         Guid id, [FromBody] CreateIssueInput input, CancellationToken ct)
     {
@@ -143,7 +143,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpDelete("dev/issues/{id:guid}")]
-    [RequireFeature("WORK_TASK")]
+    [RequireFeature("DEV_ISSUES")]
     public async Task<ActionResult<ApiResult>> DeleteIssue(Guid id, CancellationToken ct)
     {
         var existing = await personaService.GetIssueByIdAsync(id, ct);
@@ -161,7 +161,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     // Dev - Pipelines
 
     [HttpGet("dev/pipelines")]
-    [RequireFeature("WORK_PROJECT")]
+    [RequireFeature("DEV_PIPELINES")]
     public async Task<ActionResult<ApiResult<PageResult<PipelineDto>>>> GetPipelines(
         [FromQuery] PersonaQueryDto query, CancellationToken ct)
     {
@@ -171,7 +171,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpGet("dev/pipelines/{id:guid}")]
-    [RequireFeature("WORK_PROJECT")]
+    [RequireFeature("DEV_PIPELINES")]
     public async Task<ActionResult<ApiResult<PipelineDto>>> GetPipelineById(Guid id, CancellationToken ct)
     {
         var result = await personaService.GetPipelineByIdAsync(id, ct);
@@ -186,7 +186,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpPost("dev/pipelines")]
-    [RequireFeature("WORK_PROJECT")]
+    [RequireFeature("DEV_PIPELINES")]
     public async Task<ActionResult<ApiResult<PipelineDto>>> CreatePipeline(
         [FromBody] CreatePipelineInput input, CancellationToken ct)
     {
@@ -199,7 +199,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpPut("dev/pipelines/{id:guid}")]
-    [RequireFeature("WORK_PROJECT")]
+    [RequireFeature("DEV_PIPELINES")]
     public async Task<ActionResult<ApiResult<PipelineDto>>> UpdatePipeline(
         Guid id, [FromBody] CreatePipelineInput input, CancellationToken ct)
     {
@@ -216,7 +216,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpDelete("dev/pipelines/{id:guid}")]
-    [RequireFeature("WORK_PROJECT")]
+    [RequireFeature("DEV_PIPELINES")]
     public async Task<ActionResult<ApiResult>> DeletePipeline(Guid id, CancellationToken ct)
     {
         var existing = await personaService.GetPipelineByIdAsync(id, ct);
@@ -234,6 +234,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     // Design - Assets
 
     [HttpGet("design/assets")]
+    [RequireFeature("DESIGN_ASSETS")]
     public async Task<ActionResult<ApiResult<PageResult<DesignAssetDto>>>> GetDesignAssets(
         [FromQuery] PersonaQueryDto query, CancellationToken ct)
     {
@@ -243,6 +244,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpGet("design/assets/{id:guid}")]
+    [RequireFeature("DESIGN_ASSETS")]
     public async Task<ActionResult<ApiResult<DesignAssetDto>>> GetDesignAssetById(Guid id, CancellationToken ct)
     {
         var result = await personaService.GetDesignAssetByIdAsync(id, ct);
@@ -257,6 +259,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpPost("design/assets")]
+    [RequireFeature("DESIGN_ASSETS")]
     public async Task<ActionResult<ApiResult<DesignAssetDto>>> CreateDesignAsset(
         [FromBody] CreateDesignAssetInput input, CancellationToken ct)
     {
@@ -269,6 +272,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpPut("design/assets/{id:guid}")]
+    [RequireFeature("DESIGN_ASSETS")]
     public async Task<ActionResult<ApiResult<DesignAssetDto>>> UpdateDesignAsset(
         Guid id, [FromBody] CreateDesignAssetInput input, CancellationToken ct)
     {
@@ -285,6 +289,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpDelete("design/assets/{id:guid}")]
+    [RequireFeature("DESIGN_ASSETS")]
     public async Task<ActionResult<ApiResult>> DeleteDesignAsset(Guid id, CancellationToken ct)
     {
         var existing = await personaService.GetDesignAssetByIdAsync(id, ct);
@@ -302,6 +307,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     // Design - Prototypes
 
     [HttpGet("design/prototypes")]
+    [RequireFeature("DESIGN_PROTOTYPES")]
     public async Task<ActionResult<ApiResult<PageResult<PrototypeDto>>>> GetPrototypes(
         [FromQuery] PersonaQueryDto query, CancellationToken ct)
     {
@@ -311,6 +317,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpGet("design/prototypes/{id:guid}")]
+    [RequireFeature("DESIGN_PROTOTYPES")]
     public async Task<ActionResult<ApiResult<PrototypeDto>>> GetPrototypeById(Guid id, CancellationToken ct)
     {
         var result = await personaService.GetPrototypeByIdAsync(id, ct);
@@ -325,6 +332,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpPost("design/prototypes")]
+    [RequireFeature("DESIGN_PROTOTYPES")]
     public async Task<ActionResult<ApiResult<PrototypeDto>>> CreatePrototype(
         [FromBody] CreatePrototypeInput input, CancellationToken ct)
     {
@@ -337,6 +345,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpPut("design/prototypes/{id:guid}")]
+    [RequireFeature("DESIGN_PROTOTYPES")]
     public async Task<ActionResult<ApiResult<PrototypeDto>>> UpdatePrototype(
         Guid id, [FromBody] CreatePrototypeInput input, CancellationToken ct)
     {
@@ -353,6 +362,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpDelete("design/prototypes/{id:guid}")]
+    [RequireFeature("DESIGN_PROTOTYPES")]
     public async Task<ActionResult<ApiResult>> DeletePrototype(Guid id, CancellationToken ct)
     {
         var existing = await personaService.GetPrototypeByIdAsync(id, ct);
@@ -370,6 +380,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     // Teacher - Courses
 
     [HttpGet("teacher/courses")]
+    [RequireFeature("TEACHER_COURSES")]
     public async Task<ActionResult<ApiResult<PageResult<TeacherCourseDto>>>> GetTeacherCourses(
         [FromQuery] PersonaQueryDto query, CancellationToken ct)
     {
@@ -379,6 +390,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpGet("teacher/courses/{id:guid}")]
+    [RequireFeature("TEACHER_COURSES")]
     public async Task<ActionResult<ApiResult<TeacherCourseDto>>> GetTeacherCourseById(Guid id, CancellationToken ct)
     {
         var result = await personaService.GetTeacherCourseByIdAsync(id, ct);
@@ -393,6 +405,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpPost("teacher/courses")]
+    [RequireFeature("TEACHER_COURSES")]
     public async Task<ActionResult<ApiResult<TeacherCourseDto>>> CreateTeacherCourse(
         [FromBody] CreateTeacherCourseInput input, CancellationToken ct)
     {
@@ -405,6 +418,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpPut("teacher/courses/{id:guid}")]
+    [RequireFeature("TEACHER_COURSES")]
     public async Task<ActionResult<ApiResult<TeacherCourseDto>>> UpdateTeacherCourse(
         Guid id, [FromBody] CreateTeacherCourseInput input, CancellationToken ct)
     {
@@ -421,6 +435,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpDelete("teacher/courses/{id:guid}")]
+    [RequireFeature("TEACHER_COURSES")]
     public async Task<ActionResult<ApiResult>> DeleteTeacherCourse(Guid id, CancellationToken ct)
     {
         var existing = await personaService.GetTeacherCourseByIdAsync(id, ct);
@@ -438,6 +453,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     // Teacher - Students
 
     [HttpGet("teacher/students")]
+    [RequireFeature("TEACHER_STUDENTS")]
     public async Task<ActionResult<ApiResult<PageResult<TeacherStudentDto>>>> GetTeacherStudents(
         [FromQuery] PersonaQueryDto query, CancellationToken ct)
     {
@@ -447,6 +463,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpGet("teacher/students/{id:guid}")]
+    [RequireFeature("TEACHER_STUDENTS")]
     public async Task<ActionResult<ApiResult<TeacherStudentDto>>> GetTeacherStudentById(Guid id, CancellationToken ct)
     {
         var result = await personaService.GetTeacherStudentByIdAsync(id, ct);
@@ -461,6 +478,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpPost("teacher/students")]
+    [RequireFeature("TEACHER_STUDENTS")]
     public async Task<ActionResult<ApiResult<TeacherStudentDto>>> CreateTeacherStudent(
         [FromBody] CreateTeacherStudentInput input, CancellationToken ct)
     {
@@ -473,6 +491,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpPut("teacher/students/{id:guid}")]
+    [RequireFeature("TEACHER_STUDENTS")]
     public async Task<ActionResult<ApiResult<TeacherStudentDto>>> UpdateTeacherStudent(
         Guid id, [FromBody] CreateTeacherStudentInput input, CancellationToken ct)
     {
@@ -489,6 +508,7 @@ public class PersonaController(IPersonaFeatureService personaService) : BaseApiC
     }
 
     [HttpDelete("teacher/students/{id:guid}")]
+    [RequireFeature("TEACHER_STUDENTS")]
     public async Task<ActionResult<ApiResult>> DeleteTeacherStudent(Guid id, CancellationToken ct)
     {
         var existing = await personaService.GetTeacherStudentByIdAsync(id, ct);

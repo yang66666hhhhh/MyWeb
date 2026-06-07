@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using WebApplication1.Shared.Data;
+using WebApplication1.Shared.Enums;
 using WebApplication1.Features.Work.Dtos;
 using WebApplication1.Features.Work.Services.Interfaces;
 
@@ -37,8 +38,8 @@ public class WorkStatisticsService : IWorkStatisticsService
                 TotalHours = g.Sum(x => x.TotalHours),
                 TodayLogs = g.Count(x => x.WorkDate == today),
                 TodayHours = g.Where(x => x.WorkDate == today).Sum(x => x.TotalHours),
-                MissingCount = g.Count(x => x.Status == Shared.Enums.WorkLogStatus.MissingData),
-                PendingCount = g.Count(x => x.Status == Shared.Enums.WorkLogStatus.PendingSupplement)
+                MissingCount = g.Count(x => x.Status == WorkLogStatus.MissingData),
+                PendingCount = g.Count(x => x.Status == WorkLogStatus.PendingSupplement)
             })
             .FirstOrDefaultAsync(cancellationToken);
 

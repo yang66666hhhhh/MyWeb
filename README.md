@@ -248,6 +248,30 @@ vue-vben-admin/apps/web-antd/.env.production
 
 ## 更新日志
 
+### v4.0 (2025-06-07)
+
+**API Feature 覆盖对齐：**
+
+- 新增 ApiFeatureCoverageTests 和 DbSeederTests 测试
+- 修复 Controller Feature 覆盖问题
+- 权限控制和类型安全优化
+- Docker 部署配置
+- 前端工具库增强（请求去重、缓存、版本控制等）
+
+**测试结果：** 140 个后端测试全部通过，前端类型检查和构建成功
+
+### v3.5 (2025-06)
+
+**模块完善：**
+
+- 完善 Labs 模块和辅助页面
+- 补充 Analytics AI Insights 端点
+- 前端页面全面优化
+- 注册全部缺失路由（58个）
+- 实现各模块真实业务逻辑
+
+**测试结果：** 140 个后端测试全部通过，前端类型检查和构建成功
+
 ### v3.2 (2025-05-31)
 
 **页面优化：**

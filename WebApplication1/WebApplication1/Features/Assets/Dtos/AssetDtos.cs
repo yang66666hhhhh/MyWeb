@@ -159,3 +159,35 @@ public class UpdateInvestmentDto
     public string? Description { get; set; }
     public string? Remark { get; set; }
 }
+
+public class MonthlyTrendDto
+{
+    public string Month { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+}
+
+public class CategoryStatDto
+{
+    public string Category { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public int Count { get; set; }
+}
+
+public class BudgetExecutionDto
+{
+    public string Category { get; set; } = string.Empty;
+    public decimal PlannedAmount { get; set; }
+    public decimal ActualAmount { get; set; }
+    public decimal ExecutionRate { get; set; }
+}
+
+public class AssetOverviewDto
+{
+    public decimal TotalIncome { get; set; }
+    public decimal TotalExpense { get; set; }
+    public decimal TotalInvestment { get; set; }
+    public decimal NetAsset { get; set; }
+    public decimal MonthlyIncome { get; set; }
+    public decimal MonthlyExpense { get; set; }
+    public decimal SavingsRate { get; set; }
+}

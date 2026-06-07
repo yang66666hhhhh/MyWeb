@@ -1,7 +1,10 @@
 ﻿<script lang="ts" setup>
+import type { EchartsUIType } from '@vben/plugins/echarts';
+
 import { computed, onMounted, reactive, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 import { useAccessStore } from '@vben/stores';
 
 import {
@@ -24,9 +27,11 @@ import {
   Tag,
 } from 'ant-design-vue';
 
-import type { CreateIncomeInput, Income } from '#/api/assets';
+import type { CreateIncomeInput, Income, MonthlyTrend } from '#/api/assets';
 
-import { createIncomeApi, deleteIncomeApi, getIncomePageApi, updateIncomeApi } from '#/api/assets';
+import { assetApi, createIncomeApi, deleteIncomeApi, getIncomePageApi, updateIncomeApi } from '#/api/assets';
+import ExportButton from '#/components/ExportButton.vue';
+import ImportButton from '#/components/ImportButton.vue';
 
 const formRef = ref();
 const formRules = {
@@ -69,6 +74,34 @@ const monthlyIncome = computed(() => {
     })
     .reduce((sum, item) => sum + item.amount, 0);
 });
+
+const trendChartRef = ref<EchartsUIType>();
+const { renderEcharts } = useEcharts(trendChartRef);
+
+const fetchIncomeTrend = async () => {
+  try {
+    const data: MonthlyTrend[] = await assetApi.getIncomeTrend(6);
+    renderEcharts({
+      tooltip: { trigger: 'axis' as const },
+      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      xAxis: {
+        type: 'category' as const,
+        data: data.map((item) => item.month),
+        axisTick: { show: false },
+      },
+      yAxis: { type: 'value' as const, axisTick: { show: false } },
+      series: [
+        {
+          type: 'bar' as const,
+          itemStyle: { color: '#52c41a', borderRadius: [4, 4, 0, 0] },
+          data: data.map((item) => item.amount),
+        },
+      ],
+    });
+  } catch {
+    // ignore
+  }
+};
 
 const columns = [
   { title: '日期', dataIndex: 'incomeDate', key: 'incomeDate', width: 120 },
@@ -164,6 +197,7 @@ const handlePageChange = (page: number, size: number) => {
 
 onMounted(() => {
   fetchData();
+  fetchIncomeTrend();
 });
 </script>
 
@@ -182,9 +216,19 @@ onMounted(() => {
       </Col>
     </Row>
 
+    <Card title="收入趋势（近6个月）" class="mb-4">
+      <div class="h-72">
+        <EchartsUI ref="trendChartRef" />
+      </div>
+    </Card>
+
     <Card title="收入记录">
       <template #extra>
-        <Button v-if="canCreateIncome" type="primary" @click="handleAdd">记录收入</Button>
+        <Space>
+          <ExportButton module="income" filename="收入记录" />
+          <ImportButton module="income" @imported="fetchData" />
+          <Button v-if="canCreateIncome" type="primary" @click="handleAdd">记录收入</Button>
+        </Space>
       </template>
       <Table
         :columns="columns"

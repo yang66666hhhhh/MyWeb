@@ -1,7 +1,10 @@
 ﻿<script lang="ts" setup>
+import type { EchartsUIType } from '@vben/plugins/echarts';
+
 import { computed, onMounted, reactive, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 import { useAccessStore } from '@vben/stores';
 
 import {
@@ -24,9 +27,11 @@ import {
   Tag,
 } from 'ant-design-vue';
 
-import type { CreateExpenseInput, Expense } from '#/api/assets';
+import type { CategoryStat, CreateExpenseInput, Expense, MonthlyTrend } from '#/api/assets';
 
-import { createExpenseApi, deleteExpenseApi, getExpensePageApi, updateExpenseApi } from '#/api/assets';
+import { assetApi, createExpenseApi, deleteExpenseApi, getExpensePageApi, updateExpenseApi } from '#/api/assets';
+import ExportButton from '#/components/ExportButton.vue';
+import ImportButton from '#/components/ImportButton.vue';
 
 const formRef = ref();
 const formRules = {
@@ -69,6 +74,63 @@ const monthlyExpense = computed(() => {
     })
     .reduce((sum, item) => sum + item.amount, 0);
 });
+
+const trendChartRef = ref<EchartsUIType>();
+const { renderEcharts: renderTrendChart } = useEcharts(trendChartRef);
+
+const pieChartRef = ref<EchartsUIType>();
+const { renderEcharts: renderPieChart } = useEcharts(pieChartRef);
+
+const fetchExpenseCharts = async () => {
+  try {
+    const [trendRes, categoryRes] = await Promise.allSettled([
+      assetApi.getExpenseTrend(6),
+      assetApi.getExpenseCategoryStats(),
+    ]);
+
+    if (trendRes.status === 'fulfilled') {
+      const data: MonthlyTrend[] = trendRes.value;
+      renderTrendChart({
+        tooltip: { trigger: 'axis' as const },
+        grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+        xAxis: {
+          type: 'category' as const,
+          data: data.map((item) => item.month),
+          axisTick: { show: false },
+        },
+        yAxis: { type: 'value' as const, axisTick: { show: false } },
+        series: [
+          {
+            type: 'bar' as const,
+            itemStyle: { color: '#ff4d4f', borderRadius: [4, 4, 0, 0] },
+            data: data.map((item) => item.amount),
+          },
+        ],
+      });
+    }
+
+    if (categoryRes.status === 'fulfilled') {
+      const data: CategoryStat[] = categoryRes.value;
+      renderPieChart({
+        tooltip: { trigger: 'item' as const },
+        legend: { bottom: '0%', left: 'center' },
+        series: [
+          {
+            type: 'pie' as const,
+            radius: ['40%', '70%'],
+            label: { show: true, formatter: '{b}: {c} ({d}%)' },
+            data: data.map((item) => ({
+              name: item.category,
+              value: item.amount,
+            })),
+          },
+        ],
+      });
+    }
+  } catch {
+    // ignore
+  }
+};
 
 const columns = [
   { title: '日期', dataIndex: 'expenseDate', key: 'expenseDate', width: 120 },
@@ -167,6 +229,7 @@ const handlePageChange = (page: number, size: number) => {
 
 onMounted(() => {
   fetchData();
+  fetchExpenseCharts();
 });
 </script>
 
@@ -185,9 +248,30 @@ onMounted(() => {
       </Col>
     </Row>
 
+    <Row :gutter="[16, 16]" class="mb-4">
+      <Col :lg="12" :xs="24">
+        <Card title="支出趋势（近6个月）">
+          <div class="h-72">
+            <EchartsUI ref="trendChartRef" />
+          </div>
+        </Card>
+      </Col>
+      <Col :lg="12" :xs="24">
+        <Card title="支出分类占比">
+          <div class="h-72">
+            <EchartsUI ref="pieChartRef" />
+          </div>
+        </Card>
+      </Col>
+    </Row>
+
     <Card title="支出记录">
       <template #extra>
-        <Button v-if="canCreateExpense" type="primary" @click="handleAdd">记录支出</Button>
+        <Space>
+          <ExportButton module="expense" filename="支出记录" />
+          <ImportButton module="expense" @imported="fetchData" />
+          <Button v-if="canCreateExpense" type="primary" @click="handleAdd">记录支出</Button>
+        </Space>
       </template>
       <Table
         :columns="columns"

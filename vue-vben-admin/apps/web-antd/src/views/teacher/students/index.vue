@@ -1,7 +1,10 @@
 ﻿<script lang="ts" setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import type { EchartsUIType } from '@vben/plugins/echarts';
+
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 
 import { Page } from '@vben/common-ui';
+import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 
 import {
   Button,
@@ -37,6 +40,24 @@ const modalVisible = ref(false);
 const editingId = ref<string | null>(null);
 const submitting = ref(false);
 
+const chartRef = ref<EchartsUIType>();
+const { renderEcharts } = useEcharts(chartRef);
+
+const gradeDistribution = computed(() => {
+  const ranges = [
+    { name: '优秀 (90-100)', min: 90, max: 100, count: 0 },
+    { name: '良好 (80-89)', min: 80, max: 89, count: 0 },
+    { name: '中等 (70-79)', min: 70, max: 79, count: 0 },
+    { name: '及格 (60-69)', min: 60, max: 69, count: 0 },
+    { name: '不及格 (<60)', min: 0, max: 59, count: 0 },
+  ];
+  dataList.value.forEach((s) => {
+    const range = ranges.find((r) => s.grade >= r.min && s.grade <= r.max);
+    if (range) range.count++;
+  });
+  return ranges;
+});
+
 const formState = reactive<CreateTeacherStudentInput>({
   name: '',
   studentId: '',
@@ -67,6 +88,40 @@ const gradeColors = (grade: number) => {
   if (grade >= 60) return 'orange';
   return 'red';
 };
+
+watch(gradeDistribution, (dist) => {
+  if (dist.some((d) => d.count > 0)) {
+    renderEcharts({
+      tooltip: { trigger: 'axis' as const },
+      grid: { bottom: '3%', containLabel: true, left: '3%', right: '4%', top: '3%' },
+      xAxis: {
+        type: 'category' as const,
+        data: dist.map((d) => d.name),
+        axisLabel: { rotate: 15 },
+      },
+      yAxis: { type: 'value' as const },
+      series: [
+        {
+          data: dist.map((d) => d.count),
+          type: 'bar' as const,
+          itemStyle: {
+            color: (params: any) => {
+              const colors = ['#52c41a', '#1890ff', '#faad14', '#ff7a45', '#f5222d'];
+              return colors[params.dataIndex] || '#1890ff';
+            },
+          },
+        },
+      ],
+    });
+  }
+});
+
+const attendanceStats = computed(() => {
+  const totalStudents = dataList.value.length;
+  const withEmail = dataList.value.filter((s) => s.email).length;
+  const withPhone = dataList.value.filter((s) => s.phone).length;
+  return { totalStudents, withEmail, withPhone };
+});
 
 const averageGrade = computed(() => {
   if (dataList.value.length === 0) return 0;
@@ -165,6 +220,29 @@ onMounted(() => {
       <Col :lg="6" :md="12" :xs="24">
         <Card :loading="loading">
           <Statistic title="平均成绩" :value="averageGrade" suffix="分" />
+        </Card>
+      </Col>
+      <Col :lg="6" :md="12" :xs="24">
+        <Card :loading="loading">
+          <Statistic title="有邮箱" :value="attendanceStats.withEmail" :suffix="`/ ${attendanceStats.totalStudents}`" />
+        </Card>
+      </Col>
+      <Col :lg="6" :md="12" :xs="24">
+        <Card :loading="loading">
+          <Statistic title="有电话" :value="attendanceStats.withPhone" :suffix="`/ ${attendanceStats.totalStudents}`" />
+        </Card>
+      </Col>
+    </Row>
+
+    <Row :gutter="[16, 16]" class="mb-4">
+      <Col :lg="12" :md="24" :xs="24">
+        <Card title="成绩分布" :loading="loading">
+          <div class="h-72">
+            <EchartsUI v-if="!loading && gradeDistribution.some(d => d.count > 0)" ref="chartRef" />
+            <div v-else class="flex items-center justify-center h-full text-gray-400">
+              暂无数据
+            </div>
+          </div>
         </Card>
       </Col>
     </Row>

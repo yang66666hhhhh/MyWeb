@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Features.Ai.Services;
+using WebApplication1.Features.Auth.Authorization;
 using WebApplication1.Shared.Common;
 
 namespace WebApplication1.Features.Ai;
@@ -21,6 +22,7 @@ public class AiExtendedController : BaseApiController
     // ─── Automation endpoints ────────────────────────────────────
 
     [HttpGet("automation")]
+    [RequireFeature("AI_AUTOMATION")]
     public async Task<ActionResult<ApiResult<PageResult<AutomationWorkflowDto>>>> GetWorkflows(
         [FromQuery] AiExtendedQueryDto query, CancellationToken ct)
     {
@@ -32,6 +34,7 @@ public class AiExtendedController : BaseApiController
     }
 
     [HttpPost("automation")]
+    [RequireFeature("AI_AUTOMATION")]
     public async Task<ActionResult<ApiResult<AutomationWorkflowDto>>> CreateWorkflow(
         [FromBody] CreateAutomationWorkflowInput input, CancellationToken ct)
     {
@@ -43,6 +46,7 @@ public class AiExtendedController : BaseApiController
     }
 
     [HttpPut("automation/{id:guid}")]
+    [RequireFeature("AI_AUTOMATION")]
     public async Task<ActionResult<ApiResult<AutomationWorkflowDto>>> UpdateWorkflow(
         Guid id, [FromBody] UpdateAutomationWorkflowInput input, CancellationToken ct)
     {
@@ -53,6 +57,7 @@ public class AiExtendedController : BaseApiController
     }
 
     [HttpDelete("automation/{id:guid}")]
+    [RequireFeature("AI_AUTOMATION")]
     public async Task<ActionResult<ApiResult>> DeleteWorkflow(Guid id, CancellationToken ct)
     {
         var success = await _service.DeleteWorkflowAsync(id, ct);
@@ -62,6 +67,7 @@ public class AiExtendedController : BaseApiController
     // ─── Knowledge Chat endpoints ────────────────────────────────
 
     [HttpGet("knowledge-chat/sessions")]
+    [RequireFeature("AI_KNOWLEDGE_CHAT")]
     public async Task<ActionResult<ApiResult<PageResult<KnowledgeChatSessionDto>>>> GetKnowledgeChatSessions(
         [FromQuery] AiExtendedQueryDto query, CancellationToken ct)
     {
@@ -73,6 +79,7 @@ public class AiExtendedController : BaseApiController
     }
 
     [HttpPost("knowledge-chat")]
+    [RequireFeature("AI_KNOWLEDGE_CHAT")]
     public async Task<ActionResult<ApiResult<KnowledgeChatResponseDto>>> SendKnowledgeChatMessage(
         [FromBody] KnowledgeChatRequest input, CancellationToken ct)
     {
@@ -84,6 +91,7 @@ public class AiExtendedController : BaseApiController
     }
 
     [HttpDelete("knowledge-chat/sessions/{id:guid}")]
+    [RequireFeature("AI_KNOWLEDGE_CHAT")]
     public async Task<ActionResult<ApiResult>> DeleteKnowledgeChatSession(Guid id, CancellationToken ct)
     {
         var success = await _service.DeleteSessionAsync(id, ct);
@@ -93,6 +101,7 @@ public class AiExtendedController : BaseApiController
     // ─── Insights endpoints ──────────────────────────────────────
 
     [HttpGet("insights")]
+    [RequireFeature("AI_INSIGHTS")]
     public async Task<ActionResult<ApiResult<PageResult<AiInsightItemDto>>>> GetInsights(
         [FromQuery] AiExtendedQueryDto query, CancellationToken ct)
     {
@@ -104,6 +113,7 @@ public class AiExtendedController : BaseApiController
     }
 
     [HttpPost("insights/generate")]
+    [RequireFeature("AI_INSIGHTS")]
     public async Task<ActionResult<ApiResult<AiInsightItemDto>>> GenerateInsight(
         [FromBody] GenerateInsightInput input, CancellationToken ct)
     {
@@ -115,6 +125,7 @@ public class AiExtendedController : BaseApiController
     }
 
     [HttpDelete("insights/{id:guid}")]
+    [RequireFeature("AI_INSIGHTS")]
     public async Task<ActionResult<ApiResult>> DeleteInsight(Guid id, CancellationToken ct)
     {
         var success = await _service.DeleteInsightAsync(id, ct);

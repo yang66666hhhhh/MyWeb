@@ -27,6 +27,8 @@ import {
   updateHabitStatusApi,
 } from '#/api/growth';
 import { usePagedQuery } from '#/composables/usePagedQuery';
+import ExportButton from '#/components/ExportButton.vue';
+import ImportButton from '#/components/ImportButton.vue';
 
 import HabitDetail from './components/HabitDetail.vue';
 import HabitForm from './components/HabitForm.vue';
@@ -173,6 +175,8 @@ onMounted(() => {
         </Form.Item>
         <Form.Item>
           <Space>
+            <ExportButton module="habits" filename="习惯记录" />
+            <ImportButton module="habits" @imported="load" />
             <Button type="primary" @click="search"> 查询 </Button>
             <Button v-if="canCreateHabit" @click="openCreate"> 新增 </Button>
           </Space>

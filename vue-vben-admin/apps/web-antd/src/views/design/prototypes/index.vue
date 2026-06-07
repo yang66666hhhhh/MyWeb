@@ -14,9 +14,11 @@ import {
   Modal,
   Popconfirm,
   Row,
+  Space,
   Statistic,
   Table,
   Tag,
+  Tooltip,
 } from 'ant-design-vue';
 
 import type { CreatePrototypeInput, Prototype } from '#/api/persona';
@@ -57,10 +59,19 @@ const statusMap: Record<number, string> = {
   3: '待审核',
 };
 
+const previewVisible = ref(false);
+const previewUrl = ref('');
+
+const handlePreview = (url: string) => {
+  previewUrl.value = url;
+  previewVisible.value = true;
+};
+
 const columns = [
   { title: '原型名称', dataIndex: 'title', key: 'title' },
   { title: '项目', dataIndex: 'project', key: 'project', width: 120 },
   { title: '状态', dataIndex: 'status', key: 'status', width: 80 },
+  { title: '预览', key: 'preview', width: 80 },
   { title: '标签', dataIndex: 'tags', key: 'tags', width: 150 },
   { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 120 },
   { title: '操作', key: 'action', width: 150 },
@@ -202,8 +213,18 @@ onMounted(() => {
               {{ statusMap[record.status] || '未知' }}
             </Tag>
           </template>
+          <template v-else-if="column.key === 'preview'">
+            <Tooltip v-if="record.previewUrl" title="点击预览">
+              <Button type="link" size="small" @click="handlePreview(record.previewUrl)">
+                预览
+              </Button>
+            </Tooltip>
+            <span v-else class="text-gray-400">-</span>
+          </template>
           <template v-else-if="column.key === 'tags'">
-            <Tag v-for="tag in (record.tags || '').split(',').filter(Boolean)" :key="tag">{{ tag }}</Tag>
+            <Space>
+              <Tag v-for="tag in (record.tags || '').split(',').filter(Boolean)" :key="tag">{{ tag }}</Tag>
+            </Space>
           </template>
           <template v-else-if="column.key === 'action'">
             <div class="flex gap-2">
@@ -240,6 +261,22 @@ onMounted(() => {
           <Input v-model:value="formState.tags" placeholder="多个标签用逗号分隔" />
         </FormItem>
       </Form>
+    </Modal>
+
+    <Modal
+      v-model:open="previewVisible"
+      title="原型预览"
+      :footer="null"
+      width="80%"
+    >
+      <div class="w-full" style="height: 70vh">
+        <iframe
+          v-if="previewUrl"
+          :src="previewUrl"
+          class="w-full h-full border-0"
+          allow="fullscreen"
+        />
+      </div>
     </Modal>
   </Page>
 </template>

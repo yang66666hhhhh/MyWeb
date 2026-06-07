@@ -489,4 +489,90 @@ public class AssetsController(IAssetService assetService, ILogger<AssetsControll
             return StatusCode(500, ApiResult.Fail("删除失败，请稍后重试"));
         }
     }
+
+    [HttpGet("charts/income-trend")]
+    public async Task<ActionResult<ApiResult<List<MonthlyTrendDto>>>> GetIncomeTrend(
+        [FromQuery] int months = 6,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var result = await assetService.GetIncomeTrendAsync(userId, months, cancellationToken);
+            return Ok(ApiResult<List<MonthlyTrendDto>>.Success(result));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "获取收入趋势数据失败");
+            return StatusCode(500, ApiResult.Fail("获取数据失败，请稍后重试"));
+        }
+    }
+
+    [HttpGet("charts/expense-trend")]
+    public async Task<ActionResult<ApiResult<List<MonthlyTrendDto>>>> GetExpenseTrend(
+        [FromQuery] int months = 6,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var result = await assetService.GetExpenseTrendAsync(userId, months, cancellationToken);
+            return Ok(ApiResult<List<MonthlyTrendDto>>.Success(result));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "获取支出趋势数据失败");
+            return StatusCode(500, ApiResult.Fail("获取数据失败，请稍后重试"));
+        }
+    }
+
+    [HttpGet("charts/expense-category")]
+    public async Task<ActionResult<ApiResult<List<CategoryStatDto>>>> GetExpenseCategoryStats(
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var result = await assetService.GetExpenseCategoryStatsAsync(userId, cancellationToken);
+            return Ok(ApiResult<List<CategoryStatDto>>.Success(result));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "获取支出分类统计数据失败");
+            return StatusCode(500, ApiResult.Fail("获取数据失败，请稍后重试"));
+        }
+    }
+
+    [HttpGet("charts/budget-execution")]
+    public async Task<ActionResult<ApiResult<List<BudgetExecutionDto>>>> GetBudgetExecution(
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var result = await assetService.GetBudgetExecutionAsync(userId, cancellationToken);
+            return Ok(ApiResult<List<BudgetExecutionDto>>.Success(result));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "获取预算执行数据失败");
+            return StatusCode(500, ApiResult.Fail("获取数据失败，请稍后重试"));
+        }
+    }
+
+    [HttpGet("charts/asset-overview")]
+    public async Task<ActionResult<ApiResult<AssetOverviewDto>>> GetAssetOverview(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetUserIdForQuery();
+            var result = await assetService.GetAssetOverviewAsync(userId, cancellationToken);
+            return Ok(ApiResult<AssetOverviewDto>.Success(result));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "获取资产总览数据失败");
+            return StatusCode(500, ApiResult.Fail("获取数据失败，请稍后重试"));
+        }
+    }
 }

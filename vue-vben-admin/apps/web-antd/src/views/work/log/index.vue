@@ -34,6 +34,8 @@ import {
   WorkLogStatusColor,
   WorkLogStatusLabel,
 } from '#/enums/workEnum';
+import ExportButton from '#/components/ExportButton.vue';
+import ImportButton from '#/components/ImportButton.vue';
 
 import WorkLogModal from './WorkLogModal.vue';
 
@@ -191,7 +193,11 @@ onMounted(() => {
               </Space>
             </Form.Item>
           </Form>
-          <Button v-if="canCreateLog" type="primary" @click="openCreate">新增日志</Button>
+          <Space>
+            <ExportButton module="worklogs" filename="工作日志" />
+            <ImportButton module="worklogs" @imported="load" />
+            <Button v-if="canCreateLog" type="primary" @click="openCreate">新增日志</Button>
+          </Space>
         </div>
       </Card>
 

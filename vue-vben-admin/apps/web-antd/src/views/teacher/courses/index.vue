@@ -65,6 +65,14 @@ const statusMap: Record<number, string> = {
   2: '已完成',
 };
 
+const outlineVisible = ref(false);
+const selectedCourse = ref<TeacherCourse | null>(null);
+
+const handleViewOutline = (course: TeacherCourse) => {
+  selectedCourse.value = course;
+  outlineVisible.value = true;
+};
+
 const columns = [
   { title: '课程名称', dataIndex: 'name', key: 'name' },
   { title: '课程代码', dataIndex: 'code', key: 'code', width: 100 },
@@ -72,6 +80,7 @@ const columns = [
   { title: '学期', key: 'semester', width: 100 },
   { title: '学生数', dataIndex: 'studentCount', key: 'studentCount', width: 80 },
   { title: '状态', dataIndex: 'status', key: 'status', width: 80 },
+  { title: '大纲', key: 'outline', width: 60 },
   { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 120 },
   { title: '操作', key: 'action', width: 150 },
 ];
@@ -221,6 +230,11 @@ onMounted(() => {
               {{ statusMap[record.status] || '未知' }}
             </Tag>
           </template>
+          <template v-else-if="column.key === 'outline'">
+            <Button type="link" size="small" @click="handleViewOutline(record as TeacherCourse)">
+              查看
+            </Button>
+          </template>
           <template v-else-if="column.key === 'action'">
             <div class="flex gap-2">
               <Button type="link" size="small" @click="handleEdit(record as TeacherCourse)">编辑</Button>
@@ -267,6 +281,38 @@ onMounted(() => {
           <Input v-model:value="formState.tags" placeholder="多个标签用逗号分隔" />
         </FormItem>
       </Form>
+    </Modal>
+
+    <Modal
+      v-model:open="outlineVisible"
+      title="课程大纲"
+      :footer="null"
+      width="600px"
+    >
+      <div v-if="selectedCourse" class="py-4">
+        <h3 class="text-lg font-medium mb-2">{{ selectedCourse.name }}</h3>
+        <p class="text-gray-500 mb-4">{{ selectedCourse.description || '暂无描述' }}</p>
+        <div class="space-y-3">
+          <div class="flex items-start gap-2">
+            <Tag color="blue">课程代码</Tag>
+            <span>{{ selectedCourse.code }}</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <Tag color="green">学年学期</Tag>
+            <span>{{ selectedCourse.year }}-{{ selectedCourse.year + 1 }} 第{{ selectedCourse.semester }}学期</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <Tag color="orange">学生人数</Tag>
+            <span>{{ selectedCourse.studentCount }} 人</span>
+          </div>
+          <div v-if="selectedCourse.tags" class="flex items-start gap-2">
+            <Tag color="purple">标签</Tag>
+            <Space>
+              <Tag v-for="tag in selectedCourse.tags.split(',').filter(Boolean)" :key="tag">{{ tag }}</Tag>
+            </Space>
+          </div>
+        </div>
+      </div>
     </Modal>
   </Page>
 </template>
