@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-  # 后端 API
   api:
     build:
       context: ./WebApplication1
@@ -11,16 +8,27 @@ services:
       - "5062:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - DB_CONNECTION=Server=mysql;Port=3306;Database=personal_growth;User=root;Password=growth_password;
-      - JWT_SECRET_KEY=your-super-secret-key-at-least-32-characters-long
+      - DB_CONNECTION=${DB_CONNECTION}
+      - Jwt__SecretKey=${JWT_SECRET_KEY}
+      - Jwt__Issuer=PersonalGrowthManagement
+      - Jwt__Audience=VueVbenAdmin
+      - Security__EncryptionKey=${SECURITY_ENCRYPTION_KEY}
+      - OpenAI__ApiKey=${OPENAI_API_KEY:-}
+      - Database__AutoMigrate=${DATABASE_AUTO_MIGRATE:-true}
+      - Database__SeedOnStartup=${DATABASE_SEED_ON_STARTUP:-true}
     depends_on:
       mysql:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/healthz/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     networks:
       - growth-network
     restart: unless-stopped
 
-  # 前端
   web:
     build:
       context: ./vue-vben-admin
@@ -29,20 +37,26 @@ services:
     ports:
       - "5666:80"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
     networks:
       - growth-network
     restart: unless-stopped
 
-  # MySQL 数据库
   mysql:
     image: mysql:8.0
     container_name: growth-mysql
     ports:
       - "3306:3306"
     environment:
-      - MYSQL_ROOT_PASSWORD=growth_password
-      - MYSQL_DATABASE=personal_growth
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-personal_growth}
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:

@@ -1,313 +1,180 @@
 # 部署指南
 
-## 目录
-- [本地开发](#本地开发)
-- [Docker部署](#docker部署)
-- [生产环境部署](#生产环境部署)
-- [环境变量配置](#环境变量配置)
-- [数据库迁移](#数据库迁移)
-- [健康检查](#健康检查)
-
 ## 本地开发
 
-### 前置条件
-- .NET 10.0 SDK
-- MySQL 8.0
-- Visual Studio 2022 或 VS Code
+前置条件：
 
-### 步骤
+- .NET SDK 10
+- Node.js 20.19+、22.18+ 或 24+
+- pnpm 10+
+- MySQL 8+
 
-1. **克隆项目**
-```bash
-git clone <repository-url>
-cd WebApplication1
-```
+创建数据库：
 
-2. **配置环境变量**
-```bash
-# 复制配置模板
-cp WebApplication1/appsettings.Development.example.json WebApplication1/appsettings.Development.json
-```
-
-编辑 `appsettings.Development.json`：
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Port=3306;Database=personal_growth;User=root;Password=your_password"
-  },
-  "Jwt": {
-    "SecretKey": "your-super-secret-key-at-least-32-chars-long"
-  },
-  "OpenAI": {
-    "ApiKey": "sk-your-openai-api-key"
-  },
-  "Security": {
-    "EncryptionKey": "your-encryption-key"
-  }
-}
-```
-
-3. **创建数据库**
 ```sql
-CREATE DATABASE personal_growth CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS personal_growth
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
 ```
 
-4. **运行迁移**
-```bash
-cd WebApplication1
-dotnet ef database update
-```
+复制并编辑后端开发配置：
 
-5. **启动应用**
-```bash
-dotnet run
-```
-
-6. **访问应用**
-- API: http://localhost:5000
-- Swagger: http://localhost:5000/swagger
-- 健康检查: http://localhost:5000/healthz
-
-## Docker部署
-
-### 前置条件
-- Docker
-- Docker Compose
-
-### 步骤
-
-1. **创建环境变量文件**
-```bash
-cat > .env << EOF
-# 数据库配置
-DB_CONNECTION=Server=mysql;Port=3306;Database=personal_growth;User=root;Password=your_password
-MYSQL_ROOT_PASSWORD=your_root_password
-MYSQL_USER=your_user
-MYSQL_PASSWORD=your_password
-
-# JWT配置
-JWT_SECRET_KEY=your-super-secret-key-at-least-32-chars-long
-
-# OpenAI配置（可选）
-OPENAI_API_KEY=sk-your-openai-api-key
-
-# 加密配置
-Security__EncryptionKey=your-encryption-key
-EOF
-```
-
-2. **启动服务**
-```bash
-docker-compose up -d
-```
-
-3. **查看服务状态**
-```bash
-docker-compose ps
-```
-
-4. **查看日志**
-```bash
-# 查看所有日志
-docker-compose logs -f
-
-# 查看Web应用日志
-docker-compose logs -f webapp
-
-# 查看MySQL日志
-docker-compose logs -f mysql
-```
-
-5. **停止服务**
-```bash
-docker-compose down
-```
-
-6. **更新部署**
-```bash
-docker-compose down
-docker-compose build --no-cache
-docker-compose up -d
-```
-
-## 生产环境部署
-
-### 使用 systemd 服务
-
-1. **发布应用**
-```bash
-dotnet publish -c Release -o /var/www/personal-growth
-```
-
-2. **创建 systemd 服务文件**
-```bash
-sudo nano /etc/systemd/system/personal-growth.service
-```
-
-```ini
-[Unit]
-Description=Personal Growth Management API
-After=network.target
-
-[Service]
-WorkingDirectory=/var/www/personal-growth
-ExecStart=/usr/bin/dotnet /var/www/personal-growth/WebApplication1.dll
-Restart=always
-RestartSec=10
-SyslogIdentifier=personal-growth
-User=www-data
-Environment=ASPNETCORE_ENVIRONMENT=Production
-Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
-
-[Install]
-WantedBy=multi-user.target
-```
-
-3. **启动服务**
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable personal-growth
-sudo systemctl start personal-growth
-```
-
-4. **查看服务状态**
-```bash
-sudo systemctl status personal-growth
-sudo journalctl -u personal-growth -f
-```
-
-### 使用 Nginx 反向代理
-
-1. **安装 Nginx**
-```bash
-sudo apt update
-sudo apt install nginx
-```
-
-2. **配置 Nginx**
-```bash
-sudo nano /etc/nginx/sites-available/personal-growth
-```
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location / {
-        proxy_pass http://localhost:5000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection keep-alive;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-3. **启用配置**
-```bash
-sudo ln -s /etc/nginx/sites-available/personal-growth /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl restart nginx
-```
-
-## 环境变量配置
-
-### 必需的环境变量
-
-| 变量名 | 说明 | 示例 |
-|--------|------|------|
-| `DB_CONNECTION` | 数据库连接字符串 | `Server=localhost;Port=3306;Database=personal_growth;User=root;Password=xxx` |
-| `JWT_SECRET_KEY` | JWT密钥（≥32字符） | `your-super-secret-key-at-least-32-chars-long` |
-| `Security__EncryptionKey` | 加密密钥 | `your-encryption-key` |
-
-### 可选的环境变量
-
-| 变量名 | 说明 | 默认值 |
-|--------|------|--------|
-| `ASPNETCORE_ENVIRONMENT` | 运行环境 | `Production` |
-| `OPENAI_API_KEY` | OpenAI API Key | 无 |
-| `Logging__LogLevel__Default` | 日志级别 | `Information` |
-
-### 设置环境变量
-
-#### Linux/macOS
-```bash
-export DB_CONNECTION="Server=localhost;Port=3306;Database=personal_growth;User=root;Password=xxx"
-export JWT_SECRET_KEY="your-super-secret-key-at-least-32-chars-long"
-```
-
-#### Windows
 ```powershell
-$env:DB_CONNECTION="Server=localhost;Port=3306;Database=personal_growth;User=root;Password=xxx"
-$env:JWT_SECRET_KEY="your-super-secret-key-at-least-32-chars-long"
+rtk pwsh -Command "Copy-Item WebApplication1\WebApplication1\appsettings.Development.example.json WebApplication1\WebApplication1\appsettings.Development.json"
 ```
 
-#### Docker
-在 `docker-compose.yml` 或 `.env` 文件中配置。
+启动后端：
 
-## 数据库迁移
-
-### 创建迁移
-```bash
-dotnet ef migrations add MigrationName
+```powershell
+rtk dotnet run --project WebApplication1\WebApplication1\WebApplication1.csproj
 ```
 
-### 应用迁移
-```bash
-dotnet ef database update
+默认地址：
+
+- API: `http://localhost:5062`
+- Swagger: `http://localhost:5062/swagger`
+- 健康检查: `http://localhost:5062/healthz`
+
+启动前端：
+
+```powershell
+rtk pwsh -Command "Set-Location vue-vben-admin; pnpm install"
+rtk pwsh -Command "Set-Location vue-vben-admin; pnpm -F @vben/web-antd run dev"
 ```
 
-### 回滚迁移
-```bash
-dotnet ef database update PreviousMigrationName
+前端地址：`http://localhost:5666`。开发环境通过 Vite 将 `/api` 代理到 `http://localhost:5062/api`。
+
+## Docker Compose 部署
+
+根目录 `docker-compose.yml` 提供 MVP 默认部署方式，包含：
+
+- `mysql`：MySQL 8
+- `api`：ASP.NET Core API
+- `web`：Nginx 托管前端静态资源，并把 `/api` 代理到 API 容器
+
+1. 复制环境变量模板：
+
+```powershell
+rtk pwsh -Command "Copy-Item .env.example .env"
 ```
 
-### 删除迁移
-```bash
-dotnet ef migrations remove
+2. 编辑根目录 `.env`，替换密码和密钥：
+
+```text
+MYSQL_ROOT_PASSWORD=...
+DB_CONNECTION=Server=mysql;Port=3306;Database=personal_growth;User=root;Password=...;CharSet=utf8mb4;
+JWT_SECRET_KEY=至少32字符的随机密钥
+SECURITY_ENCRYPTION_KEY=随机加密密钥
+OPENAI_API_KEY=
+DATABASE_AUTO_MIGRATE=true
+DATABASE_SEED_ON_STARTUP=true
 ```
+
+3. 构建并启动：
+
+```powershell
+rtk docker compose --env-file .env up -d --build
+```
+
+4. 查看状态和日志：
+
+```powershell
+rtk docker compose ps
+rtk docker compose logs -f api
+rtk docker compose logs -f web
+rtk docker compose logs -f mysql
+```
+
+5. 访问服务：
+
+- 前端：`http://localhost:5666`
+- API 存活检查：`http://localhost:5666/api/healthz/live`
+- API 就绪检查：`http://localhost:5666/api/healthz/ready`
+- Web 健康检查：`http://localhost:5666/health`
+
+停止服务：
+
+```powershell
+rtk docker compose down
+```
+
+如需清空数据库卷：
+
+```powershell
+rtk docker compose down -v
+```
+
+## 生产环境变量
+
+后端必需：
+
+| 变量名 | 说明 |
+|---|---|
+| `DB_CONNECTION` | MySQL 连接字符串 |
+| `Jwt__SecretKey` 或 `JWT_SECRET_KEY` | JWT 密钥，至少 32 字符 |
+| `Jwt__Issuer` | JWT Issuer，Docker 默认 `PersonalGrowthManagement` |
+| `Jwt__Audience` | JWT Audience，Docker 默认 `VueVbenAdmin` |
+| `Security__EncryptionKey` | 敏感数据加密密钥 |
+
+后端可选：
+
+| 变量名 | 说明 |
+|---|---|
+| `OpenAI__ApiKey` 或 `OPENAI_API_KEY` | 启用真实 AI 能力 |
+| `Database__AutoMigrate` | 启动时自动应用 EF Core 迁移 |
+| `Database__SeedOnStartup` | 启动时写入基础菜单、功能码和演示数据 |
+| `Cors__Origins__0` | 分域部署时允许的前端域名 |
+
+前端生产配置位于 `vue-vben-admin/apps/web-antd/.env.production`。Docker Compose 默认使用：
+
+```text
+VITE_GLOB_API_URL=/api
+```
+
+如果前后端分开部署，改为真实 API 地址，例如：
+
+```text
+VITE_GLOB_API_URL=https://api.example.com/api
+```
+
+## 数据库初始化策略
+
+开发环境会自动执行 Seeder，方便本地获得演示账号和菜单。
+
+生产环境默认不应隐式初始化数据库。Docker Compose MVP 通过 `.env` 显式开启：
+
+```text
+DATABASE_AUTO_MIGRATE=true
+DATABASE_SEED_ON_STARTUP=true
+```
+
+传统服务器或云平台部署时，建议先手动执行迁移，确认数据库备份和变更窗口后再开启自动迁移。
 
 ## 健康检查
 
-### 端点说明
-
 | 端点 | 说明 | 用途 |
-|------|------|------|
+|---|---|---|
 | `/healthz` | 完整健康检查 | 监控系统 |
-| `/healthz/ready` | 就绪检查 | 负载均衡器 |
-| `/healthz/live` | 存活检查 | 容器编排 |
+| `/healthz/ready` | MySQL 就绪检查 | 容器依赖和负载均衡 |
+| `/healthz/live` | 应用存活检查 | 容器存活探针 |
+| `/health` | 前端 Nginx 健康检查 | Web 容器健康探针 |
 
-### 响应示例
+## 验证命令
 
-```json
-{
-  "status": "Healthy",
-  "totalDuration": 123.45,
-  "checks": [
-    {
-      "name": "mysql",
-      "status": "Healthy",
-      "duration": 50.12,
-      "description": "MySQL connection is healthy"
-    },
-    {
-      "name": "memory",
-      "status": "Healthy",
-      "duration": 1.23,
-      "description": "Memory usage: 150MB / 1024MB"
-    }
-  ]
-}
+后端测试：
+
+```powershell
+rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.csproj --no-restore
 ```
 
-### 配置监控
+前端类型检查：
 
-建议使用以下工具监控健康检查：
-- Prometheus + Grafana
-- Datadog
-- New Relic
-- AWS CloudWatch
+```powershell
+rtk pwsh -Command "Set-Location vue-vben-admin; pnpm -F @vben/web-antd run typecheck"
+```
+
+前端生产构建：
+
+```powershell
+rtk pwsh -Command "Set-Location vue-vben-admin; pnpm -F @vben/web-antd run build"
+```

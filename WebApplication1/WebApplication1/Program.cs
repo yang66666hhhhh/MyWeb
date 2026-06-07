@@ -36,6 +36,7 @@ using WebApplication1.Features.Persona;
 using WebApplication1.Shared.HealthChecks;
 using WebApplication1.Shared.Localization;
 using WebApplication1.Shared.Services;
+using WebApplication1.Shared.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -219,9 +220,7 @@ builder.Services.AddScoped<IAuditService, AuditService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? Environment.GetEnvironmentVariable("DB_CONNECTION")
-        ?? throw new InvalidOperationException("DefaultConnection is not configured.");
+    var connectionString = DatabaseStartupOptions.ResolveConnectionString(builder.Configuration);
     options.UseMySQL(connectionString, mysqlOptions =>
     {
         mysqlOptions.CommandTimeout(30);
@@ -239,9 +238,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     }
 });
 
-var jwtSecretKey = builder.Configuration["Jwt:SecretKey"]
-    ?? Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
-    ?? throw new InvalidOperationException("Jwt:SecretKey is not configured.");
+var jwtSecretKey = DatabaseStartupOptions.ResolveJwtSecretKey(builder.Configuration);
 if (string.IsNullOrWhiteSpace(jwtSecretKey) || jwtSecretKey.Length < 32)
 {
     throw new InvalidOperationException("Jwt:SecretKey must be at least 32 characters long.");
@@ -315,7 +312,7 @@ builder.Services.AddScoped<WebApplication1.Features.Shared.Services.IImportServi
 
 builder.Services.AddHealthChecks()
     .AddMySql(
-        builder.Configuration.GetConnectionString("DefaultConnection") ?? "",
+        DatabaseStartupOptions.ResolveConnectionString(builder.Configuration),
         name: "mysql",
         timeout: TimeSpan.FromSeconds(3),
         tags: ["db", "mysql"])
@@ -459,12 +456,24 @@ app.MapHealthChecks("/healthz/live", new Microsoft.AspNetCore.Diagnostics.Health
     }
 });
 
-if (app.Environment.IsDevelopment())
+var databaseStartupOptions = DatabaseStartupOptions.FromConfiguration(app.Configuration);
+if (databaseStartupOptions.AutoMigrate || databaseStartupOptions.SeedOnStartup || app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    await DbSeeder.SeedAsync(context, logger);
+
+    if (databaseStartupOptions.AutoMigrate)
+    {
+        logger.LogInformation("Applying database migrations on startup.");
+        await context.Database.MigrateAsync();
+    }
+
+    if (databaseStartupOptions.SeedOnStartup || app.Environment.IsDevelopment())
+    {
+        logger.LogInformation("Seeding database on startup.");
+        await DbSeeder.SeedAsync(context, logger);
+    }
 }
 
 app.Run();

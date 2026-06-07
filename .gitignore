@@ -95,12 +95,12 @@ lerna-debug.log*
 # ------------------------------------------------------------------------------
 # Environment files
 # ------------------------------------------------------------------------------
+.env
 .env.local
 .env.*.local
 *.local.env
 
-# Keep committed Vben env files and examples available to the team.
-!.env
+# Keep examples and committed Vben env files available to the team.
 !.env.development
 !.env.production
 !.env.analyze
@@ -110,6 +110,10 @@ lerna-debug.log*
 !**/.env.production
 !**/.env.analyze
 !**/.env.example
+
+# Root .env contains Docker deployment secrets. Keep only the example committed.
+/.env
+!/.env.example
 
 # ------------------------------------------------------------------------------
 # Logs, diagnostics, temporary files

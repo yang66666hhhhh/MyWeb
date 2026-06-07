@@ -82,6 +82,7 @@ WebApplication1/WebApplication1/appsettings.Development.example.json
 ```powershell
 $env:DB_CONNECTION="Server=...;Port=3306;Database=personal_growth;User=...;Password=...;CharSet=utf8mb4;"
 $env:JWT_SECRET_KEY="至少32字符的生产密钥"
+$env:Security__EncryptionKey="生产加密密钥"
 $env:OPENAI_API_KEY="sk-..."
 ```
 
@@ -131,6 +132,56 @@ http://localhost:5666
 ```text
 http://localhost:5062/api
 ```
+
+## Docker Compose MVP 启动
+
+根目录提供 Docker Compose 部署闭环，包含 MySQL、后端 API 和前端 Nginx。
+
+1. 复制环境变量模板：
+
+```powershell
+rtk pwsh -Command "Copy-Item .env.example .env"
+```
+
+2. 编辑根目录 `.env`，至少替换：
+
+- `MYSQL_ROOT_PASSWORD`
+- `DB_CONNECTION` 中的数据库密码
+- `JWT_SECRET_KEY`
+- `SECURITY_ENCRYPTION_KEY`
+
+3. 构建并启动：
+
+```powershell
+rtk docker compose --env-file .env up -d --build
+```
+
+默认地址：
+
+```text
+前端：http://localhost:5666
+API：http://localhost:5666/api
+API 存活检查：http://localhost:5666/api/healthz/live
+API 就绪检查：http://localhost:5666/api/healthz/ready
+```
+
+Docker Compose 默认开启：
+
+```text
+DATABASE_AUTO_MIGRATE=true
+DATABASE_SEED_ON_STARTUP=true
+```
+
+这会在 API 启动时应用数据库迁移并写入菜单、功能码和演示账号。传统生产部署不要默认开启，除非确认需要由应用启动时初始化数据库。
+
+内置演示账号：
+
+| 用户名 | 密码 | 角色 | 说明 |
+|---|---|---|---|
+| `vben` | `123456` | owner | 管理员，Developer + Implementation |
+| `admin` | `123456` | pro | Pro 通用用户 |
+| `jack` | `123456` | member | Developer 用户 |
+| `lisa` | `123456` | member | Student 用户 |
 
 ## 本地验证
 
@@ -237,14 +288,22 @@ rtk dotnet list WebApplication1\WebApplication1\WebApplication1.csproj package -
 vue-vben-admin/apps/web-antd/.env.production
 ```
 
-当前 `VITE_GLOB_API_URL` 需要在部署前改成真实后端 API 地址，不能继续指向 Vben mock API。
+当前 Docker Compose 部署使用 `VITE_GLOB_API_URL=/api`，由前端 Nginx 代理到 `api:8080`。如果前后端分域部署，需要把 `vue-vben-admin/apps/web-antd/.env.production` 中的 `VITE_GLOB_API_URL` 改成真实后端 API 地址。
 
 后端生产配置需要提供：
 
 - `DB_CONNECTION`
 - `JWT_SECRET_KEY`
+- `Security__EncryptionKey`
 - `OPENAI_API_KEY`，如果启用 AI 功能
 - `Cors:Origins`，允许的前端域名
+- `Database__AutoMigrate` 和 `Database__SeedOnStartup`，仅在明确需要启动时迁移/种子时开启
+
+MVP 验收清单见：
+
+```text
+docs/MVP_ACCEPTANCE_CHECKLIST.md
+```
 
 ## 更新日志
 
