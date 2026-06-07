@@ -33,7 +33,7 @@ Desktop.ini
 
 **/bin/
 **/obj/
-packages/
+/packages/
 artifacts/
 TestResults/
 BenchmarkDotNet.Artifacts/

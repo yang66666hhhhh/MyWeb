@@ -49,7 +49,8 @@ public class HealthCheckTests
     [Fact]
     public async Task DiskSpaceHealthCheck_ShouldReturnHealthy_WhenDriveExists()
     {
-        var healthCheck = new DiskSpaceHealthCheck("C:\\", thresholdBytes: 1024 * 1024); // 1MB
+        var driveName = Path.GetPathRoot(AppContext.BaseDirectory) ?? Directory.GetDirectoryRoot(AppContext.BaseDirectory);
+        var healthCheck = new DiskSpaceHealthCheck(driveName, thresholdBytes: 1024 * 1024); // 1MB
         var context = new HealthCheckContext
         {
             Registration = new HealthCheckRegistration(
@@ -67,6 +68,26 @@ public class HealthCheckTests
         Assert.True(result.Data.ContainsKey("DriveName"));
         Assert.True(result.Data.ContainsKey("TotalSizeBytes"));
         Assert.True(result.Data.ContainsKey("AvailableFreeSpaceBytes"));
+    }
+
+    [Fact]
+    public async Task DiskSpaceHealthCheck_ShouldUseCurrentPlatformRoot_WhenDriveIsNotConfigured()
+    {
+        var expectedDriveName = Path.GetPathRoot(AppContext.BaseDirectory) ?? Directory.GetDirectoryRoot(AppContext.BaseDirectory);
+        var healthCheck = new DiskSpaceHealthCheck(thresholdBytes: 1024 * 1024); // 1MB
+        var context = new HealthCheckContext
+        {
+            Registration = new HealthCheckRegistration(
+                "disk",
+                healthCheck,
+                HealthStatus.Degraded,
+                new List<string> { "system", "disk" })
+        };
+
+        var result = await healthCheck.CheckHealthAsync(context);
+
+        Assert.True(result.Status == HealthStatus.Healthy || result.Status == HealthStatus.Degraded);
+        Assert.Equal(expectedDriveName, result.Data["DriveName"]);
     }
 
     [Fact]

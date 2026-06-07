@@ -42,10 +42,16 @@ public class DiskSpaceHealthCheck : IHealthCheck
     private readonly long _thresholdBytes;
     private readonly string _driveName;
 
-    public DiskSpaceHealthCheck(string driveName = "C:\\", long thresholdBytes = 1024 * 1024 * 1024) // 1GB default
+    public DiskSpaceHealthCheck(string? driveName = null, long thresholdBytes = 1024 * 1024 * 1024) // 1GB default
     {
-        _driveName = driveName;
+        _driveName = string.IsNullOrWhiteSpace(driveName) ? GetDefaultDriveName() : driveName;
         _thresholdBytes = thresholdBytes;
+    }
+
+    private static string GetDefaultDriveName()
+    {
+        return Path.GetPathRoot(AppContext.BaseDirectory)
+            ?? Directory.GetDirectoryRoot(AppContext.BaseDirectory);
     }
 
     public Task<HealthCheckResult> CheckHealthAsync(
