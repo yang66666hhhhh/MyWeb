@@ -3,6 +3,15 @@ import { unmountGlobalLoading } from '@vben/utils';
 
 import { overridesPreferences, preferencesExtension } from './preferences';
 
+// PWA Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // SW registration failed, app still works
+    });
+  });
+}
+
 /**
  * 应用初始化完成之后再进行页面加载渲染
  */

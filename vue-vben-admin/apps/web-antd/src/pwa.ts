@@ -1,4 +1,4 @@
-// PWA 配置 (需要安装 vite-plugin-pwa 后启用)
+// PWA 配置
 export const pwaConfig = {
   registerType: 'autoUpdate' as const,
   includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
@@ -11,6 +11,8 @@ export const pwaConfig = {
     display: 'standalone',
     scope: '/',
     start_url: '/',
+    orientation: 'portrait-primary',
+    categories: ['productivity', 'lifestyle'],
     icons: [
       {
         src: 'pwa-192x192.png',
@@ -31,7 +33,7 @@ export const pwaConfig = {
     ],
   },
   workbox: {
-    globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+    globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
     runtimeCaching: [
       {
         urlPattern: /^https:\/\/api.*/i,
@@ -69,7 +71,20 @@ export const pwaConfig = {
           },
         },
       },
+      {
+        urlPattern: /\.(?:woff2|ttf|eot)$/,
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'fonts-cache',
+          expiration: {
+            maxEntries: 30,
+            maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+          },
+        },
+      },
     ],
+    navigateFallback: '/index.html',
+    navigateFallbackDenylist: [/^\/api/],
   },
   devOptions: {
     enabled: false,

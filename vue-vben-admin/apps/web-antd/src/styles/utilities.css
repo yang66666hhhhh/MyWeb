@@ -187,6 +187,22 @@
   .hide-on-desktop { display: none; }
 }
 
+/* Enhanced Mobile utilities */
+@media (max-width: 768px) {
+  .mobile-p-0 { padding: 0; }
+  .mobile-p-2 { padding: 8px; }
+  .mobile-p-4 { padding: 16px; }
+  .mobile-m-0 { margin: 0; }
+  .mobile-mt-4 { margin-top: 16px; }
+  .mobile-mb-4 { margin-bottom: 16px; }
+  .mobile-gap-2 { gap: 8px; }
+  .mobile-gap-4 { gap: 16px; }
+  .mobile-text-sm { font-size: 14px; }
+  .mobile-text-base { font-size: 16px; }
+  .mobile-w-full { width: 100%; }
+  .mobile-flex-col { flex-direction: column; }
+}
+
 /* 打印 */
 @media print {
   .no-print { display: none; }
