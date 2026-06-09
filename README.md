@@ -156,6 +156,18 @@ rtk pwsh -Command "Copy-Item .env.example .env"
 rtk docker compose --env-file .env up -d --build
 ```
 
+4. 执行 MVP 验收脚本：
+
+```powershell
+rtk pwsh -File scripts\verify-mvp.ps1 -RequireRuntime
+```
+
+如果只想检查配置、文档和前端 PWA 构建产物，不检查正在运行的容器：
+
+```powershell
+rtk pwsh -File scripts\verify-mvp.ps1 -SkipRuntime
+```
+
 默认地址：
 
 ```text
@@ -209,6 +221,8 @@ rtk pwsh -Command "Set-Location vue-vben-admin; pnpm -F @vben/web-antd run build
 rtk dotnet test WebApplication1\WebApplication1.Tests\WebApplication1.Tests.csproj --no-restore
 rtk pwsh -Command "Set-Location vue-vben-admin; pnpm -F @vben/web-antd run typecheck"
 rtk pwsh -Command "Set-Location vue-vben-admin; pnpm -F @vben/web-antd run build"
+rtk pwsh -File scripts\verify-mvp.tests.ps1
+rtk pwsh -File scripts\verify-mvp.ps1 -SkipRuntime
 ```
 
 ## 权限与菜单

@@ -13,6 +13,7 @@
 
 - [ ] 执行 `rtk docker compose --env-file .env up -d --build` 成功。
 - [ ] 执行 `rtk docker compose ps` 后 `mysql`、`api`、`web` 均为 healthy。
+- [ ] 执行 `rtk pwsh -File scripts\verify-mvp.ps1 -RequireRuntime` 成功。
 - [ ] 打开 `http://localhost:5666` 能进入前端。
 - [ ] 打开 `http://localhost:5666/api/healthz/live` 返回健康状态。
 - [ ] 打开 `http://localhost:5666/api/healthz/ready` 返回 MySQL 就绪状态。
@@ -46,6 +47,8 @@
 - [ ] 前端类型检查通过：`rtk pwsh -Command "Set-Location vue-vben-admin; pnpm -F @vben/web-antd run typecheck"`。
 - [ ] 前端构建通过：`rtk pwsh -Command "Set-Location vue-vben-admin; pnpm -F @vben/web-antd run build"`。
 - [ ] 前端构建产物包含 `manifest.webmanifest`、`sw.js` 和 `workbox-*.js`。
+- [ ] MVP 验收脚本测试通过：`rtk pwsh -File scripts\verify-mvp.tests.ps1`。
+- [ ] MVP 静态验收通过：`rtk pwsh -File scripts\verify-mvp.ps1 -SkipRuntime`。
 
 ## 演示账号
 
